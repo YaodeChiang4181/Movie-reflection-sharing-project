@@ -14,13 +14,14 @@
 }
 
 .formContainer {
+  position: relative;
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
   border-radius: var(--radius-lg);
-  padding: 32px;
-  background-color: #383838; /* 根據 mockup 調整為深灰色 */
+  padding: 32px 40px; /* 增加左右 padding */
+  background-color: #383838;
   border: none;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.3s ease-out;
@@ -31,22 +32,18 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.formHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.formHeader h2 {
+.mainLabel {
   font-size: 1.6rem;
   color: #ffffff;
-  margin: 0;
+  margin-bottom: 16px;
   font-weight: 500;
   letter-spacing: 1px;
 }
 
 .closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -63,7 +60,8 @@
 .formBody {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
+  margin-top: 10px;
 }
 
 .formGroupTop {
@@ -86,7 +84,7 @@
 }
 
 .largeTextarea {
-  width: 100%;
+  width: 80%;
   min-height: 180px;
   resize: vertical;
   font-size: 1.2rem;

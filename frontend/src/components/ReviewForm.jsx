@@ -70,15 +70,13 @@ function ReviewForm({ onClose, onReviewAdded }) {
   return (
     <div className={styles.formOverlay}>
       <div className={styles.formContainer}>
-        <div className={styles.formHeader}>
-          <h2>撰寫電影心得：</h2>
-          <button className={styles.closeBtn} onClick={onClose}><X size={24} /></button>
-        </div>
+        <button className={styles.closeBtn} onClick={onClose}><X size={24} /></button>
 
         {error && <div className="errorBox">{error}</div>}
 
         <form onSubmit={handleSubmit} className={styles.formBody}>
           <div className={styles.formGroupTop}>
+            <label className={styles.mainLabel}>撰寫電影心得：</label>
             <textarea
               className={styles.largeTextarea}
               placeholder="分享你對這部電影最真實的感受..."
