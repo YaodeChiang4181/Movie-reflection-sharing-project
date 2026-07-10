@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Film, User, Home, Search } from 'lucide-react';
+import { Film, User, Home, Search, CalendarDays } from 'lucide-react';
 import styles from './Navbar.module.css';
 
 function Navbar() {
@@ -18,7 +18,11 @@ function Navbar() {
           </Link>
           <Link to="/movies/1" className={styles.navLink}>
             <Search size={18} />
-            <span>電影總覽</span>
+            <span>電影心得搜尋</span>
+          </Link>
+          <Link to="/events" className={styles.navLink}>
+            <CalendarDays size={18} />
+            <span>電影迷活動板</span>
           </Link>
         </div>
 
