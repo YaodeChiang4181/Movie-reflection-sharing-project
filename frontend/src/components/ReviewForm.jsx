@@ -1,54 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Send } from 'lucide-react';
-import StarRating from './StarRating';
-import TagInput from './TagInput';
 import api from '../api/axios';
 import styles from './ReviewForm.module.css';
 
 function ReviewForm({ onClose, onReviewAdded }) {
   const [content, setContent] = useState('');
-  const [rating, setRating] = useState(0);
-  const [tags, setTags] = useState([]);
-  const [movieId, setMovieId] = useState('');
-  const [movies, setMovies] = useState([]);
+  const [movieId, setMovieId] = useState(''); // We'll use this state for movie_title now
+  const [tagsInput, setTagsInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    // Fetch available movies for the dropdown
-    const fetchMovies = async () => {
-      try {
-        const response = await api.get('movies/');
-        setMovies(response.data.results || response.data);
-      } catch (err) {
-        console.error("Failed to fetch movies", err);
-      }
-    };
-    fetchMovies();
-  }, []);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content.trim()) return setError('請填寫心得內容');
-    if (!movieId) return setError('請選擇一部電影');
-    if (rating === 0) return setError('請給予評分');
+    if (!movieId.trim()) return setError('請填寫電影名稱');
+
+    // 解析 Hashtags
+    let parsedTags = [];
+    if (tagsInput.trim()) {
+      const rawTags = tagsInput.split(';');
+      for (let t of rawTags) {
+        const cleanTag = t.trim();
+        if (cleanTag) {
+          if (!cleanTag.startsWith('#')) {
+            return setError('Hashtag 標籤必須以 # 號開頭 (例如: #神作)');
+          }
+          // 移除 # 號後傳給後端
+          parsedTags.push(cleanTag.substring(1));
+        }
+      }
+    }
+
+    // 將電影名稱自動加入 Hashtag
+    const movieTag = movieId.trim();
+    if (!parsedTags.includes(movieTag)) {
+      parsedTags.push(movieTag);
+    }
 
     setIsSubmitting(true);
     setError('');
 
     try {
       const response = await api.post('reviews/', {
-        movie_id: movieId,
+        movie_title: movieId.trim(),
         content: content,
-        rating: rating,
-        tag_names: tags,
+        rating: 5, // 預設滿分，因使用者要求移除評分表單
+        tag_names: parsedTags,
         is_spoiler: false
       });
       
       if (onReviewAdded) {
         onReviewAdded(response.data);
       }
-      onClose(); // 關閉表單
+      onClose();
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) {
@@ -83,30 +89,27 @@ function ReviewForm({ onClose, onReviewAdded }) {
           </div>
 
           <div className="formGroup">
-            <label>選擇電影名稱</label>
-            <select 
+            <label>輸入電影名稱</label>
+            <input 
+              type="text"
               className="inputField" 
+              placeholder="例如: 奧本海默"
               value={movieId}
               onChange={(e) => setMovieId(e.target.value)}
               disabled={isSubmitting}
-            >
-              <option value="">-- 請選擇電影 --</option>
-              {movies.map(m => (
-                <option key={m.id} value={m.id}>{m.title}</option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="formGroup">
-            <label>評分</label>
-            <div style={{ marginTop: '8px' }}>
-              <StarRating initialRating={rating} onChange={setRating} />
-            </div>
-          </div>
-
-          <div className="formGroup">
-            <label>Hashtag 標籤 (按 Enter 建立)</label>
-            <TagInput tags={tags} setTags={setTags} placeholder="例如: 神作, 必看" />
+            <label>Hashtag 標籤 (請使用分號 ; 區隔，並以 # 開頭)</label>
+            <input 
+              type="text"
+              className="inputField" 
+              placeholder="例如: #神作;#必看"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              disabled={isSubmitting}
+            />
           </div>
 
           <button 

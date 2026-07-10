@@ -62,9 +62,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    movie_id = serializers.PrimaryKeyRelatedField(
-        queryset=Movie.objects.all(), source='movie', write_only=True
-    )
+    movie_title = serializers.CharField(write_only=True)
     movie = MovieSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     # Accepts a list of tag names during creation
@@ -74,12 +72,20 @@ class ReviewSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Review
-        fields = ('id', 'user', 'movie', 'movie_id', 'rating', 'content', 'is_spoiler', 'tags', 'tag_names', 'created_at')
+        fields = ('id', 'user', 'movie', 'movie_title', 'rating', 'content', 'is_spoiler', 'tags', 'tag_names', 'created_at')
 
     def create(self, validated_data):
         tag_names = validated_data.pop('tag_names', [])
+        movie_title = validated_data.pop('movie_title')
         
         with transaction.atomic():
+            # Automatically get or create the movie by title
+            movie, _ = Movie.objects.get_or_create(
+                title=movie_title,
+                defaults={'director': 'Unknown', 'release_year': timezone.now().year}
+            )
+            validated_data['movie'] = movie
+            
             review = Review.objects.create(**validated_data)
             
             for name in tag_names:
