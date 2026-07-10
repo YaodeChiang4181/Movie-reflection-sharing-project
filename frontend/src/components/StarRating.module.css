@@ -1,0 +1,22 @@
+.starContainer {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.starBtn {
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.starBtn:hover {
+  transform: scale(1.1);
+}
+
+.starBtn.filled {
+  color: #fbbf24; /* Amber color */
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+}
