@@ -20,9 +20,9 @@
   overflow-y: auto;
   border-radius: var(--radius-lg);
   padding: 32px;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  background-color: #383838; /* 根據 mockup 調整為深灰色 */
+  border: none;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.3s ease-out;
 }
 
@@ -35,13 +35,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .formHeader h2 {
-  font-size: 1.8rem;
-  color: var(--text-primary);
+  font-size: 1.6rem;
+  color: #ffffff;
   margin: 0;
+  font-weight: 500;
+  letter-spacing: 1px;
 }
 
 .closeBtn {
@@ -61,20 +63,66 @@
 .formBody {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+}
+
+.formGroupTop {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroupInline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.formGroupInline label {
+  font-size: 1.3rem;
+  color: #ffffff;
+  white-space: nowrap;
+  font-weight: 500;
+  letter-spacing: 1px;
 }
 
 .largeTextarea {
+  width: 100%;
   min-height: 180px;
   resize: vertical;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   line-height: 1.6;
-  background-color: var(--bg-tertiary); /* 淺背景一個色號 */
-  color: #ffffff; /* 字體白色 */
-  border: 1px solid var(--border-color);
+  background-color: #555555;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 20px;
+  outline: none;
 }
 .largeTextarea::placeholder {
-  color: var(--text-muted);
+  color: #a0a0a0;
+}
+.largeTextarea:focus {
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5);
+}
+
+.customInput {
+  flex-grow: 1;
+  background-color: #555555;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px; /* pill shape */
+  padding: 10px 20px;
+  font-size: 1.1rem;
+  outline: none;
+}
+
+.customInput::placeholder {
+  color: #a0a0a0;
+  font-size: 1rem;
+}
+
+.customInput:focus {
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5);
 }
 
 .submitBtn {

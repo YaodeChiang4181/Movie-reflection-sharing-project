@@ -69,18 +69,18 @@ function ReviewForm({ onClose, onReviewAdded }) {
 
   return (
     <div className={styles.formOverlay}>
-      <div className={`glass ${styles.formContainer}`}>
+      <div className={styles.formContainer}>
         <div className={styles.formHeader}>
-          <h2>撰寫電影心得</h2>
+          <h2>撰寫電影心得：</h2>
           <button className={styles.closeBtn} onClick={onClose}><X size={24} /></button>
         </div>
 
         {error && <div className="errorBox">{error}</div>}
 
         <form onSubmit={handleSubmit} className={styles.formBody}>
-          <div className="formGroup">
+          <div className={styles.formGroupTop}>
             <textarea
-              className={`inputField ${styles.largeTextarea}`}
+              className={styles.largeTextarea}
               placeholder="分享你對這部電影最真實的感受..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -88,24 +88,23 @@ function ReviewForm({ onClose, onReviewAdded }) {
             />
           </div>
 
-          <div className="formGroup">
-            <label>輸入電影名稱</label>
+          <div className={styles.formGroupInline}>
+            <label>電影名稱：</label>
             <input 
               type="text"
-              className="inputField" 
-              placeholder="例如: 奧本海默"
+              className={styles.customInput} 
               value={movieId}
               onChange={(e) => setMovieId(e.target.value)}
               disabled={isSubmitting}
             />
           </div>
 
-          <div className="formGroup">
-            <label>Hashtag 標籤 (請使用分號 ; 區隔，並以 # 開頭)</label>
+          <div className={styles.formGroupInline}>
+            <label>Hashtag 標籤：</label>
             <input 
               type="text"
-              className="inputField" 
-              placeholder="例如: #神作;#必看"
+              className={styles.customInput} 
+              placeholder="(請使用分號 ; 區隔，並以 # 開頭)"
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               disabled={isSubmitting}
