@@ -1,14 +1,25 @@
 from rest_framework import generics
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
-from .serializers import RegisterSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import RegisterSerializer, CustomTokenObtainPairSerializer, UserMeSerializer
 
 User = get_user_model()
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
+
+class UserMeView(generics.RetrieveAPIView):
+    serializer_class = UserMeSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -37,6 +48,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
         # 清除快取，讓首頁立刻更新
         cache.delete('trending_reviews')
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        # 嚴格過濾出該名使用者的發文
+        user_reviews = Review.objects.filter(user=request.user).order_by('-created_at')
+        serializer = self.get_serializer(user_reviews, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def vote(self, request, pk=None):

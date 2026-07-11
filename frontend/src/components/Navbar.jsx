@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Film, User, Home, Search, CalendarDays } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import styles from './Navbar.module.css';
 
 function Navbar() {
+  const { isLoggedIn, userProfile, logout } = useAuth();
+
   return (
     <nav className={`${styles.navbar} glass`}>
       <div className={`container flex-between ${styles.navContainer}`}>
@@ -27,10 +30,21 @@ function Navbar() {
         </div>
 
         <div className={styles.userActions}>
-          <Link to="/profile" className={styles.profileBtn}>
-            <User size={18} />
-            <span>個人主頁</span>
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <span className={styles.welcomeText}>Hi, {userProfile?.nickname}</span>
+              <Link to="/profile" className={styles.profileBtn}>
+                <User size={18} />
+                <span>個人主頁</span>
+              </Link>
+              <button onClick={() => { logout(); }} className={styles.logoutBtn}>登出</button>
+            </>
+          ) : (
+            <Link to="/auth" className={`btn-primary ${styles.loginBtn}`}>
+              <User size={18} />
+              <span>登入 / 註冊</span>
+            </Link>
+          )}
         </div>
       </div>
     </nav>

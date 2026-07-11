@@ -64,10 +64,39 @@
 }
 
 .profileBtn:hover {
-  background-color: var(--accent-primary);
-  color: white;
-  border-color: var(--accent-hover);
-  box-shadow: 0 0 15px var(--accent-glow);
+  background: rgba(255, 255, 255, 0.1);
+  color: #a78bfa;
+}
+
+.welcomeText {
+  color: #d1d5db;
+  font-weight: 500;
+  margin-right: 15px;
+}
+
+.logoutBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.logoutBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+.loginBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  text-decoration: none;
 }
 
 @media (max-width: 768px) {

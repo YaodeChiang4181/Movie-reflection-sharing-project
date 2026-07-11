@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ThumbsUp, MessageCircle } from 'lucide-react';
 import ReviewForm from '../components/ReviewForm';
 import api from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
 
 function Home() {
   const [isComposing, setIsComposing] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchReviews();
@@ -29,11 +33,35 @@ function Home() {
     fetchReviews();
   };
 
+  const handleComposeClick = () => {
+    if (!isLoggedIn) {
+      alert('請先登入後再發布心得！');
+      navigate('/auth');
+      return;
+    }
+    setIsComposing(true);
+  };
+
+  const handleVote = async (reviewId) => {
+    if (!isLoggedIn) {
+      alert('必須登入才能對心得進行評價！');
+      navigate('/auth');
+      return;
+    }
+    try {
+      await api.post(`reviews/${reviewId}/vote/`, { vote_type: 1 });
+      fetchReviews(); // Re-fetch to update scores
+    } catch (err) {
+      console.error(err);
+      alert('評價失敗，請稍後再試。');
+    }
+  };
+
   return (
     <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
       <header className="flex-between" style={{ marginBottom: '40px' }}>
         <h1>探索熱門電影心得</h1>
-        <button className="btn-primary" onClick={() => setIsComposing(true)}>
+        <button className="btn-primary" onClick={handleComposeClick}>
           發布心得
         </button>
       </header>
@@ -53,7 +81,7 @@ function Home() {
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
             這座城市還缺少您的觀影回憶。
           </p>
-          <button className="btn-primary" onClick={() => setIsComposing(true)}>
+          <button className="btn-primary" onClick={handleComposeClick}>
             現在來寫第一篇吧！
           </button>
         </div>
@@ -92,11 +120,24 @@ function Home() {
 
               <div style={{ display: 'flex', gap: '16px', color: 'var(--text-secondary)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <ThumbsUp size={16} /> 推薦指數 {review.rating}/5
+                   推薦指數 {review.rating}/5
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <UserIcon username={review.user?.username} /> {review.user?.username}
+                  <UserIcon nickname={review.user?.nickname} /> {review.user?.nickname || '未知使用者'}
                 </span>
+                <button 
+                  onClick={() => handleVote(review.id)}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: '6px', 
+                    background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', 
+                    color: 'var(--text-primary)', padding: '4px 12px', borderRadius: '20px',
+                    cursor: 'pointer', transition: 'all 0.2s ease', marginLeft: 'auto'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                >
+                  <ThumbsUp size={16} /> 推薦 ({review.score || 0})
+                </button>
               </div>
             </div>
           ))}
@@ -107,7 +148,7 @@ function Home() {
 }
 
 // Simple helper component
-function UserIcon({ username }) {
+function UserIcon({ nickname }) {
   return (
     <div style={{
       width: '24px', height: '24px', borderRadius: '50%', 
@@ -115,7 +156,7 @@ function UserIcon({ username }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: '0.8rem', fontWeight: 'bold'
     }}>
-      {username ? username.charAt(0).toUpperCase() : '?'}
+      {nickname ? nickname.charAt(0).toUpperCase() : '?'}
     </div>
   );
 }

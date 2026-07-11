@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Clock, Phone } from 'lucide-react';
 import api from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
 import styles from './Events.module.css';
 
 function Events() {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -22,6 +26,24 @@ function Events() {
     fetchEvents();
   }, []);
 
+  const handleCreateEvent = () => {
+    if (!isLoggedIn) {
+      alert('請先登入後再發起揪團活動！');
+      navigate('/auth');
+      return;
+    }
+    alert('發起活動功能即將推出，敬請期待！'); // Or open modal
+  };
+
+  const handleJoinEvent = () => {
+    if (!isLoggedIn) {
+      alert('請先登入後再報名參加活動！');
+      navigate('/auth');
+      return;
+    }
+    alert('報名功能即將推出，敬請期待！');
+  };
+
   return (
     <div className={`container ${styles.pageWrapper}`}>
       <header className={`flex-between ${styles.header}`}>
@@ -29,7 +51,7 @@ function Events() {
           <h1 className={styles.title}>電影迷活動板</h1>
           <p className={styles.subtitle}>尋找志同道合的影迷，一起揪團看電影、討論劇情！</p>
         </div>
-        <button className="btn-primary">發起活動</button>
+        <button className="btn-primary" onClick={handleCreateEvent}>發起活動</button>
       </header>
 
       <div className={styles.eventList}>
@@ -58,8 +80,8 @@ function Events() {
             </div>
             
             <div className={styles.cardFooter}>
-              <span className={styles.author}>發起人: {event.user.username}</span>
-              <button className={styles.joinBtn}>報名參加</button>
+              <span className={styles.author}>發起人: {event.user?.nickname || '未知使用者'}</span>
+              <button className={styles.joinBtn} onClick={handleJoinEvent}>報名參加</button>
             </div>
             </div>
           ))

@@ -1,7 +1,59 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Film, ThumbsUp, MessageSquare } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../api/axios';
 import styles from './Profile.module.css';
 
 function Profile() {
+  const { isLoggedIn, logout } = useAuth();
+  const navigate = useNavigate();
+  
+  const [userData, setUserData] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/auth');
+      return;
+    }
+
+    const fetchProfileData = async () => {
+      try {
+        const [userRes, reviewsRes] = await Promise.all([
+          api.get('users/me/'),
+          api.get('reviews/me/')
+        ]);
+        setUserData(userRes.data);
+        setReviews(reviewsRes.data);
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+        if (err.response?.status === 401) {
+          logout();
+          navigate('/auth');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [isLoggedIn, navigate, logout]);
+
+  if (isLoading) {
+    return (
+      <div className={`container ${styles.pageWrapper}`} style={{ textAlign: 'center', paddingTop: '100px' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
+      </div>
+    );
+  }
+
+  // Calculate stats
+  const totalReviews = reviews.length;
+  // If score is included in the backend, sum it up. Otherwise fallback to 0.
+  const totalVotes = reviews.reduce((sum, review) => sum + (review.score || 0), 0);
+
   return (
     <div className={`container ${styles.pageWrapper}`}>
       {/* Profile Header Card */}
@@ -12,29 +64,25 @@ function Profile() {
           </div>
         </div>
         <div className={styles.userInfo}>
-          <h1 className={styles.username}>NCU Movie Fan</h1>
-          <p className={styles.email}>student@g.ncu.edu.tw</p>
+          <h1 className={styles.username}>{userData?.nickname || 'NCU User'}</h1>
+          <p className={styles.email}>真實姓名: {userData?.real_name} | 科系: {userData?.department}</p>
+          <p className={styles.email} style={{ fontSize: '0.85rem', marginTop: '4px', opacity: 0.7 }}>
+            校園 ID: {userData?.campus_id}
+          </p>
           
           <div className={styles.statsRow}>
             <div className={styles.statBox}>
               <Film size={20} className={styles.statIcon} />
               <div className={styles.statData}>
-                <span className={styles.statValue}>12</span>
+                <span className={styles.statValue}>{totalReviews}</span>
                 <span className={styles.statLabel}>已發布心得</span>
               </div>
             </div>
             <div className={styles.statBox}>
               <ThumbsUp size={20} className={styles.statIcon} />
               <div className={styles.statData}>
-                <span className={styles.statValue}>340</span>
-                <span className={styles.statLabel}>獲得推數</span>
-              </div>
-            </div>
-            <div className={styles.statBox}>
-              <MessageSquare size={20} className={styles.statIcon} />
-              <div className={styles.statData}>
-                <span className={styles.statValue}>45</span>
-                <span className={styles.statLabel}>獲得留言</span>
+                <span className={styles.statValue}>{totalVotes}</span>
+                <span className={styles.statLabel}>獲得推薦</span>
               </div>
             </div>
           </div>
@@ -44,17 +92,35 @@ function Profile() {
       {/* Reviews Section */}
       <div className={styles.reviewsSection}>
         <h2 className={styles.sectionTitle}>我的觀影心得</h2>
-        <div className={styles.reviewList}>
-          {/* Placeholder for Review Card */}
-          <div className={styles.reviewCard}>
-            <h3>全面啟動</h3>
-            <p>劇情非常精彩，諾蘭導演的敘事手法依舊讓人驚艷...</p>
-            <div className={styles.tags}>
-              <span className={styles.tag}>科幻</span>
-              <span className={styles.tag}>燒腦</span>
-            </div>
+        
+        {reviews.length === 0 ? (
+          <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+            <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>這裡還空空如也</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
+              趕快回到首頁，建立您的第一座影像殿堂吧！
+            </p>
+            <button className="btn-primary" onClick={() => navigate('/')}>
+              去首頁發布心得
+            </button>
           </div>
-        </div>
+        ) : (
+          <div className={styles.reviewList}>
+            {reviews.map(review => (
+              <div key={review.id} className={styles.reviewCard}>
+                <h3>{review.movie?.title || '未命名電影'}</h3>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '12px' }}>
+                  {new Date(review.created_at).toLocaleDateString('zh-TW')}
+                </span>
+                <p>{review.content}</p>
+                <div className={styles.tags}>
+                  {review.tags?.map(tag => (
+                    <span key={tag.id} className={styles.tag}>{tag.name}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

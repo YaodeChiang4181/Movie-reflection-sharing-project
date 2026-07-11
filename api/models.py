@@ -2,17 +2,34 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
-    # Using Django's AbstractUser which already has: username, password, email, first_name, last_name, date_joined
+    # 使用 campus_id 取代原本的 id 作為 Primary Key
+    campus_id = models.CharField(primary_key=True, max_length=20, verbose_name="校園ID")
+    
+    # 取消原本 username 的唯一限制與必填，改用 campus_id 登入
+    username = models.CharField(max_length=150, unique=False, null=True, blank=True)
+    
+    USERNAME_FIELD = 'campus_id'
+    REQUIRED_FIELDS = []
     
     def __str__(self):
-        return self.username
+        return self.campus_id
+
+class UserIdentity(models.Model):
+    """機密身分表：嚴格控管存取，保護真實姓名與科系"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='identity')
+    real_name = models.CharField(max_length=50, verbose_name="使用者姓名")
+    department = models.CharField(max_length=100, verbose_name="科系")
+    
+    def __str__(self):
+        return f"{self.user.campus_id} - {self.real_name}"
 
 class UserProfile(models.Model):
+    """公開主頁表：只存放公開的暱稱與設定"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    nickname = models.CharField(max_length=50, blank=True)
+    nickname = models.CharField(max_length=50, unique=True, verbose_name="登入者代碼")
     
     def __str__(self):
-        return self.nickname or self.user.username
+        return self.nickname
 
 class Movie(models.Model):
     title = models.CharField(max_length=200)

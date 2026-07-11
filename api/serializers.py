@@ -18,33 +18,69 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'nickname', 'date_joined')
+        fields = ('campus_id', 'nickname', 'date_joined')
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    email = serializers.EmailField(required=True)
-    nickname = serializers.CharField(write_only=True, required=False, allow_blank=True)
+class UserMeSerializer(serializers.ModelSerializer):
+    nickname = serializers.CharField(source='profile.nickname', read_only=True)
+    real_name = serializers.CharField(source='identity.real_name', read_only=True)
+    department = serializers.CharField(source='identity.department', read_only=True)
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'email', 'nickname')
+        fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined')
 
-    def validate_email(self, value):
-        if not value.endswith('@g.ncu.edu.tw'):
-            raise serializers.ValidationError("必須使用中央大學信箱 (@g.ncu.edu.tw) 進行註冊")
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("此信箱已被註冊")
+from .models import UserIdentity
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    
+    # 機密身分表欄位
+    real_name = serializers.CharField(write_only=True, required=True)
+    department = serializers.CharField(write_only=True, required=True)
+    
+    # 公開主頁表欄位
+    nickname = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        # 我們不再要求 email，但需要 campus_id 與 password
+        fields = ('campus_id', 'password', 'real_name', 'department', 'nickname')
+
+    def validate_campus_id(self, value):
+        if User.objects.filter(campus_id=value).exists():
+            raise serializers.ValidationError("此校園ID已被註冊")
         return value
 
     def create(self, validated_data):
-        nickname = validated_data.pop('nickname', '')
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            password=validated_data['password'],
-            email=validated_data['email']
-        )
-        UserProfile.objects.create(user=user, nickname=nickname)
+        real_name = validated_data.pop('real_name')
+        department = validated_data.pop('department')
+        nickname = validated_data.pop('nickname')
+        
+        with transaction.atomic():
+            user = User.objects.create_user(
+                campus_id=validated_data['campus_id'],
+                password=validated_data['password']
+            )
+            # 建立機密身分表
+            UserIdentity.objects.create(user=user, real_name=real_name, department=department)
+            # 建立公開主頁表
+            UserProfile.objects.create(user=user, nickname=nickname)
+            
         return user
+
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        # Add custom data to the response
+        data['user'] = {
+            'campus_id': self.user.campus_id,
+            'nickname': getattr(self.user, 'profile', None) and self.user.profile.nickname
+        }
+        return data
 
 
 from django.utils import timezone
@@ -69,10 +105,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     tag_names = serializers.ListField(
         child=serializers.CharField(max_length=50), write_only=True, required=False
     )
+    score = serializers.IntegerField(read_only=True, required=False)
     
     class Meta:
         model = Review
-        fields = ('id', 'user', 'movie', 'movie_title', 'rating', 'content', 'is_spoiler', 'tags', 'tag_names', 'created_at')
+        fields = ('id', 'user', 'movie', 'movie_title', 'rating', 'content', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'score')
 
     def create(self, validated_data):
         tag_names = validated_data.pop('tag_names', [])
