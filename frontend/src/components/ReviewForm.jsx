@@ -60,7 +60,8 @@ function ReviewForm({ onClose, onReviewAdded }) {
       if (err.response?.status === 401) {
         setError('請先登入後再發布心得！');
       } else {
-        setError('發布失敗，請稍後再試。');
+        const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+        setError(`發布失敗，請稍後再試。錯誤訊息: ${errorMsg}`);
       }
     } finally {
       setIsSubmitting(false);

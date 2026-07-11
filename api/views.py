@@ -35,6 +35,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        # 清除快取，讓首頁立刻更新
+        cache.delete('trending_reviews')
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def vote(self, request, pk=None):
@@ -58,10 +60,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
                     existing_vote.vote_type = vote_type
                     existing_vote.save()
                     return Response({"message": "Vote updated."}, status=status.HTTP_200_OK)
-            else:
                 # New vote
                 Vote.objects.create(user=user, review=review, vote_type=vote_type)
-                return Response({"message": "Vote registered."}, status=status.HTTP_201_CREATED)
+                
+            # 清除排行榜快取，因為分數變動了
+            cache.delete('trending_reviews')
+            return Response({"message": "Vote processed."}, status=status.HTTP_200_OK)
                 
         except IntegrityError:
             return Response({"error": "Concurrent vote detection failed."}, status=status.HTTP_400_BAD_REQUEST)
