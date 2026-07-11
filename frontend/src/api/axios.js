@@ -1,8 +1,13 @@
 import axios from 'axios';
 
 // 建立 Axios 實體，自動讀取 Vite 環境變數
+let baseURL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/';
+if (!baseURL.endsWith('/')) {
+  baseURL += '/';
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/',
+  baseURL: baseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
