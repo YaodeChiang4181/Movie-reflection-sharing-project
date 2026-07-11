@@ -57,10 +57,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         nickname = validated_data.pop('nickname')
         
         with transaction.atomic():
-            user = User.objects.create_user(
+            user = User(
                 campus_id=validated_data['campus_id'],
-                password=validated_data['password']
+                username=validated_data['campus_id'] # 保留 username 欄位的值以防其他 Django 內部機制需要
             )
+            user.set_password(validated_data['password'])
+            user.save()
+            
             # 建立機密身分表
             UserIdentity.objects.create(user=user, real_name=real_name, department=department)
             # 建立公開主頁表
