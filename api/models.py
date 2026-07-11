@@ -1,9 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 
 class User(AbstractUser):
-    # 使用 campus_id 取代原本的 id 作為 Primary Key
-    campus_id = models.CharField(primary_key=True, max_length=20, verbose_name="校園ID")
+    # 使用 campus_id 取代原本的 id 作為 Primary Key，強制 9 碼數字
+    campus_id = models.CharField(
+        primary_key=True, 
+        max_length=9, 
+        validators=[RegexValidator(r'^\d{9}$', message="學號必須為 9 位數字")],
+        verbose_name="校園ID"
+    )
     
     # 取消原本 username 的唯一限制與必填，改用 campus_id 登入
     username = models.CharField(max_length=150, unique=False, null=True, blank=True)
@@ -19,6 +25,7 @@ class UserIdentity(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='identity')
     real_name = models.CharField(max_length=50, verbose_name="使用者姓名")
     department = models.CharField(max_length=100, verbose_name="科系")
+    school_email = models.EmailField(unique=True, verbose_name="學校信箱")
     
     def __str__(self):
         return f"{self.user.campus_id} - {self.real_name}"

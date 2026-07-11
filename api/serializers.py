@@ -34,26 +34,41 @@ from .models import UserIdentity
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     
-    # 機密身分表欄位
-    real_name = serializers.CharField(write_only=True, required=True)
-    department = serializers.CharField(write_only=True, required=True)
+    real_name = serializers.CharField(max_length=50, write_only=True)
+    department = serializers.CharField(max_length=100, write_only=True)
+    school_email = serializers.EmailField(write_only=True)
+    nickname = serializers.CharField(max_length=50, write_only=True)
     
-    # 公開主頁表欄位
-    nickname = serializers.CharField(write_only=True, required=True)
-
     class Meta:
         model = User
-        # 我們不再要求 email，但需要 campus_id 與 password
-        fields = ('campus_id', 'password', 'real_name', 'department', 'nickname')
+        fields = ('campus_id', 'password', 'real_name', 'department', 'school_email', 'nickname')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
     def validate_campus_id(self, value):
+        import re
+        if not re.match(r'^\d{9}$', value):
+            raise serializers.ValidationError("學號必須剛好是 9 位數字")
         if User.objects.filter(campus_id=value).exists():
             raise serializers.ValidationError("此校園ID已被註冊")
         return value
 
+    def validate_school_email(self, value):
+        if not value.endswith('@cc.ncu.edu.tw'):
+            raise serializers.ValidationError("必須使用中央大學信箱 (@cc.ncu.edu.tw)")
+        return value
+
+    def validate(self, attrs):
+        # 檢查暱稱是否重複
+        if UserProfile.objects.filter(nickname=attrs['nickname']).exists():
+            raise serializers.ValidationError({"nickname": "此代碼/暱稱已被使用"})
+        return attrs
+
     def create(self, validated_data):
         real_name = validated_data.pop('real_name')
         department = validated_data.pop('department')
+        school_email = validated_data.pop('school_email')
         nickname = validated_data.pop('nickname')
         
         with transaction.atomic():
@@ -65,7 +80,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.save()
             
             # 建立機密身分表
-            UserIdentity.objects.create(user=user, real_name=real_name, department=department)
+            UserIdentity.objects.create(user=user, real_name=real_name, department=department, school_email=school_email)
             # 建立公開主頁表
             UserProfile.objects.create(user=user, nickname=nickname)
             
@@ -81,7 +96,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Add custom data to the response
         data['user'] = {
             'campus_id': self.user.campus_id,
-            'nickname': getattr(self.user, 'profile', None) and self.user.profile.nickname
+            'nickname': getattr(self.user, 'profile', None) and self.user.profile.nickname,
+            'is_staff': self.user.is_staff
         }
         return data
 

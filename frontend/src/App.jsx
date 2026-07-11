@@ -5,6 +5,7 @@ import MovieDetail from './pages/MovieDetail';
 import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 import Events from './pages/Events';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/movies/:id" element={<MovieDetail />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </div>
     </BrowserRouter>

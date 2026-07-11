@@ -12,6 +12,7 @@ function Auth() {
     password: '',
     real_name: '',
     department: '',
+    school_email: '',
     nickname: ''
   });
   const [error, setError] = useState('');
@@ -26,8 +27,8 @@ function Auth() {
     e.preventDefault();
     setError('');
 
-    if (role === 'admin') {
-      setError('管理者功能尚在開發中，請先使用一般使用者登入！');
+    if (role === 'admin' && !isLogin) {
+      setError('管理者無法從前端註冊，請聯絡系統維護人員。');
       return;
     }
 
@@ -90,13 +91,16 @@ function Auth() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
-            <label>校園 ID (Campus ID)</label>
+            <label>校園 ID / 學號 (Campus ID)</label>
             <input 
               type="text" 
               name="campus_id" 
               value={formData.campus_id} 
               onChange={handleChange} 
               required 
+              pattern="[0-9]{9}"
+              title="請輸入剛好 9 位數字的學號"
+              placeholder="例如: 113409016"
             />
           </div>
 
@@ -120,6 +124,19 @@ function Auth() {
                   value={formData.department} 
                   onChange={handleChange} 
                   required={!isLogin} 
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label>學校信箱 (School Email)</label>
+                <input 
+                  type="email" 
+                  name="school_email" 
+                  value={formData.school_email} 
+                  onChange={handleChange} 
+                  required={!isLogin} 
+                  pattern=".*@cc\.ncu\.edu\.tw$"
+                  title="必須使用中央大學信箱 (結尾為 @cc.ncu.edu.tw)"
+                  placeholder="student@cc.ncu.edu.tw"
                 />
               </div>
               <div className={styles.inputGroup}>
@@ -151,12 +168,14 @@ function Auth() {
           </button>
         </form>
 
-        <p className={styles.toggleText}>
-          {isLogin ? '還沒有帳號嗎？' : '已經有帳號了？'}
-          <button type="button" onClick={() => setIsLogin(!isLogin)} className={styles.toggleBtn}>
-            {isLogin ? '立即註冊' : '馬上登入'}
-          </button>
-        </p>
+        {role === 'user' && (
+          <p className={styles.toggleText}>
+            {isLogin ? '還沒有帳號嗎？' : '已經有帳號了？'}
+            <button type="button" onClick={() => setIsLogin(!isLogin)} className={styles.toggleBtn}>
+              {isLogin ? '立即註冊' : '馬上登入'}
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );
