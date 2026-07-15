@@ -39,7 +39,7 @@ api.interceptors.response.use(
       // 清除失效的 Token
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      
+
       // 若有設定 routing，這邊可以強制導回登入頁
       // window.location.href = '/login';
     }

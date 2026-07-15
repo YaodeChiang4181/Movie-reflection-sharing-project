@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Send } from 'lucide-react';
+import { X, Send, Star } from 'lucide-react';
 import api from '../api/axios';
 import styles from './ReviewForm.module.css';
 
@@ -9,6 +9,8 @@ function ReviewForm({ onClose, onReviewAdded }) {
   const [tagsInput, setTagsInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
 
 
 
@@ -46,7 +48,7 @@ function ReviewForm({ onClose, onReviewAdded }) {
       const response = await api.post('reviews/', {
         movie_title: movieId.trim(),
         content: content,
-        rating: 5, // 預設滿分，因使用者要求移除評分表單
+        rating: rating,
         tag_names: parsedTags,
         is_spoiler: false
       });
@@ -96,6 +98,24 @@ function ReviewForm({ onClose, onReviewAdded }) {
               onChange={(e) => setMovieId(e.target.value)}
               disabled={isSubmitting}
             />
+          </div>
+
+          <div className={styles.formGroupInline}>
+            <label>推薦指數：</label>
+            <div style={{ display: 'flex', gap: '8px', cursor: 'pointer', padding: '10px 0' }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  size={24}
+                  fill={(hoverRating || rating) >= star ? 'var(--accent-primary)' : 'none'}
+                  color={(hoverRating || rating) >= star ? 'var(--accent-primary)' : 'var(--text-muted)'}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={() => setRating(star)}
+                  style={{ transition: 'all 0.2s ease', outline: 'none' }}
+                />
+              ))}
+            </div>
           </div>
 
           <div className={styles.formGroupInline}>

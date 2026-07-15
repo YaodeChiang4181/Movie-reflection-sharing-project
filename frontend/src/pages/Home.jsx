@@ -9,8 +9,16 @@ function Home() {
   const [isComposing, setIsComposing] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedReviews, setExpandedReviews] = useState({});
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+
+  const toggleReview = (id) => {
+    setExpandedReviews(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   useEffect(() => {
     fetchReviews();
@@ -88,7 +96,12 @@ function Home() {
       ) : (
         <div style={{ display: 'grid', gap: '24px' }}>
           {reviews.map(review => (
-            <div key={review.id} className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)' }}>
+            <div 
+              key={review.id} 
+              className="glass" 
+              style={{ padding: '24px', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all 0.3s ease' }}
+              onClick={() => toggleReview(review.id)}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <h3 style={{ color: 'var(--accent-primary)', fontSize: '1.4rem' }}>
                   {review.movie?.title}
@@ -97,7 +110,19 @@ function Home() {
                   {new Date(review.created_at).toLocaleDateString('zh-TW')}
                 </span>
               </div>
-              <p style={{ color: 'var(--text-primary)', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '20px' }}>
+              <p style={{ 
+                color: 'var(--text-primary)', 
+                fontSize: '1.1rem', 
+                lineHeight: '1.6', 
+                marginBottom: '20px',
+                ...(expandedReviews[review.id] ? {} : {
+                  display: '-webkit-box',
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                })
+              }}>
                 {review.content}
               </p>
               
@@ -126,7 +151,7 @@ function Home() {
                   <UserIcon nickname={review.user?.nickname} /> {review.user?.nickname || '未知使用者'}
                 </span>
                 <button 
-                  onClick={() => handleVote(review.id)}
+                  onClick={(e) => { e.stopPropagation(); handleVote(review.id); }}
                   style={{ 
                     display: 'flex', alignItems: 'center', gap: '6px', 
                     background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', 
