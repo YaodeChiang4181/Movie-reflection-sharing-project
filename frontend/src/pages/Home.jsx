@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThumbsUp, MessageCircle } from 'lucide-react';
 import ReviewForm from '../components/ReviewForm';
+import ReviewModal from '../components/ReviewModal';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,15 +10,16 @@ function Home() {
   const [isComposing, setIsComposing] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [expandedReviews, setExpandedReviews] = useState({});
+  const [selectedReview, setSelectedReview] = useState(null);
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
-  const toggleReview = (id) => {
-    setExpandedReviews(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+  const handleReviewUpdated = () => {
+    fetchReviews();
+  };
+
+  const handleReviewDeleted = (id) => {
+    setReviews(reviews.filter(r => r.id !== id));
   };
 
   useEffect(() => {
@@ -81,6 +83,15 @@ function Home() {
         />
       )}
 
+      {selectedReview && (
+        <ReviewModal 
+          review={selectedReview} 
+          onClose={() => setSelectedReview(null)} 
+          onReviewUpdated={handleReviewUpdated}
+          onReviewDeleted={handleReviewDeleted}
+        />
+      )}
+
       {isLoading ? (
         <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
       ) : reviews.length === 0 ? (
@@ -100,7 +111,7 @@ function Home() {
               key={review.id} 
               className="glass" 
               style={{ padding: '24px', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all 0.3s ease' }}
-              onClick={() => toggleReview(review.id)}
+              onClick={() => setSelectedReview(review)}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <h3 style={{ color: 'var(--accent-primary)', fontSize: '1.4rem' }}>
@@ -115,13 +126,11 @@ function Home() {
                 fontSize: '1.1rem', 
                 lineHeight: '1.6', 
                 marginBottom: '20px',
-                ...(expandedReviews[review.id] ? {} : {
-                  display: '-webkit-box',
-                  WebkitLineClamp: 1,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                })
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}>
                 {review.content}
               </p>
@@ -150,16 +159,25 @@ function Home() {
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <UserIcon nickname={review.user?.nickname} /> {review.user?.nickname || '未知使用者'}
                 </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '16px' }}>
+                  <MessageCircle size={16} /> {review.comments_count || 0}
+                </span>
+                
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleVote(review.id); }}
                   style={{ 
                     display: 'flex', alignItems: 'center', gap: '6px', 
-                    background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', 
-                    color: 'var(--text-primary)', padding: '4px 12px', borderRadius: '20px',
+                    background: review.user_voted ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                    border: '1px solid rgba(255,255,255,0.1)', 
+                    color: review.user_voted ? 'var(--accent-primary)' : 'var(--text-primary)',
+                    padding: '4px 12px', borderRadius: '20px',
                     cursor: 'pointer', transition: 'all 0.2s ease', marginLeft: 'auto'
                   }}
                   onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                  onMouseOut={(e) => { 
+                    e.currentTarget.style.background = review.user_voted ? 'rgba(139, 92, 246, 0.2)' : 'transparent'; 
+                    e.currentTarget.style.color = review.user_voted ? 'var(--accent-primary)' : 'var(--text-primary)'; 
+                  }}
                 >
                   <ThumbsUp size={16} /> 推薦 ({review.score || 0})
                 </button>

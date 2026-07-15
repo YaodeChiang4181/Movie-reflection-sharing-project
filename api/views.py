@@ -47,8 +47,8 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from datetime import timedelta
 from django.core.cache import cache
-from .models import Movie, Tag, Review, Vote, Event
-from .serializers import MovieSerializer, TagSerializer, ReviewSerializer, VoteSerializer, EventSerializer
+from .models import Movie, Tag, Review, Vote, Event, Comment
+from .serializers import MovieSerializer, TagSerializer, ReviewSerializer, VoteSerializer, EventSerializer, CommentSerializer
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.all()
@@ -64,6 +64,22 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
         # 清除快取，讓首頁立刻更新
         cache.delete('trending_reviews')
+
+    def destroy(self, request, *args, **kwargs):
+        review = self.get_object()
+        if review.user != request.user and not request.user.is_staff:
+            return Response({"error": "You don't have permission to delete this review."}, status=status.HTTP_403_FORBIDDEN)
+        response = super().destroy(request, *args, **kwargs)
+        cache.delete('trending_reviews')
+        return response
+
+    def partial_update(self, request, *args, **kwargs):
+        review = self.get_object()
+        if review.user != request.user and not request.user.is_staff:
+            return Response({"error": "You don't have permission to edit this review."}, status=status.HTTP_403_FORBIDDEN)
+        response = super().partial_update(request, *args, **kwargs)
+        cache.delete('trending_reviews')
+        return response
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
@@ -82,27 +98,42 @@ class ReviewViewSet(viewsets.ModelViewSet):
             return Response({"error": "vote_type must be 1 (Upvote) or -1 (Downvote)."}, status=status.HTTP_400_BAD_REQUEST)
             
         try:
-            # Check if user already voted
             existing_vote = Vote.objects.filter(user=user, review=review).first()
+            msg = ""
             if existing_vote:
                 if existing_vote.vote_type == vote_type:
-                    # Same vote: undo the vote
                     existing_vote.delete()
-                    return Response({"message": "Vote removed."}, status=status.HTTP_200_OK)
+                    msg = "Vote removed."
                 else:
-                    # Different vote: change vote
                     existing_vote.vote_type = vote_type
                     existing_vote.save()
-                    return Response({"message": "Vote updated."}, status=status.HTTP_200_OK)
-                # New vote
+                    msg = "Vote updated."
+            else:
                 Vote.objects.create(user=user, review=review, vote_type=vote_type)
+                msg = "Vote added."
                 
-            # 清除排行榜快取，因為分數變動了
             cache.delete('trending_reviews')
-            return Response({"message": "Vote processed."}, status=status.HTTP_200_OK)
+            return Response({"message": msg}, status=status.HTTP_200_OK)
                 
         except IntegrityError:
             return Response({"error": "Concurrent vote detection failed."}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticatedOrReadOnly])
+    def comments(self, request, pk=None):
+        review = self.get_object()
+        if request.method == 'GET':
+            comments = review.comments.all().order_by('-created_at')
+            serializer = CommentSerializer(comments, many=True)
+            return Response(serializer.data)
+        elif request.method == 'POST':
+            if not request.user.is_authenticated:
+                return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            content = request.data.get('content')
+            if not content:
+                return Response({"error": "Content is required"}, status=status.HTTP_400_BAD_REQUEST)
+            comment = Comment.objects.create(review=review, user=request.user, content=content)
+            serializer = CommentSerializer(comment)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def trending(self, request):

@@ -3,13 +3,13 @@ import { X, Send, Star } from 'lucide-react';
 import api from '../api/axios';
 import styles from './ReviewForm.module.css';
 
-function ReviewForm({ onClose, onReviewAdded }) {
-  const [content, setContent] = useState('');
-  const [movieId, setMovieId] = useState(''); // We'll use this state for movie_title now
-  const [tagsInput, setTagsInput] = useState('');
+function ReviewForm({ onClose, onReviewAdded, initialData = null }) {
+  const [content, setContent] = useState(initialData?.content || '');
+  const [movieId, setMovieId] = useState(initialData?.movie?.title || '');
+  const [tagsInput, setTagsInput] = useState(initialData?.tags?.map(t => '#' + t.name).join('; ') || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(initialData?.rating || 5);
   const [hoverRating, setHoverRating] = useState(0);
 
 
@@ -45,16 +45,23 @@ function ReviewForm({ onClose, onReviewAdded }) {
     setError('');
 
     try {
-      const response = await api.post('reviews/', {
+      const payload = {
         movie_title: movieId.trim(),
         content: content,
         rating: rating,
         tag_names: parsedTags,
         is_spoiler: false
-      });
+      };
+      
+      let response;
+      if (initialData) {
+        response = await api.patch(`reviews/${initialData.id}/`, payload);
+      } else {
+        response = await api.post('reviews/', payload);
+      }
       
       if (onReviewAdded) {
-        onReviewAdded(response.data);
+        onReviewAdded(response.data, !!initialData);
       }
       onClose();
     } catch (err) {
@@ -79,7 +86,7 @@ function ReviewForm({ onClose, onReviewAdded }) {
 
         <form onSubmit={handleSubmit} className={styles.formBody}>
           <div className={styles.formGroupTop}>
-            <label className={styles.mainLabel}>撰寫電影心得：</label>
+            <label className={styles.mainLabel}>{initialData ? '編輯電影心得：' : '撰寫電影心得：'}</label>
             <textarea
               className={styles.largeTextarea}
               placeholder="分享你對這部電影最真實的感受..."
@@ -135,9 +142,9 @@ function ReviewForm({ onClose, onReviewAdded }) {
             className={`btn-primary ${styles.submitBtn}`}
             disabled={isSubmitting}
           >
-            {isSubmitting ? '發布中...' : (
+            {isSubmitting ? (initialData ? '更新中...' : '發布中...') : (
               <>
-                <Send size={18} /> 發布心得
+                <Send size={18} /> {initialData ? '儲存變更' : '發布心得'}
               </>
             )}
           </button>
