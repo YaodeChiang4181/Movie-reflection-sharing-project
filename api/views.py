@@ -42,7 +42,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from django.db import IntegrityError
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Count
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from datetime import timedelta
@@ -56,9 +56,11 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all().order_by('-created_at')
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
+    
+    def get_queryset(self):
+        return Review.objects.annotate(score=Count('votes')).order_by('-created_at')
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -84,7 +86,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
         # 嚴格過濾出該名使用者的發文
-        user_reviews = Review.objects.filter(user=request.user).order_by('-created_at')
+        user_reviews = self.get_queryset().filter(user=request.user)
         serializer = self.get_serializer(user_reviews, many=True)
         return Response(serializer.data)
 
@@ -132,6 +134,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             if not content:
                 return Response({"error": "Content is required"}, status=status.HTTP_400_BAD_REQUEST)
             comment = Comment.objects.create(review=review, user=request.user, content=content)
+            cache.delete('trending_reviews')
             serializer = CommentSerializer(comment)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -143,13 +146,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if cached_data:
             return Response(cached_data)
 
-        # 撈取近 7 日內的文章，並一次性計算熱度積分 (避免 N+1 Query)
-        # 公式: (推數 - 噓數) * 權重。因為 vote_type 剛好是 1 或 -1，可以直接加總
+        # 撈取近 7 日內的文章，並依據推薦人數 (score) 排行
         seven_days_ago = timezone.now() - timedelta(days=7)
-        trending_reviews = Review.objects.filter(
+        trending_reviews = self.get_queryset().filter(
             created_at__gte=seven_days_ago
-        ).annotate(
-            score=Coalesce(Sum('votes__vote_type'), 0) * 10  # 假設權重為 10
         ).order_by('-score', '-created_at')[:10]
         
         serializer = self.get_serializer(trending_reviews, many=True)

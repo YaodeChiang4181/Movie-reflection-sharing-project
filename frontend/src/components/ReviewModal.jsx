@@ -35,7 +35,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
       setCurrentReview(prev => ({
         ...prev,
         user_voted: !prev.user_voted,
-        score: prev.score + (prev.user_voted ? -10 : 10) 
+        score: prev.score + (prev.user_voted ? -1 : 1) 
       }));
       if (onReviewUpdated) onReviewUpdated();
     } catch (err) {
