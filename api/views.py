@@ -42,7 +42,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from django.db import IntegrityError
-from django.db.models import Sum, F, Count
+from django.db.models import Sum, F, Count, Q, Case, When, Value, IntegerField
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from datetime import timedelta
@@ -164,6 +164,25 @@ class ReviewViewSet(viewsets.ModelViewSet):
             cache.delete('trending_reviews')
             serializer = CommentSerializer(comment)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def search(self, request):
+        query = request.query_params.get('q', '')
+        if not query:
+            return Response([])
+
+        results = self.get_queryset().filter(
+            Q(movie__title__icontains=query) | Q(content__icontains=query)
+        ).annotate(
+            match_priority=Case(
+                When(movie__title__icontains=query, then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            )
+        ).order_by('match_priority', 'created_at')
+
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def trending(self, request):

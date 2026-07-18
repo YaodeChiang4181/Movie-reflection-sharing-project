@@ -19,7 +19,7 @@ function Navbar() {
             <Home size={18} />
             <span>首頁</span>
           </Link>
-          <Link to="/movies/1" className={styles.navLink}>
+          <Link to="/search" className={styles.navLink}>
             <Search size={18} />
             <span>電影心得搜尋</span>
           </Link>
