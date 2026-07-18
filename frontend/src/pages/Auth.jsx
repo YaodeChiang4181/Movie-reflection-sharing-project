@@ -100,7 +100,7 @@ function Auth() {
               required 
               pattern="[0-9]{9}"
               title="請輸入剛好 9 位數字的學號"
-              placeholder="例如: 113409016"
+              placeholder="例如: xxxxxxxxx"
             />
           </div>
 
