@@ -178,7 +178,7 @@ class EventSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Event
-        fields = ('id', 'user', 'title', 'location', 'event_time', 'contact_info', 'created_at')
+        fields = ('id', 'user', 'title', 'location', 'event_time', 'organizer_nickname', 'description', 'created_at')
         
     def validate_event_time(self, value):
         if value < timezone.now():
@@ -187,10 +187,10 @@ class EventSerializer(serializers.ModelSerializer):
         
     def validate_location(self, value):
         if not value.strip():
-            raise serializers.ValidationError("影城地點不能為空白。")
+            raise serializers.ValidationError("地點不能為空白。")
         return value
         
-    def validate_contact_info(self, value):
+    def validate_organizer_nickname(self, value):
         if not value.strip():
-            raise serializers.ValidationError("聯絡渠道不能為空白。")
+            raise serializers.ValidationError("主辦人代稱不能為空白。")
         return value

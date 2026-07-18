@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Film, ThumbsUp, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
+import ReviewModal from '../components/ReviewModal';
 import styles from './Profile.module.css';
 
 function Profile() {
@@ -11,7 +12,9 @@ function Profile() {
   
   const [userData, setUserData] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [commentedReviews, setCommentedReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedReview, setSelectedReview] = useState(null);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -21,12 +24,14 @@ function Profile() {
 
     const fetchProfileData = async () => {
       try {
-        const [userRes, reviewsRes] = await Promise.all([
+        const [userRes, reviewsRes, commentedRes] = await Promise.all([
           api.get('users/me/'),
-          api.get('reviews/me/')
+          api.get('reviews/me/'),
+          api.get('reviews/commented_by_me/')
         ]);
         setUserData(userRes.data);
         setReviews(reviewsRes.data);
+        setCommentedReviews(commentedRes.data);
       } catch (err) {
         console.error("Failed to fetch profile", err);
         if (err.response?.status === 401) {
@@ -40,6 +45,17 @@ function Profile() {
 
     fetchProfileData();
   }, [isLoggedIn, navigate, logout]);
+
+  const handleReviewUpdated = () => {
+    // 重新載入以獲取最新資料
+    api.get('reviews/me/').then(res => setReviews(res.data));
+    api.get('reviews/commented_by_me/').then(res => setCommentedReviews(res.data));
+  };
+
+  const handleReviewDeleted = (id) => {
+    setReviews(reviews.filter(r => r.id !== id));
+    setCommentedReviews(commentedReviews.filter(r => r.id !== id));
+  };
 
   if (isLoading) {
     return (
@@ -106,7 +122,14 @@ function Profile() {
         ) : (
           <div className={styles.reviewList}>
             {reviews.map(review => (
-              <div key={review.id} className={styles.reviewCard}>
+              <div 
+                key={review.id} 
+                className={styles.reviewCard}
+                onClick={() => setSelectedReview(review)}
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
                 <h3>{review.movie?.title || '未命名電影'}</h3>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '12px' }}>
                   {new Date(review.created_at).toLocaleDateString('zh-TW')}
@@ -122,6 +145,50 @@ function Profile() {
           </div>
         )}
       </div>
+
+      {/* Commented Reviews Section */}
+      <div className={styles.reviewsSection} style={{ marginTop: '40px' }}>
+        <h2 className={styles.sectionTitle}>我留言過的心得</h2>
+        
+        {commentedReviews.length === 0 ? (
+          <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-secondary)' }}>您還沒有在任何心得下方留言過。</p>
+          </div>
+        ) : (
+          <div className={styles.reviewList}>
+            {commentedReviews.map(review => (
+              <div 
+                key={review.id} 
+                className={styles.reviewCard} 
+                onClick={() => setSelectedReview(review)}
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <h3>{review.movie?.title || '未命名電影'}</h3>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '12px' }}>
+                  {new Date(review.created_at).toLocaleDateString('zh-TW')} • 作者: {review.user?.nickname}
+                </span>
+                <p style={{
+                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                }}>
+                  {review.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Review Modal for both sections */}
+      {selectedReview && (
+        <ReviewModal 
+          review={selectedReview} 
+          onClose={() => setSelectedReview(null)} 
+          onReviewUpdated={handleReviewUpdated}
+          onReviewDeleted={handleReviewDeleted}
+        />
+      )}
     </div>
   );
 }

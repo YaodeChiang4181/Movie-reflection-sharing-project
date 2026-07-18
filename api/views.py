@@ -117,6 +117,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(user_reviews, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def commented_by_me(self, request):
+        reviews = self.get_queryset().filter(comments__user=request.user).distinct()
+        serializer = self.get_serializer(reviews, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def vote(self, request, pk=None):
         review = self.get_object()

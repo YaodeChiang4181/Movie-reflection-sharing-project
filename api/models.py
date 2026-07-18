@@ -90,7 +90,8 @@ class Event(models.Model):
     title = models.CharField(max_length=200)
     location = models.CharField(max_length=200)
     event_time = models.DateTimeField()
-    contact_info = models.CharField(max_length=200)
+    organizer_nickname = models.CharField(max_length=200, default='')
+    description = models.TextField(default="")
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
