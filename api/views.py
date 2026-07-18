@@ -60,7 +60,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     
     def get_queryset(self):
-        return Review.objects.annotate(score=Count('votes')).order_by('-created_at')
+        return Review.objects.filter(is_deleted=False).annotate(score=Count('votes')).order_by('-created_at')
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -71,9 +71,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review = self.get_object()
         if review.user != request.user and not request.user.is_staff:
             return Response({"error": "You don't have permission to delete this review."}, status=status.HTTP_403_FORBIDDEN)
-        response = super().destroy(request, *args, **kwargs)
+        
+        review.is_deleted = True
+        review.save()
         cache.delete('trending_reviews')
-        return response
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def partial_update(self, request, *args, **kwargs):
         review = self.get_object()
@@ -82,6 +84,31 @@ class ReviewViewSet(viewsets.ModelViewSet):
         response = super().partial_update(request, *args, **kwargs)
         cache.delete('trending_reviews')
         return response
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
+    def deleted_reviews(self, request):
+        deleted = Review.objects.filter(is_deleted=True).annotate(score=Count('votes')).order_by('-created_at')
+        serializer = self.get_serializer(deleted, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAdminUser])
+    def force_delete(self, request, pk=None):
+        review = Review.objects.filter(pk=pk).first()
+        if not review:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        review.delete()
+        cache.delete('trending_reviews')
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def restore(self, request, pk=None):
+        review = Review.objects.filter(pk=pk).first()
+        if not review:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        review.is_deleted = False
+        review.save()
+        cache.delete('trending_reviews')
+        return Response({"message": "Review restored."}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):

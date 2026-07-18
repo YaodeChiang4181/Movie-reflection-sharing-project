@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 
 class User(AbstractUser):
     # 使用 campus_id 取代原本的 id 作為 Primary Key，強制 9 碼數字
@@ -56,11 +56,15 @@ class Tag(models.Model):
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='reviews')
-    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
+    rating = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
     content = models.TextField()
     is_spoiler = models.BooleanField(default=False)
     tags = models.ManyToManyField(Tag, related_name='reviews', blank=True)
+    is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return f"{self.user.username} - {self.movie.title}"
