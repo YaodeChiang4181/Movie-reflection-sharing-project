@@ -195,21 +195,32 @@ class ReviewViewSet(viewsets.ModelViewSet):
         # 實作排行榜快取機制 (10 分鐘)
         cache_key = 'trending_reviews'
         cached_data = cache.get(cache_key)
-        if cached_data:
-            return Response(cached_data)
-
-        # 撈取近 7 日內的文章，並依據推薦人數 (score) 排行
-        seven_days_ago = timezone.now() - timedelta(days=7)
-        trending_reviews = self.get_queryset().filter(
-            created_at__gte=seven_days_ago
-        ).order_by('-score', '-created_at')[:10]
         
-        serializer = self.get_serializer(trending_reviews, many=True)
+        if not cached_data:
+            # 移除 7 天的限制，讓舊文章也能在首頁顯示，並依據推薦人數 (score) 排行取前 10 名
+            trending_reviews = self.get_queryset().order_by('-score', '-created_at')[:10]
+            
+            serializer = self.get_serializer(trending_reviews, many=True)
+            cached_data = serializer.data
+            
+            # 寫入快取
+            cache.set(cache_key, cached_data, 60 * 10)
+            
+        # 動態計算 user_voted，避免快取到特定使用者的按讚狀態而影響其他使用者
+        response_data = []
+        user = request.user
+        user_votes = set()
         
-        # 寫入快取
-        cache.set(cache_key, serializer.data, 60 * 10)
-        
-        return Response(serializer.data)
+        if user.is_authenticated:
+            review_ids = [item['id'] for item in cached_data]
+            user_votes = set(Vote.objects.filter(user=user, review_id__in=review_ids).values_list('review_id', flat=True))
+            
+        for item in cached_data:
+            new_item = dict(item)
+            new_item['user_voted'] = new_item['id'] in user_votes
+            response_data.append(new_item)
+            
+        return Response(response_data)
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all().order_by('event_time')
