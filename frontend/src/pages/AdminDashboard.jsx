@@ -82,7 +82,6 @@ function AdminDashboard() {
   return (
     <div className={`container ${styles.container}`}>
       <div className={styles.header}>
-        <ShieldAlert size={32} className={styles.headerIcon} />
         <h1 className={styles.title}>系統管理後台</h1>
         <p className={styles.subtitle}>帳戶剔除區與安全管理</p>
       </div>
