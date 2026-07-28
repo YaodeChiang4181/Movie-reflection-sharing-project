@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, ShieldAlert, UserX, Trash2, X, RefreshCw } from 'lucide-react';
+import { Shield, ShieldAlert, UserX, Trash2, X, RefreshCw, Image, Link as LinkIcon, Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import styles from './AdminDashboard.module.css';
@@ -13,6 +13,13 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [showTrashModal, setShowTrashModal] = useState(false);
   const [deletedReviews, setDeletedReviews] = useState([]);
+  
+  // Advertisement states
+  const [advertisements, setAdvertisements] = useState([]);
+  const [adTitle, setAdTitle] = useState('');
+  const [adUrl, setAdUrl] = useState('');
+  const [adImage, setAdImage] = useState(null);
+  const [adUploading, setAdUploading] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn || !userProfile?.is_staff) {
@@ -20,7 +27,17 @@ function AdminDashboard() {
       return;
     }
     fetchUsers();
+    fetchAdvertisements();
   }, [isLoggedIn, userProfile, navigate]);
+
+  const fetchAdvertisements = async () => {
+    try {
+      const response = await api.get('admin/advertisements/');
+      setAdvertisements(response.data.results || response.data);
+    } catch (err) {
+      console.error('Failed to fetch ads', err);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -77,6 +94,51 @@ function AdminDashboard() {
     }
   };
 
+  const handleUploadAd = async (e) => {
+    e.preventDefault();
+    if (!adImage || !adTitle) {
+      alert('請填寫標題並選擇圖片');
+      return;
+    }
+    setAdUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('title', adTitle);
+      formData.append('image', adImage);
+      if (adUrl) formData.append('url', adUrl);
+      
+      await api.post('admin/advertisements/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      alert('廣告上傳成功！');
+      setAdTitle('');
+      setAdUrl('');
+      setAdImage(null);
+      // clear file input
+      document.getElementById('adImageInput').value = '';
+      fetchAdvertisements();
+    } catch (err) {
+      console.error(err);
+      alert('廣告上傳失敗');
+    } finally {
+      setAdUploading(false);
+    }
+  };
+
+  const handleDeleteAd = async (id) => {
+    if (window.confirm("確定要刪除這個廣告嗎？")) {
+      try {
+        await api.delete(`admin/advertisements/${id}/`);
+        setAdvertisements(advertisements.filter(ad => ad.id !== id));
+      } catch (err) {
+        alert('刪除失敗');
+      }
+    }
+  };
+
   if (loading) return <div className={styles.container}>載入中...</div>;
 
   return (
@@ -87,6 +149,79 @@ function AdminDashboard() {
       </div>
       
       {error && <div className={styles.errorBox}>{error}</div>}
+
+      <div className={`glass ${styles.card}`} style={{ marginBottom: '40px' }}>
+        <div className={styles.cardHeader}>
+          <Image size={20} />
+          <h2>廣告投放區</h2>
+        </div>
+        
+        <form onSubmit={handleUploadAd} className={styles.uploadForm}>
+          <div className={styles.formGroup}>
+            <label>廣告標題</label>
+            <input 
+              type="text" 
+              value={adTitle} 
+              onChange={e => setAdTitle(e.target.value)} 
+              className={styles.formInput} 
+              placeholder="輸入廣告標題"
+              required 
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label>廣告連結 (選填)</label>
+            <input 
+              type="url" 
+              value={adUrl} 
+              onChange={e => setAdUrl(e.target.value)} 
+              className={styles.formInput} 
+              placeholder="https://..."
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label>上傳圖片</label>
+            <input 
+              id="adImageInput"
+              type="file" 
+              accept="image/*"
+              onChange={e => setAdImage(e.target.files[0])} 
+              className={styles.fileInput}
+              required 
+            />
+          </div>
+          <button type="submit" className={styles.submitBtn} disabled={adUploading}>
+            {adUploading ? '上傳中...' : <><Upload size={16} style={{display:'inline', marginRight:'6px', verticalAlign:'text-bottom'}}/>新增廣告</>}
+          </button>
+        </form>
+
+        <h3 style={{ color: '#fff', fontSize: '1.1rem', marginTop: '30px' }}>已上架廣告列表</h3>
+        {advertisements.length === 0 ? (
+          <p style={{ color: 'var(--text-secondary)' }}>目前沒有任何廣告。</p>
+        ) : (
+          <div className={styles.adGrid}>
+            {advertisements.map(ad => (
+              <div key={ad.id} className={styles.adItem}>
+                <img src={ad.image} alt={ad.title} className={styles.adImage} />
+                <div className={styles.adInfo}>
+                  <div className={styles.adTitle}>{ad.title}</div>
+                  <div className={styles.adActions}>
+                    {ad.url ? (
+                      <a href={ad.url} target="_blank" rel="noreferrer" className={styles.adLink}>
+                        <LinkIcon size={14} style={{display:'inline', marginRight:'4px', verticalAlign:'text-bottom'}}/> 
+                        前往連結
+                      </a>
+                    ) : <span></span>}
+                    <button onClick={() => handleDeleteAd(ad.id)} className={styles.deleteAdBtn}>
+                      <Trash2 size={14} style={{display:'inline', marginRight:'4px', verticalAlign:'text-bottom'}}/> 
+                      刪除
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className={`glass ${styles.card}`}>
         <div className={styles.cardHeader}>

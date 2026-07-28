@@ -3,14 +3,14 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from rest_framework.routers import DefaultRouter
-from .views import RegisterView, MovieViewSet, ReviewViewSet, EventViewSet, CustomTokenObtainPairView, UserMeView, AdminUserViewSet
+from .views import RegisterView, MovieViewSet, ReviewViewSet, EventViewSet, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, AdvertisementViewSet
 
 router = DefaultRouter()
 router.register(r'movies', MovieViewSet, basename='movie')
 router.register(r'reviews', ReviewViewSet, basename='review')
 router.register(r'events', EventViewSet, basename='event')
 router.register(r'admin/users', AdminUserViewSet, basename='admin-user')
-
+router.register(r'admin/advertisements', AdvertisementViewSet, basename='admin-advertisement')
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='auth_register'),
     path('auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

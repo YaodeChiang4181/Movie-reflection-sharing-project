@@ -4,7 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import UserProfile, Movie, Tag, Review, Vote, Event, Comment, OutsiderIdentity, UserIdentity
+from .models import UserProfile, Movie, Tag, Review, Vote, Event, Comment, OutsiderIdentity, UserIdentity, Advertisement
 
 User = get_user_model()
 
@@ -243,3 +243,9 @@ class EventSerializer(serializers.ModelSerializer):
         if not value.strip():
             raise serializers.ValidationError("主辦人代稱不能為空白。")
         return value
+
+class AdvertisementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Advertisement
+        fields = '__all__'
+

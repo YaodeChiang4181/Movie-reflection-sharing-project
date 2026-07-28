@@ -47,8 +47,8 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from datetime import timedelta
 from django.core.cache import cache
-from .models import Movie, Tag, Review, Vote, Event, Comment
-from .serializers import MovieSerializer, TagSerializer, ReviewSerializer, VoteSerializer, EventSerializer, CommentSerializer
+from .models import Movie, Tag, Review, Vote, Event, Comment, Advertisement
+from .serializers import MovieSerializer, TagSerializer, ReviewSerializer, VoteSerializer, EventSerializer, CommentSerializer, AdvertisementSerializer
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.all()
@@ -229,4 +229,16 @@ class EventViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+class AdvertisementViewSet(viewsets.ModelViewSet):
+    queryset = Advertisement.objects.all().order_by('-created_at')
+    serializer_class = AdvertisementSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAdminUser]
+        return [permission() for permission in permission_classes]
+
 
