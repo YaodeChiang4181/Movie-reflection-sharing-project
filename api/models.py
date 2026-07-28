@@ -3,12 +3,12 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 
 class User(AbstractUser):
-    # 使用 campus_id 取代原本的 id 作為 Primary Key，強制 9 碼數字
+    # 使用 campus_id 取代原本的 id 作為 Primary Key，強制 9 碼數字或英文字母 (校外人士使用字母)
     campus_id = models.CharField(
         primary_key=True, 
         max_length=9, 
-        validators=[RegexValidator(r'^\d{9}$', message="學號必須為 9 位數字")],
-        verbose_name="校園ID"
+        validators=[RegexValidator(r'^[a-zA-Z0-9]{9}$', message="學號必須為 9 位英數字")],
+        verbose_name="帳號ID"
     )
     
     # 取消原本 username 的唯一限制與必填，改用 campus_id 登入
@@ -37,6 +37,26 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return self.nickname
+
+class OutsiderIdentity(models.Model):
+    """校外人士資料表：紀錄校外人士的姓名、信箱與職業"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='outsider_identity')
+    real_name = models.CharField(max_length=50, verbose_name="使用者姓名")
+    email = models.EmailField(unique=True, verbose_name="聯絡信箱")
+    occupation = models.CharField(max_length=100, verbose_name="職業")
+    
+    def __str__(self):
+        return f"{self.user.campus_id} - {self.real_name}"
+
+class Advertisement(models.Model):
+    title = models.CharField(max_length=200, verbose_name="廣告標題")
+    image = models.ImageField(upload_to='ads/', verbose_name="廣告圖片")
+    url = models.URLField(max_length=500, blank=True, null=True, verbose_name="廣告連結")
+    is_active = models.BooleanField(default=True, verbose_name="是否上架")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="建立時間")
+    
+    def __str__(self):
+        return self.title
 
 class Movie(models.Model):
     title = models.CharField(max_length=200)

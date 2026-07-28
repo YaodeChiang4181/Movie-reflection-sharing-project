@@ -4,7 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import UserProfile, Movie, Tag, Review, Vote, Event, Comment
+from .models import UserProfile, Movie, Tag, Review, Vote, Event, Comment, OutsiderIdentity, UserIdentity
 
 User = get_user_model()
 
@@ -34,53 +34,93 @@ from .models import UserIdentity
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     
-    real_name = serializers.CharField(max_length=50, write_only=True)
-    department = serializers.CharField(max_length=100, write_only=True)
-    school_email = serializers.EmailField(write_only=True)
+    # 共同欄位
     nickname = serializers.CharField(max_length=50, write_only=True)
+    is_outsider = serializers.BooleanField(write_only=True, default=False)
+    
+    # 校內學生欄位
+    campus_id = serializers.CharField(required=False)
+    real_name = serializers.CharField(max_length=50, write_only=True)
+    department = serializers.CharField(max_length=100, write_only=True, required=False)
+    school_email = serializers.EmailField(write_only=True, required=False)
+    
+    # 校外人士欄位
+    email = serializers.EmailField(write_only=True, required=False)
+    occupation = serializers.CharField(max_length=100, write_only=True, required=False)
     
     class Meta:
         model = User
-        fields = ('campus_id', 'password', 'real_name', 'department', 'school_email', 'nickname')
+        fields = ('campus_id', 'password', 'real_name', 'department', 'school_email', 'nickname', 'is_outsider', 'email', 'occupation')
         extra_kwargs = {
             'password': {'write_only': True}
         }
 
-    def validate_campus_id(self, value):
-        import re
-        if not re.match(r'^\d{9}$', value):
-            raise serializers.ValidationError("學號必須剛好是 9 位數字")
-        if User.objects.filter(campus_id=value).exists():
-            raise serializers.ValidationError("此校園ID已被註冊")
-        return value
-
-    def validate_school_email(self, value):
-        if not value.endswith('@cc.ncu.edu.tw'):
-            raise serializers.ValidationError("必須使用中央大學信箱 (@cc.ncu.edu.tw)")
-        return value
-
     def validate(self, attrs):
+        is_outsider = attrs.get('is_outsider', False)
+        if is_outsider:
+            if not attrs.get('real_name'):
+                raise serializers.ValidationError({"real_name": "校外人士必須填寫姓名"})
+            if not attrs.get('email'):
+                raise serializers.ValidationError({"email": "校外人士必須填寫信箱"})
+            if OutsiderIdentity.objects.filter(email=attrs.get('email')).exists():
+                raise serializers.ValidationError({"email": "此信箱已被註冊"})
+        else:
+            if not attrs.get('campus_id'):
+                raise serializers.ValidationError({"campus_id": "校內學生必須填寫學號"})
+            import re
+            if not re.match(r'^\d{9}$', attrs.get('campus_id', '')):
+                raise serializers.ValidationError({"campus_id": "學號必須剛好是 9 位數字"})
+            if User.objects.filter(campus_id=attrs.get('campus_id')).exists():
+                raise serializers.ValidationError({"campus_id": "此學號已被註冊"})
+            
+            school_email = attrs.get('school_email', '')
+            if not school_email.endswith('@cc.ncu.edu.tw'):
+                raise serializers.ValidationError({"school_email": "必須使用中央大學信箱 (@cc.ncu.edu.tw)"})
+                
         # 檢查暱稱是否重複
-        if UserProfile.objects.filter(nickname=attrs['nickname']).exists():
+        if UserProfile.objects.filter(nickname=attrs.get('nickname')).exists():
             raise serializers.ValidationError({"nickname": "此代碼/暱稱已被使用"})
         return attrs
 
     def create(self, validated_data):
+        is_outsider = validated_data.pop('is_outsider', False)
         real_name = validated_data.pop('real_name')
-        department = validated_data.pop('department')
-        school_email = validated_data.pop('school_email')
         nickname = validated_data.pop('nickname')
+        password = validated_data.pop('password')
         
         with transaction.atomic():
-            user = User(
-                campus_id=validated_data['campus_id'],
-                username=validated_data['campus_id'] # 保留 username 欄位的值以防其他 Django 內部機制需要
-            )
-            user.set_password(validated_data['password'])
-            user.save()
+            if is_outsider:
+                # 產生 26 進位的 9 碼字串
+                count = OutsiderIdentity.objects.count()
+                if count == 0:
+                    base26_str = 'a'
+                else:
+                    base26_str = ''
+                    n = count
+                    while n > 0:
+                        base26_str = chr((n % 26) + 97) + base26_str
+                        n //= 26
+                campus_id = base26_str.rjust(9, 'a')
+                
+                user = User(campus_id=campus_id, username=campus_id)
+                user.set_password(password)
+                user.save()
+                
+                email = validated_data.pop('email')
+                occupation = validated_data.pop('occupation', '')
+                OutsiderIdentity.objects.create(user=user, real_name=real_name, email=email, occupation=occupation)
+            else:
+                campus_id = validated_data.pop('campus_id')
+                department = validated_data.pop('department', '')
+                school_email = validated_data.pop('school_email')
+                
+                user = User(campus_id=campus_id, username=campus_id)
+                user.set_password(password)
+                user.save()
+                
+                # 建立機密身分表
+                UserIdentity.objects.create(user=user, real_name=real_name, department=department, school_email=school_email)
             
-            # 建立機密身分表
-            UserIdentity.objects.create(user=user, real_name=real_name, department=department, school_email=school_email)
             # 建立公開主頁表
             UserProfile.objects.create(user=user, nickname=nickname)
             
@@ -91,6 +131,15 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        # 攔截並判斷是否為信箱登入
+        username = attrs.get(self.username_field)
+        if username and '@' in username:
+            try:
+                outsider = OutsiderIdentity.objects.get(email=username)
+                attrs[self.username_field] = outsider.user.campus_id
+            except OutsiderIdentity.DoesNotExist:
+                pass
+                
         data = super().validate(attrs)
         
         # Add custom data to the response

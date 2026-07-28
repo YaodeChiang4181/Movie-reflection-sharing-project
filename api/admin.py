@@ -1,3 +1,7 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from .models import User, OutsiderIdentity, Advertisement
 
-# Register your models here.
+admin.site.register(User, UserAdmin)
+admin.site.register(OutsiderIdentity)
+admin.site.register(Advertisement)
