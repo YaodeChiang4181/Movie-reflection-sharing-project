@@ -6,14 +6,16 @@ import styles from './Auth.module.css';
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-  const [role, setRole] = useState('user'); // 'user' or 'admin'
+  const [role, setRole] = useState('student'); // 'student' or 'outsider'
   const [formData, setFormData] = useState({
     campus_id: '',
     password: '',
     real_name: '',
     department: '',
     school_email: '',
-    nickname: ''
+    nickname: '',
+    email: '',
+    occupation: ''
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -27,18 +29,16 @@ function Auth() {
     e.preventDefault();
     setError('');
 
-    if (role === 'admin' && !isLogin) {
-      setError('管理者無法從前端註冊，請聯絡系統維護人員。');
-      return;
-    }
+
 
     try {
       if (isLogin) {
         // 登入流程
-        const response = await api.post('auth/login/', {
-          campus_id: formData.campus_id,
+        const loginData = {
+          campus_id: role === 'outsider' ? formData.email : formData.campus_id,
           password: formData.password
-        });
+        };
+        const response = await api.post('auth/login/', loginData);
         
         // CustomTokenObtainPairSerializer 會回傳 access, refresh 與 user 資訊
         login(response.data.access, response.data.user);
@@ -47,7 +47,29 @@ function Auth() {
         navigate('/'); // 登入後回到首頁，或由路由守衛決定跳轉
       } else {
         // 註冊流程
-        await api.post('auth/register/', formData);
+        let registerData = {
+          password: formData.password,
+          real_name: formData.real_name,
+          nickname: formData.nickname
+        };
+
+        if (role === 'outsider') {
+          registerData = {
+            ...registerData,
+            is_outsider: true,
+            email: formData.email,
+            occupation: formData.occupation
+          };
+        } else {
+          registerData = {
+            ...registerData,
+            is_outsider: false,
+            campus_id: formData.campus_id,
+            department: formData.department,
+            school_email: formData.school_email
+          };
+        }
+        await api.post('auth/register/', registerData);
         alert('註冊成功！請登入。');
         setIsLogin(true); // 切換回登入畫面
       }
@@ -73,36 +95,50 @@ function Auth() {
         <div className={styles.roleTabs}>
           <button 
             type="button" 
-            className={`${styles.roleTab} ${role === 'user' ? styles.activeRole : ''}`}
-            onClick={() => { setRole('user'); setError(''); }}
+            className={`${styles.roleTab} ${role === 'student' ? styles.activeRole : ''}`}
+            onClick={() => { setRole('student'); setError(''); }}
           >
-            使用者
+            校內教職/學生
           </button>
           <button 
             type="button" 
-            className={`${styles.roleTab} ${role === 'admin' ? styles.activeRole : ''}`}
-            onClick={() => { setRole('admin'); setError(''); }}
+            className={`${styles.roleTab} ${role === 'outsider' ? styles.activeRole : ''}`}
+            onClick={() => { setRole('outsider'); setError(''); }}
           >
-            管理者
+            校外使用者
           </button>
         </div>
 
         {error && <div className={styles.errorBox}>{error}</div>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label>校園 ID / 學號 (Campus ID)</label>
-            <input 
-              type="text" 
-              name="campus_id" 
-              value={formData.campus_id} 
-              onChange={handleChange} 
-              required 
-              pattern="[0-9]{9}"
-              title="請輸入剛好 9 位數字的學號"
-              placeholder="例如: xxxxxxxxx"
-            />
-          </div>
+          {role === 'student' ? (
+            <div className={styles.inputGroup}>
+              <label>校園 ID / 學號 (Campus ID)</label>
+              <input 
+                type="text" 
+                name="campus_id" 
+                value={formData.campus_id} 
+                onChange={handleChange} 
+                required 
+                pattern="[a-zA-Z0-9]{9}"
+                title="請輸入剛好 9 碼的學號"
+                placeholder="例如: xxxxxxxxx"
+              />
+            </div>
+          ) : (
+            <div className={styles.inputGroup}>
+              <label>登入信箱 (Email)</label>
+              <input 
+                type="email" 
+                name="email" 
+                value={formData.email} 
+                onChange={handleChange} 
+                required 
+                placeholder="您的常用信箱"
+              />
+            </div>
+          )}
 
           {!isLogin && (
             <>
@@ -116,29 +152,46 @@ function Auth() {
                   required={!isLogin} 
                 />
               </div>
-              <div className={styles.inputGroup}>
-                <label>科系 (Department)</label>
-                <input 
-                  type="text" 
-                  name="department" 
-                  value={formData.department} 
-                  onChange={handleChange} 
-                  required={!isLogin} 
-                />
-              </div>
-              <div className={styles.inputGroup}>
-                <label>學校信箱 (School Email)</label>
-                <input 
-                  type="email" 
-                  name="school_email" 
-                  value={formData.school_email} 
-                  onChange={handleChange} 
-                  required={!isLogin} 
-                  pattern=".*@cc\.ncu\.edu\.tw$"
-                  title="必須使用中央大學信箱 (結尾為 @cc.ncu.edu.tw)"
-                  placeholder="student@cc.ncu.edu.tw"
-                />
-              </div>
+              
+              {role === 'student' ? (
+                <>
+                  <div className={styles.inputGroup}>
+                    <label>科系 (Department)</label>
+                    <input 
+                      type="text" 
+                      name="department" 
+                      value={formData.department} 
+                      onChange={handleChange} 
+                      required={!isLogin} 
+                    />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>學校信箱 (School Email)</label>
+                    <input 
+                      type="email" 
+                      name="school_email" 
+                      value={formData.school_email} 
+                      onChange={handleChange} 
+                      required={!isLogin} 
+                      pattern=".*@cc\.ncu\.edu\.tw$"
+                      title="必須使用中央大學信箱 (結尾為 @cc.ncu.edu.tw)"
+                      placeholder="student@cc.ncu.edu.tw"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className={styles.inputGroup}>
+                  <label>職業 (Occupation)</label>
+                  <input 
+                    type="text" 
+                    name="occupation" 
+                    value={formData.occupation} 
+                    onChange={handleChange} 
+                    required={!isLogin} 
+                  />
+                </div>
+              )}
+
               <div className={styles.inputGroup}>
                 <label>公開登入代碼/暱稱 (Nickname)</label>
                 <input 
@@ -168,14 +221,12 @@ function Auth() {
           </button>
         </form>
 
-        {role === 'user' && (
-          <p className={styles.toggleText}>
-            {isLogin ? '還沒有帳號嗎？' : '已經有帳號了？'}
-            <button type="button" onClick={() => setIsLogin(!isLogin)} className={styles.toggleBtn}>
-              {isLogin ? '立即註冊' : '馬上登入'}
-            </button>
-          </p>
-        )}
+        <p className={styles.toggleText}>
+          {isLogin ? '還沒有帳號嗎？' : '已經有帳號了？'}
+          <button type="button" onClick={() => setIsLogin(!isLogin)} className={styles.toggleBtn}>
+            {isLogin ? '立即註冊' : '馬上登入'}
+          </button>
+        </p>
       </div>
     </div>
   );
