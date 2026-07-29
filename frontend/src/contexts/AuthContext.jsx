@@ -11,6 +11,13 @@ export const AuthProvider = ({ children }) => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
+    // 監聽來自 Axios 攔截器的全局登出事件
+    const handleLogout = () => {
+      setIsLoggedIn(false);
+      setUserProfile(null);
+    };
+    window.addEventListener('auth:logout', handleLogout);
+
     // 檢查 localStorage 中是否有 token
     const token = localStorage.getItem('access_token');
     const savedUser = localStorage.getItem('user_profile');
@@ -20,6 +27,10 @@ export const AuthProvider = ({ children }) => {
       setUserProfile(JSON.parse(savedUser));
     }
     setIsAuthLoading(false);
+
+    return () => {
+      window.removeEventListener('auth:logout', handleLogout);
+    };
   }, []);
 
   const login = (token, user) => {
