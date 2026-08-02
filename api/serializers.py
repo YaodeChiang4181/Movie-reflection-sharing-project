@@ -216,6 +216,33 @@ class ReviewSerializer(serializers.ModelSerializer):
                 
         return review
 
+    def update(self, instance, validated_data):
+        tag_names = validated_data.pop('tag_names', None)
+        movie_title = validated_data.pop('movie_title', None)
+
+        with transaction.atomic():
+            # 如果有提供新的電影名稱，更新關聯的 Movie
+            if movie_title:
+                movie, _ = Movie.objects.get_or_create(
+                    title=movie_title,
+                    defaults={'director': 'Unknown', 'release_year': timezone.now().year}
+                )
+                instance.movie = movie
+
+            # 更新其他欄位 (content, rating, is_spoiler 等)
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+            instance.save()
+
+            # 如果有提供新的 tag_names，重新設定 tags
+            if tag_names is not None:
+                instance.tags.clear()
+                for name in tag_names:
+                    tag, _ = Tag.objects.get_or_create(name=name)
+                    instance.tags.add(tag)
+
+        return instance
+
 class VoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vote
