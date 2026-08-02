@@ -104,3 +104,11 @@ button {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px 0 var(--accent-glow);
 }
+
+/* Mobile bottom padding for tab bar clearance */
+@media (max-width: 768px) {
+  .app-content {
+    padding-bottom: 70px;
+  }
+}
+
