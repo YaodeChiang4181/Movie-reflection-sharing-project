@@ -237,7 +237,8 @@ function AdminDashboard() {
                 <th>校園 ID (學號)</th>
                 <th>公開暱稱</th>
                 <th>真實姓名</th>
-                <th>科系</th>
+                <th>信箱</th>
+                <th>身分類別</th>
                 <th>註冊時間</th>
                 <th>操作</th>
               </tr>
@@ -249,7 +250,20 @@ function AdminDashboard() {
                     <td>{user.campus_id}</td>
                     <td>{user.nickname}</td>
                     <td>{user.real_name || 'N/A'}</td>
-                    <td>{user.department || 'N/A'}</td>
+                    <td>{user.email || 'N/A'}</td>
+                    <td>
+                      <span style={{
+                        padding: '2px 10px',
+                        borderRadius: '12px',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        background: user.user_type === '校內' ? 'rgba(34,197,94,0.15)' : 'rgba(251,191,36,0.15)',
+                        color: user.user_type === '校內' ? '#22c55e' : '#fbbf24',
+                        border: `1px solid ${user.user_type === '校內' ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.3)'}`
+                      }}>
+                        {user.user_type || '未知'}
+                      </span>
+                    </td>
                     <td>{new Date(user.date_joined).toLocaleDateString('zh-TW')}</td>
                     <td>
                       <button 
@@ -263,7 +277,7 @@ function AdminDashboard() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>目前沒有其他使用者。</td>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>目前沒有其他使用者。</td>
                 </tr>
               )}
             </tbody>

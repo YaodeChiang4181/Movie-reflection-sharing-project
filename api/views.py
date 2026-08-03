@@ -2,7 +2,7 @@ from rest_framework import generics, viewsets, status
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import RegisterSerializer, CustomTokenObtainPairSerializer, UserMeSerializer
+from .serializers import RegisterSerializer, CustomTokenObtainPairSerializer, UserMeSerializer, AdminUserSerializer
 
 User = get_user_model()
 
@@ -23,12 +23,14 @@ class UserMeView(generics.RetrieveAPIView):
 
 class AdminUserViewSet(viewsets.ModelViewSet):
     """管理員專用的使用者管理介面"""
-    serializer_class = UserMeSerializer
+    serializer_class = AdminUserSerializer
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):
-        # 列出所有非管理員的使用者
-        return User.objects.filter(is_staff=False).order_by('-date_joined')
+        # 列出所有非管理員的使用者，預先載入兩種身分表避免 N+1
+        return User.objects.filter(is_staff=False).select_related(
+            'profile', 'identity', 'outsider_identity'
+        ).order_by('-date_joined')
 
     def destroy(self, request, *args, **kwargs):
         user = self.get_object()
@@ -37,6 +39,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
             return Response({"error": "Cannot delete admin user"}, status=status.HTTP_403_FORBIDDEN)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 from rest_framework.response import Response
 from rest_framework.decorators import action

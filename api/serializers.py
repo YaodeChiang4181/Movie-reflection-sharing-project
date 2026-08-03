@@ -29,6 +29,43 @@ class UserMeSerializer(serializers.ModelSerializer):
         model = User
         fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined')
 
+class AdminUserSerializer(serializers.ModelSerializer):
+    """管理後台專用：顯示真實姓名、信箱（兼容校內/校外使用者）"""
+    nickname = serializers.CharField(source='profile.nickname', read_only=True)
+    real_name = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    user_type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('campus_id', 'nickname', 'real_name', 'email', 'user_type', 'date_joined')
+
+    def get_real_name(self, obj):
+        # 先查校內身分表
+        if hasattr(obj, 'identity') and obj.identity:
+            return obj.identity.real_name
+        # 再查校外身分表
+        if hasattr(obj, 'outsider_identity') and obj.outsider_identity:
+            return obj.outsider_identity.real_name
+        return None
+
+    def get_email(self, obj):
+        # 校內：學校信箱
+        if hasattr(obj, 'identity') and obj.identity:
+            return obj.identity.school_email
+        # 校外：聯絡信箱
+        if hasattr(obj, 'outsider_identity') and obj.outsider_identity:
+            return obj.outsider_identity.email
+        return None
+
+    def get_user_type(self, obj):
+        if hasattr(obj, 'identity') and obj.identity:
+            return '校內'
+        if hasattr(obj, 'outsider_identity') and obj.outsider_identity:
+            return '校外'
+        return '未知'
+
+
 from .models import UserIdentity
 
 class RegisterSerializer(serializers.ModelSerializer):
