@@ -269,12 +269,6 @@ class SendVerificationView(APIView):
         # 產生 6 位數驗證碼
         code = f"{random.randint(0, 999999):06d}"
         
-        # 刪除舊的未驗證紀錄
-        EmailVerification.objects.filter(email=email, is_verified=False).delete()
-        
-        # 儲存新的驗證碼
-        EmailVerification.objects.create(email=email, code=code)
-
         # 寄信
         try:
             send_mail(
@@ -284,9 +278,14 @@ class SendVerificationView(APIView):
                 recipient_list=[email],
                 fail_silently=False,
             )
+            
+            # 信件寄出成功後，才刪除舊紀錄並建立新紀錄
+            EmailVerification.objects.filter(email=email, is_verified=False).delete()
+            EmailVerification.objects.create(email=email, code=code)
+            
             return Response({'message': '驗證碼已發送'})
         except Exception as e:
-            return Response({'error': f'寄信失敗：{str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': f'寄信失敗，請確認伺服器設定'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class VerifyEmailView(APIView):
     permission_classes = (AllowAny,)

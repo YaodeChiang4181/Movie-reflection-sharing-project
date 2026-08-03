@@ -260,7 +260,7 @@ function Auth() {
                       onClick={handleSendVerification}
                       disabled={isSendingCode || cooldown > 0}
                       className={styles.verifyBtn}
-                      style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: (isSendingCode || cooldown > 0) ? 'not-allowed' : 'pointer' }}
+                      style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: (isSendingCode || cooldown > 0) ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                       {isSendingCode ? '發送中...' : cooldown > 0 ? `${cooldown}秒後重試` : '發送驗證碼'}
                     </button>
@@ -270,12 +270,12 @@ function Auth() {
                       onChange={(e) => setVerificationCode(e.target.value)}
                       placeholder="6位數驗證碼"
                       maxLength={6}
-                      style={{ flex: 1 }}
+                      style={{ flex: 1, minWidth: 0 }}
                     />
                     <button 
                       type="button"
                       onClick={handleVerifyEmail}
-                      style={{ padding: '8px 16px', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                      style={{ padding: '8px 16px', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                       驗證
                     </button>
