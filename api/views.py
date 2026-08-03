@@ -270,14 +270,32 @@ class SendVerificationView(APIView):
         code = f"{random.randint(0, 999999):06d}"
         
         # 寄信
+        import os
+        import requests
         try:
-            send_mail(
-                subject='【影像製作所】註冊驗證碼',
-                message=f'歡迎註冊影像製作所平台！\n\n您的驗證碼是：{code}\n\n此驗證碼將在 10 分鐘後失效，請勿將驗證碼外洩給他人。',
-                from_email=None,  # 預設會使用 settings 中的 DEFAULT_FROM_EMAIL
-                recipient_list=[email],
-                fail_silently=False,
-            )
+            subject = '【影像製作所】註冊驗證碼'
+            message = f'歡迎註冊影像製作所平台！\n\n您的驗證碼是：{code}\n\n此驗證碼將在 10 分鐘後失效，請勿將驗證碼外洩給他人。'
+            
+            gas_url = os.environ.get('GAS_EMAIL_URL')
+            
+            if gas_url:
+                # 使用 Google Apps Script 發信
+                response = requests.post(gas_url, json={
+                    'email': email,
+                    'subject': subject,
+                    'body': message
+                })
+                if response.status_code != 200:
+                    raise Exception('GAS 回傳錯誤')
+            else:
+                # 本機端開發，或是使用原本的 SMTP
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=None,  # 預設會使用 settings 中的 DEFAULT_FROM_EMAIL
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
             
             # 信件寄出成功後，才刪除舊紀錄並建立新紀錄
             EmailVerification.objects.filter(email=email, is_verified=False).delete()
