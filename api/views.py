@@ -244,4 +244,73 @@ class AdvertisementViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAdminUser]
         return [permission() for permission in permission_classes]
 
+from django.core.mail import send_mail
+from django.utils import timezone
+import random
+from datetime import timedelta
+from .models import EmailVerification
+from rest_framework.views import APIView
+from rest_framework import status
 
+class SendVerificationView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': '請提供信箱'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 檢查 1 分鐘內是否已發送
+        one_min_ago = timezone.now() - timedelta(minutes=1)
+        recent = EmailVerification.objects.filter(email=email, created_at__gte=one_min_ago).first()
+        if recent:
+            return Response({'error': '發送過於頻繁，請稍後再試'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        # 產生 6 位數驗證碼
+        code = f"{random.randint(0, 999999):06d}"
+        
+        # 刪除舊的未驗證紀錄
+        EmailVerification.objects.filter(email=email, is_verified=False).delete()
+        
+        # 儲存新的驗證碼
+        EmailVerification.objects.create(email=email, code=code)
+
+        # 寄信
+        try:
+            send_mail(
+                subject='【影像製作所】註冊驗證碼',
+                message=f'歡迎註冊影像製作所平台！\n\n您的驗證碼是：{code}\n\n此驗證碼將在 10 分鐘後失效，請勿將驗證碼外洩給他人。',
+                from_email=None,  # 預設會使用 settings 中的 DEFAULT_FROM_EMAIL
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            return Response({'message': '驗證碼已發送'})
+        except Exception as e:
+            return Response({'error': f'寄信失敗：{str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class VerifyEmailView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
+
+        if not email or not code:
+            return Response({'error': '請提供信箱與驗證碼'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 尋找 10 分鐘內的驗證紀錄
+        ten_mins_ago = timezone.now() - timedelta(minutes=10)
+        record = EmailVerification.objects.filter(
+            email=email, 
+            code=code, 
+            created_at__gte=ten_mins_ago,
+            is_verified=False
+        ).first()
+
+        if not record:
+            return Response({'error': '驗證碼錯誤或已過期'}, status=status.HTTP_400_BAD_REQUEST)
+
+        record.is_verified = True
+        record.save()
+
+        return Response({'message': '信箱驗證成功'})

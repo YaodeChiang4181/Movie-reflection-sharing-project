@@ -1,0 +1,35 @@
+name: movie-platform
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # 將本機目錄掛載進去，這樣你在本機改的 code 會即時反映到容器內
+      - .:/app
+    environment:
+      - DEBUG=1
+      # 如果之後有連正式資料庫 (如 PostgreSQL) 再設定 DATABASE_URL
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # 防止本機的 node_modules 蓋掉容器內的 node_modules
+      - /app/node_modules
+    environment:
+      # 確保 Vite 知道後端的位址
+      - VITE_API_BASE_URL=http://localhost:8000/api/
+    depends_on:
+      - backend

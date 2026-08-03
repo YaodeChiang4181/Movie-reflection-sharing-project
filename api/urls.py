@@ -3,7 +3,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from rest_framework.routers import DefaultRouter
-from .views import RegisterView, MovieViewSet, ReviewViewSet, EventViewSet, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, AdvertisementViewSet
+from .views import RegisterView, MovieViewSet, ReviewViewSet, EventViewSet, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, AdvertisementViewSet, SendVerificationView, VerifyEmailView
 
 router = DefaultRouter()
 router.register(r'movies', MovieViewSet, basename='movie')
@@ -15,5 +15,7 @@ urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='auth_register'),
     path('auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/send-verification/', SendVerificationView.as_view(), name='send_verification'),
+    path('auth/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('users/me/', UserMeView.as_view(), name='user_me'),
 ] + router.urls

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,8 +18,60 @@ function Auth() {
     occupation: ''
   });
   const [error, setError] = useState('');
+  
+  // Verification states
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  useEffect(() => {
+    let timer;
+    if (cooldown > 0) {
+      timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  const handleSendVerification = async () => {
+    const emailToVerify = role === 'student' ? formData.school_email : formData.email;
+    if (!emailToVerify) {
+      setError('請先填寫信箱');
+      return;
+    }
+    
+    setIsSendingCode(true);
+    setError('');
+    try {
+      await api.post('auth/send-verification/', { email: emailToVerify });
+      alert('驗證碼已發送，請至信箱收取');
+      setCooldown(60);
+    } catch (err) {
+      setError(err.response?.data?.error || '發送驗證碼失敗');
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    const emailToVerify = role === 'student' ? formData.school_email : formData.email;
+    if (!emailToVerify || !verificationCode) {
+      setError('請輸入驗證碼');
+      return;
+    }
+    
+    try {
+      await api.post('auth/verify-email/', { email: emailToVerify, code: verificationCode });
+      setIsEmailVerified(true);
+      setError('');
+      alert('信箱驗證成功！');
+    } catch (err) {
+      setError(err.response?.data?.error || '驗證碼錯誤或已過期');
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,6 +99,10 @@ function Auth() {
         navigate('/'); // 登入後回到首頁，或由路由守衛決定跳轉
       } else {
         // 註冊流程
+        if (!isEmailVerified) {
+          setError('請先完成信箱驗證');
+          return;
+        }
         let registerData = {
           password: formData.password,
           real_name: formData.real_name,
@@ -136,6 +192,7 @@ function Auth() {
                 onChange={handleChange} 
                 required 
                 placeholder="您的常用信箱"
+                disabled={!isLogin && isEmailVerified}
               />
             </div>
           )}
@@ -176,6 +233,7 @@ function Auth() {
                       pattern=".*@cc\.ncu\.edu\.tw$"
                       title="必須使用中央大學信箱 (結尾為 @cc.ncu.edu.tw)"
                       placeholder="student@cc.ncu.edu.tw"
+                      disabled={isEmailVerified}
                     />
                   </div>
                 </>
@@ -191,6 +249,43 @@ function Auth() {
                   />
                 </div>
               )}
+
+              {/* 信箱驗證區塊 (註冊時顯示) */}
+              <div className={styles.inputGroup}>
+                <label>信箱驗證</label>
+                {!isEmailVerified ? (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      type="button" 
+                      onClick={handleSendVerification}
+                      disabled={isSendingCode || cooldown > 0}
+                      className={styles.verifyBtn}
+                      style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: (isSendingCode || cooldown > 0) ? 'not-allowed' : 'pointer' }}
+                    >
+                      {isSendingCode ? '發送中...' : cooldown > 0 ? `${cooldown}秒後重試` : '發送驗證碼'}
+                    </button>
+                    <input 
+                      type="text" 
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      placeholder="6位數驗證碼"
+                      maxLength={6}
+                      style={{ flex: 1 }}
+                    />
+                    <button 
+                      type="button"
+                      onClick={handleVerifyEmail}
+                      style={{ padding: '8px 16px', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
+                      驗證
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', fontWeight: 'bold' }}>
+                    ✅ 信箱已驗證成功
+                  </div>
+                )}
+              </div>
 
               <div className={styles.inputGroup}>
                 <label>公開登入代碼/暱稱 (Nickname)</label>
@@ -216,7 +311,12 @@ function Auth() {
             />
           </div>
 
-          <button type="submit" className={`btn-primary ${styles.submitBtn}`}>
+          <button 
+            type="submit" 
+            className={`btn-primary ${styles.submitBtn}`}
+            disabled={!isLogin && !isEmailVerified}
+            style={(!isLogin && !isEmailVerified) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          >
             {isLogin ? '登入' : '註冊'}
           </button>
         </form>

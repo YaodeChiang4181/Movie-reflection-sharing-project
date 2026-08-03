@@ -97,10 +97,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         if is_outsider:
             if not attrs.get('real_name'):
                 raise serializers.ValidationError({"real_name": "校外人士必須填寫姓名"})
-            if not attrs.get('email'):
+            
+            email = attrs.get('email')
+            if not email:
                 raise serializers.ValidationError({"email": "校外人士必須填寫信箱"})
-            if OutsiderIdentity.objects.filter(email=attrs.get('email')).exists():
+            if OutsiderIdentity.objects.filter(email=email).exists():
                 raise serializers.ValidationError({"email": "此信箱已被註冊"})
+                
+            # 檢查信箱驗證狀態
+            from .models import EmailVerification
+            if not EmailVerification.objects.filter(email=email, is_verified=True).exists():
+                raise serializers.ValidationError({"email": "請先完成信箱驗證"})
+                
         else:
             if not attrs.get('campus_id'):
                 raise serializers.ValidationError({"campus_id": "校內學生必須填寫學號"})
@@ -111,8 +119,15 @@ class RegisterSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"campus_id": "此學號已被註冊"})
             
             school_email = attrs.get('school_email', '')
+            if not school_email:
+                raise serializers.ValidationError({"school_email": "必須填寫學校信箱"})
             if not school_email.endswith('@cc.ncu.edu.tw'):
                 raise serializers.ValidationError({"school_email": "必須使用中央大學信箱 (@cc.ncu.edu.tw)"})
+                
+            # 檢查信箱驗證狀態
+            from .models import EmailVerification
+            if not EmailVerification.objects.filter(email=school_email, is_verified=True).exists():
+                raise serializers.ValidationError({"school_email": "請先完成信箱驗證"})
                 
         # 檢查暱稱是否重複
         if UserProfile.objects.filter(nickname=attrs.get('nickname')).exists():

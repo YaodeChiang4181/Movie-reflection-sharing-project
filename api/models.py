@@ -125,3 +125,17 @@ class Comment(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.content[:20]}"
+
+class EmailVerification(models.Model):
+    email = models.EmailField()
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['email', 'code']),
+        ]
+
+    def __str__(self):
+        return f"{self.email} - {self.code} - {'Verified' if self.is_verified else 'Pending'}"
