@@ -142,17 +142,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         
         with transaction.atomic():
             if is_outsider:
-                # 產生 26 進位的 9 碼字串
-                count = OutsiderIdentity.objects.count()
-                if count == 0:
-                    base26_str = 'a'
-                else:
-                    base26_str = ''
-                    n = count
-                    while n > 0:
-                        base26_str = chr((n % 26) + 97) + base26_str
-                        n //= 26
-                campus_id = base26_str.rjust(9, 'a')
+                from django.utils.crypto import get_random_string
+                # 產生 9 碼的隨機小寫字母字串，並確保不重複
+                while True:
+                    campus_id = get_random_string(9, allowed_chars='abcdefghijklmnopqrstuvwxyz')
+                    if not User.objects.filter(campus_id=campus_id).exists():
+                        break
                 
                 user = User(campus_id=campus_id, username=campus_id)
                 user.set_password(password)
