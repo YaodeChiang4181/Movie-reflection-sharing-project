@@ -9,6 +9,8 @@ from django.utils import timezone
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
+from rest_framework_simplejwt.tokens import RefreshToken
+import urllib.parse
 
 from dotenv import load_dotenv
 
@@ -162,6 +164,15 @@ def handle_message(event):
         reply_lines = [f"🔍 「{keyword}」的心得搜尋結果："]
         for r in reviews:
             reply_lines.append(f"- {r.movie.title} ({r.rating}星): {r.content[:20]}...")
+            
+        # 產生自動登入與跳轉網址
+        if user:
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
+            encoded_keyword = urllib.parse.quote(keyword)
+            search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}"
+            reply_lines.append(f"\n🔗 點此前往網頁查看並自動登入：\n{search_link}")
             
         reply_lines.append("\n💡 忘記指令？輸入「/」即可查看規則喔！")
         
