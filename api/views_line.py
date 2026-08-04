@@ -131,6 +131,11 @@ def handle_message(event):
             line_display_name=display_name,
             username=display_name
         )
+        
+        # 建立隨機公開暱稱 (UserProfile)
+        random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
+        from .models import UserProfile
+        UserProfile.objects.create(user=user, nickname=random_nickname)
 
     # 1. 發布心得
     if text.startswith('#心得'):

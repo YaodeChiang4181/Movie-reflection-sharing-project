@@ -66,6 +66,8 @@ class AdminUserSerializer(serializers.ModelSerializer):
             return '校內'
         if hasattr(obj, 'outsider_identity') and obj.outsider_identity:
             return '校外'
+        if obj.line_user_id:
+            return 'LINE註冊'
         return '未知'
 
 
