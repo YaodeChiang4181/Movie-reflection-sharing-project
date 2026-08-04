@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search as SearchIcon, ThumbsUp, MessageCircle } from 'lucide-react';
 import ReviewModal from '../components/ReviewModal';
 import api from '../api/axios';
@@ -12,14 +12,11 @@ function Search() {
   const [selectedReview, setSelectedReview] = useState(null);
   const { isLoggedIn } = useAuth();
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    
+  const performSearch = async (searchQuery) => {
     setIsLoading(true);
     setHasSearched(true);
     try {
-      const res = await api.get(`reviews/search/?q=${encodeURIComponent(query)}`);
+      const res = await api.get(`reviews/search/?q=${encodeURIComponent(searchQuery)}`);
       setResults(res.data);
     } catch (err) {
       console.error(err);
@@ -27,6 +24,21 @@ function Search() {
       setIsLoading(false);
     }
   };
+
+  const handleSearch = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!query.trim()) return;
+    performSearch(query.trim());
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialQuery = params.get('q');
+    if (initialQuery) {
+      setQuery(initialQuery);
+      performSearch(initialQuery);
+    }
+  }, []);
 
   const handleReviewUpdated = () => {
     handleSearch({ preventDefault: () => {} });
