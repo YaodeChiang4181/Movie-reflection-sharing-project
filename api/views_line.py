@@ -63,15 +63,16 @@ def handle_message(event):
             "🎬 【影像製作所 Bot 指令規則】\n\n"
             "📝 發布心得格式：\n"
             "#心得\n"
-            "電影：[名稱]\n"
-            "評分：[1-5]\n"
-            "心得：[內容]\n\n"
+            "電影：奧德賽\n"
+            "評分：5\n"
+            "心得：這部電影太好看了！\n"
+            "(請直接接文字，不要打括號喔)\n\n"
             "🔍 搜尋電影評價：\n"
-            "查 [電影名稱]\n\n"
+            "查 奧德賽\n\n"
             "📅 尋找近期活動：\n"
             "揪團 或 近期活動\n\n"
             "🔗 舊用戶綁定：\n"
-            "#綁定 [學號/Email] [密碼]"
+            "#綁定 a12345678 mypassword"
         )
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=rules_text))
         return
@@ -117,7 +118,7 @@ def handle_message(event):
             else:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 帳號或密碼錯誤，請重新確認！"))
         else:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="綁定格式錯誤，請輸入：\n#綁定 [您的學號/Email] [密碼]"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="綁定格式錯誤，請參考範例 (中間要有空格，不需括號)：\n#綁定 a12345678 mypassword"))
         return
 
     # 取得或創建使用者 (一般發文邏輯)
@@ -164,7 +165,7 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
             return
         else:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="心得格式錯誤，請使用：\n#心得\n電影：[名稱]\n評分：[1-5]\n心得：[內容]"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="心得格式錯誤，請參考範例 (不需打括號)：\n#心得\n電影：奧德賽\n評分：5\n心得：真的很好看！"))
             return
             
     # 2. 搜尋心得
@@ -216,7 +217,7 @@ def handle_message(event):
     try:
         line_bot_api.reply_message(
             event.reply_token, 
-            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 [電影名稱]」、「近期活動」。\n\n💡 忘記指令？輸入「/」即可查看規則喔！")
+            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 奧德賽」、「近期活動」。\n\n💡 忘記指令？輸入「/」即可查看規則喔！")
         )
     except LineBotApiError:
         pass
