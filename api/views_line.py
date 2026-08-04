@@ -43,16 +43,50 @@ def handle_message(event):
     text = event.message.text.strip()
     line_user_id = event.source.user_id
     
-    # 取得或創建使用者
+    # 取得 LINE 顯示名稱
+    try:
+        profile = line_bot_api.get_profile(line_user_id)
+        display_name = profile.display_name
+    except:
+        display_name = "LINE User"
+
+    # 0. 綁定帳號邏輯 (優先處理，避免自動創立輕量帳號時佔用 line_user_id)
+    if text.startswith('#綁定'):
+        parts = text.split()
+        if len(parts) >= 3:
+            campus_id = parts[1]
+            password = parts[2]
+            
+            target_user = User.objects.filter(campus_id=campus_id).first()
+            if target_user and target_user.check_password(password):
+                # 檢查是否已經被別人綁定
+                if target_user.line_user_id and target_user.line_user_id != line_user_id:
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 此帳號已被其他 LINE 綁定！"))
+                    return
+                    
+                # 處理原本可能存在的輕量帳號
+                old_user = User.objects.filter(line_user_id=line_user_id).first()
+                if old_user and old_user.campus_id != target_user.campus_id:
+                    if old_user.reviews.count() == 0:
+                        old_user.delete()
+                    else:
+                        old_user.line_user_id = None
+                        old_user.save()
+                        
+                target_user.line_user_id = line_user_id
+                target_user.line_display_name = display_name
+                target_user.save()
+                
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"✅ 帳號綁定成功！歡迎回來，{target_user.username or target_user.campus_id}。"))
+            else:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 帳號或密碼錯誤，請重新確認！"))
+        else:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="綁定格式錯誤，請輸入：\n#綁定 [您的帳號/學號] [密碼]"))
+        return
+
+    # 取得或創建使用者 (一般發文邏輯)
     user = User.objects.filter(line_user_id=line_user_id).first()
     if not user:
-        # 取得 LINE 顯示名稱
-        try:
-            profile = line_bot_api.get_profile(line_user_id)
-            display_name = profile.display_name
-        except:
-            display_name = "LINE User"
-            
         # 建立輕量帳號
         campus_id = generate_random_campus_id()
         user = User.objects.create(
