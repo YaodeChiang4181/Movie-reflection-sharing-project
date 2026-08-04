@@ -47,6 +47,9 @@ class AdminUserSerializer(serializers.ModelSerializer):
         # 再查校外身分表
         if hasattr(obj, 'outsider_identity') and obj.outsider_identity:
             return obj.outsider_identity.real_name
+        # 如果都沒有，但有 LINE 顯示名稱，則顯示 LINE 名稱並標記
+        if obj.line_display_name:
+            return f"{obj.line_display_name} (LINE)"
         return None
 
     def get_email(self, obj):
