@@ -41,13 +41,31 @@ def line_webhook(request):
         return HttpResponse('OK')
     return HttpResponseBadRequest('Method not allowed')
 
+def clean_text_from_line(event):
+    """
+    過濾 LINE 專屬表情貼 (避免在網站上顯示為 $ 符號) 以及不可見控制字元，
+    保留一般文字與標準 Unicode 表情符號 (😊)
+    """
+    text = event.message.text
+    if getattr(event.message, 'emojis', None):
+        # 將表情貼依照 index 反向排序，這樣刪除時才不會影響前面字元的 index
+        emojis = sorted(event.message.emojis, key=lambda x: x.index, reverse=True)
+        for emoji in emojis:
+            start = emoji.index
+            end = emoji.index + emoji.length
+            text = text[:start] + text[end:]
+    
+    # 過濾掉不可見的控制字元 (保留換行 \n)
+    text = ''.join(char for char in text if char.isprintable() or char == '\n')
+    return text.strip()
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     # LINE Verify 測試會發送假的 replyToken，直接忽略避免噴錯
     if event.reply_token == '00000000000000000000000000000000' or event.reply_token == 'ffffffffffffffffffffffffffffffff':
         return
 
-    text = event.message.text.strip()
+    text = clean_text_from_line(event)
     line_user_id = event.source.user_id
     
     # 取得 LINE 顯示名稱
