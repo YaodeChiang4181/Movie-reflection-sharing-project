@@ -7,8 +7,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 
 from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.exceptions import InvalidSignatureError, LineBotApiError
+
 from dotenv import load_dotenv
 
 from .models import User, Review, Movie, Event
@@ -40,6 +41,10 @@ def line_webhook(request):
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    # LINE Verify 測試會發送假的 replyToken，直接忽略避免噴錯
+    if event.reply_token == '00000000000000000000000000000000' or event.reply_token == 'ffffffffffffffffffffffffffffffff':
+        return
+
     text = event.message.text.strip()
     line_user_id = event.source.user_id
     
@@ -182,7 +187,11 @@ def handle_message(event):
         return
 
     # 若無法辨識的指令，可選擇不回應或給予提示
-    line_bot_api.reply_message(
-        event.reply_token, 
-        TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 [電影名稱]」、「近期活動」。\n\n💡 忘記指令？輸入「/」即可查看規則喔！")
-    )
+    try:
+        line_bot_api.reply_message(
+            event.reply_token, 
+            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 [電影名稱]」、「近期活動」。\n\n💡 忘記指令？輸入「/」即可查看規則喔！")
+        )
+    except LineBotApiError:
+        pass
+
