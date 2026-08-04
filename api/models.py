@@ -14,6 +14,10 @@ class User(AbstractUser):
     # 取消原本 username 的唯一限制與必填，改用 campus_id 登入
     username = models.CharField(max_length=150, unique=False, null=True, blank=True)
     
+    # LINE 整合
+    line_user_id = models.CharField(max_length=100, unique=True, null=True, blank=True, verbose_name="LINE User ID")
+    line_display_name = models.CharField(max_length=100, null=True, blank=True, verbose_name="LINE 顯示名稱")
+    
     USERNAME_FIELD = 'campus_id'
     REQUIRED_FIELDS = []
     
@@ -74,12 +78,17 @@ class Tag(models.Model):
         return self.name
 
 class Review(models.Model):
+    REVIEW_SOURCES = (
+        ('web', 'Web'),
+        ('line', 'LINE'),
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='reviews')
     rating = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     content = models.TextField()
+    source = models.CharField(max_length=10, choices=REVIEW_SOURCES, default='web', verbose_name="來源")
     is_spoiler = models.BooleanField(default=False)
     tags = models.ManyToManyField(Tag, related_name='reviews', blank=True)
     is_deleted = models.BooleanField(default=False)

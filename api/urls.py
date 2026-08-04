@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework.routers import DefaultRouter
 from .views import RegisterView, MovieViewSet, ReviewViewSet, EventViewSet, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, AdvertisementViewSet, SendVerificationView, VerifyEmailView
+from .views_line import line_webhook
 
 router = DefaultRouter()
 router.register(r'movies', MovieViewSet, basename='movie')
@@ -18,4 +19,5 @@ urlpatterns = [
     path('auth/send-verification/', SendVerificationView.as_view(), name='send_verification'),
     path('auth/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('users/me/', UserMeView.as_view(), name='user_me'),
+    path('line/webhook', line_webhook, name='line_webhook'),
 ] + router.urls
