@@ -72,7 +72,7 @@ def handle_message(event):
             "📅 尋找近期活動：\n"
             "揪團 或 近期活動\n\n"
             "🔗 舊用戶綁定：\n"
-            "#綁定 a12345678 mypassword"
+            "#綁定 123456789/myemail@gmail.com mypassword"
         )
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=rules_text))
         return
@@ -185,9 +185,10 @@ def handle_message(event):
         if user:
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
             frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
             encoded_keyword = urllib.parse.quote(keyword)
-            search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}"
+            search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
             reply_lines.append(f"\n🔗 點此前往網頁查看並自動登入：\n{search_link}")
             
         reply_lines.append("\n💡 忘記指令？輸入「/」即可查看規則喔！")

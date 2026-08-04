@@ -21,10 +21,12 @@ export const AuthProvider = ({ children }) => {
     // 檢查 URL 中是否有 auto-login token (例如來自 LINE Bot 的跳轉)
     const urlParams = new URLSearchParams(window.location.search);
     const urlToken = urlParams.get('token');
+    const urlRefresh = urlParams.get('refresh');
     
     if (urlToken) {
       // 為了畫面乾淨且防止 token 外洩，把 URL 上的 token 參數移除
       urlParams.delete('token');
+      if (urlRefresh) urlParams.delete('refresh');
       const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
       window.history.replaceState({}, document.title, newUrl);
       
@@ -32,6 +34,9 @@ export const AuthProvider = ({ children }) => {
       api.get('/users/me/', { headers: { Authorization: `Bearer ${urlToken}` } })
         .then(res => {
           login(urlToken, res.data);
+          if (urlRefresh) {
+            localStorage.setItem('refresh_token', urlRefresh);
+          }
           setIsAuthLoading(false);
         })
         .catch(err => {
