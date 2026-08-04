@@ -50,6 +50,25 @@ def handle_message(event):
     except:
         display_name = "LINE User"
 
+    # 說明指令 (/)
+    if text == '/' or text == '/規則':
+        rules_text = (
+            "🎬 【影像製作所 Bot 指令規則】\n\n"
+            "📝 發布心得格式：\n"
+            "#心得\n"
+            "電影：[名稱]\n"
+            "評分：[1-5]\n"
+            "心得：[內容]\n\n"
+            "🔍 搜尋電影評價：\n"
+            "查 [電影名稱]\n\n"
+            "📅 尋找近期活動：\n"
+            "揪團 或 近期活動\n\n"
+            "🔗 舊用戶綁定：\n"
+            "#綁定 [學號] [密碼]"
+        )
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=rules_text))
+        return
+
     # 0. 綁定帳號邏輯 (優先處理，避免自動創立輕量帳號時佔用 line_user_id)
     if text.startswith('#綁定'):
         parts = text.split()
@@ -119,7 +138,7 @@ def handle_message(event):
             
             # 使用環境變數或寫死的前端網址
             frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
-            reply_text = f"發布成功！感謝您的分享。\n\n點擊查看您的心得頁面：{frontend_url}/reviews/{review.id}"
+            reply_text = f"發布成功！感謝您的分享。\n\n點擊查看您的心得頁面：{frontend_url}/reviews/{review.id}\n\n💡 忘記指令？輸入「/」即可查看規則喔！"
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
             return
         else:
@@ -138,6 +157,8 @@ def handle_message(event):
         reply_lines = [f"🔍 「{keyword}」的心得搜尋結果："]
         for r in reviews:
             reply_lines.append(f"- {r.movie.title} ({r.rating}星): {r.content[:20]}...")
+            
+        reply_lines.append("\n💡 忘記指令？輸入「/」即可查看規則喔！")
         
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
         return
@@ -155,11 +176,13 @@ def handle_message(event):
             time_str = e.event_time.strftime('%m/%d %H:%M')
             reply_lines.append(f"- [{time_str}] {e.title}\n  地點: {e.location}\n  發起人: {e.organizer_nickname}")
             
+        reply_lines.append("\n💡 忘記指令？輸入「/」即可查看規則喔！")
+            
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
         return
 
     # 若無法辨識的指令，可選擇不回應或給予提示
     line_bot_api.reply_message(
         event.reply_token, 
-        TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 [電影名稱]」、「近期活動」。")
+        TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 [電影名稱]」、「近期活動」。\n\n💡 忘記指令？輸入「/」即可查看規則喔！")
     )
