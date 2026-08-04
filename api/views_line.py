@@ -71,7 +71,7 @@ def handle_message(event):
             "📅 尋找近期活動：\n"
             "揪團 或 近期活動\n\n"
             "🔗 舊用戶綁定：\n"
-            "#綁定 [學號] [密碼]"
+            "#綁定 [學號/Email] [密碼]"
         )
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=rules_text))
         return
@@ -80,10 +80,20 @@ def handle_message(event):
     if text.startswith('#綁定'):
         parts = text.split()
         if len(parts) >= 3:
-            campus_id = parts[1]
+            username_input = parts[1]
             password = parts[2]
             
-            target_user = User.objects.filter(campus_id=campus_id).first()
+            target_user = None
+            if '@' in username_input:
+                # 校外人士使用 Email 綁定
+                from .models import OutsiderIdentity
+                outsider = OutsiderIdentity.objects.filter(email=username_input).first()
+                if outsider:
+                    target_user = outsider.user
+            else:
+                # 校內學生使用學號綁定
+                target_user = User.objects.filter(campus_id=username_input).first()
+                
             if target_user and target_user.check_password(password):
                 # 檢查是否已經被別人綁定
                 if target_user.line_user_id and target_user.line_user_id != line_user_id:
@@ -107,7 +117,7 @@ def handle_message(event):
             else:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 帳號或密碼錯誤，請重新確認！"))
         else:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="綁定格式錯誤，請輸入：\n#綁定 [您的帳號/學號] [密碼]"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="綁定格式錯誤，請輸入：\n#綁定 [您的學號/Email] [密碼]"))
         return
 
     # 取得或創建使用者 (一般發文邏輯)
