@@ -88,7 +88,13 @@ def handle_message(event):
             "🔍 搜尋電影評價：\n"
             "查 奧德賽\n\n"
             "📅 尋找近期活動：\n"
-            "揪團 或 近期活動\n\n"
+            "近期活動\n\n"
+            "🤝 發起揪團活動：\n"
+            "#揪團\n"
+            "活動：看電影\n"
+            "時間：2024-12-31 19:00\n"
+            "地點：信義威秀\n"
+            "描述：大家一起來看死侍\n\n"
             "🔗 舊用戶綁定：\n"
             "#綁定 123456789/myemail@gmail.com mypassword"
         )
@@ -214,8 +220,8 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
         return
         
-    # 3. 揪電影活動
-    if text in ['揪團', '近期活動']:
+    # 3. 搜尋近期活動
+    if text == '近期活動':
         events = Event.objects.filter(event_time__gte=timezone.now()).order_by('event_time')[:5]
         if not events:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="近期沒有活動喔！趕快來發起一個吧！"))
@@ -232,11 +238,58 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
         return
 
+    # 4. 發起揪團活動
+    if text.startswith('#揪團'):
+        title_match = re.search(r'活動：([^\n]+)', text)
+        time_match = re.search(r'時間：([^\n]+)', text)
+        location_match = re.search(r'地點：([^\n]+)', text)
+        description_match = re.search(r'描述：(.+)', text, re.DOTALL)
+        
+        if title_match and time_match and location_match:
+            title = title_match.group(1).strip()
+            time_str = time_match.group(1).strip()
+            location = location_match.group(1).strip()
+            description = description_match.group(1).strip() if description_match else ""
+            
+            from datetime import datetime
+            from django.utils.timezone import make_aware
+            
+            try:
+                # 假設使用者輸入格式為 YYYY-MM-DD HH:MM 或 YYYY/MM/DD HH:MM
+                time_str_clean = time_str.replace('/', '-')
+                event_time = datetime.strptime(time_str_clean, '%Y-%m-%d %H:%M')
+                event_time = make_aware(event_time)
+            except ValueError:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="時間格式錯誤，請使用 YYYY-MM-DD HH:MM 格式，例如：2024-12-31 19:00"))
+                return
+            
+            # 取得發起人暱稱
+            try:
+                organizer_nickname = user.profile.nickname
+            except:
+                organizer_nickname = user.line_display_name or user.username
+                
+            new_event = Event.objects.create(
+                user=user,
+                title=title,
+                location=location,
+                event_time=event_time,
+                organizer_nickname=organizer_nickname,
+                description=description
+            )
+            
+            reply_text = f"✅ 發起活動成功！\n\n活動名稱：{title}\n時間：{time_str}\n地點：{location}\n\n大家可以使用「近期活動」來查看你的揪團喔！"
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+            return
+        else:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="揪團格式錯誤，請參考範例：\n#揪團\n活動：看電影\n時間：2024-12-31 19:00\n地點：信義威秀\n描述：大家一起來"))
+            return
+
     # 若無法辨識的指令，可選擇不回應或給予提示
     try:
         line_bot_api.reply_message(
             event.reply_token, 
-            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 奧德賽」、「近期活動」。\n\n💡 忘記指令？輸入「/」即可查看規則喔！")
+            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 奧德賽」、「近期活動」、「#揪團」。\n\n💡 忘記指令？輸入「/」即可查看規則喔！")
         )
     except LineBotApiError:
         pass
