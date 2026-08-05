@@ -185,7 +185,7 @@ def handle_message(event):
             
             # 使用環境變數或寫死的前端網址
             frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
-            reply_text = f"發布成功！感謝您的分享。\n\n點擊查看您的心得頁面：{frontend_url}/reviews/{review.id}\n\n💡 忘記指令？輸入「/」即可查看規則喔！"
+            reply_text = f"發布成功！感謝您的分享。\n\n點擊查看您的電影頁面：{frontend_url}/movies/{movie.id}\n\n💡 忘記指令？輸入「/規則」即可查看規則喔！"
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
             return
         else:
@@ -215,7 +215,7 @@ def handle_message(event):
             search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
             reply_lines.append(f"\n🔗 點此前往網頁查看並自動登入：\n{search_link}")
             
-        reply_lines.append("\n💡 忘記指令？輸入「/」即可查看規則喔！")
+        reply_lines.append("\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
         
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
         return
@@ -233,7 +233,7 @@ def handle_message(event):
             time_str = e.event_time.strftime('%m/%d %H:%M')
             reply_lines.append(f"- [{time_str}] {e.title}\n  地點: {e.location}\n  發起人: {e.organizer_nickname}")
             
-        reply_lines.append("\n💡 忘記指令？輸入「/」即可查看規則喔！")
+        reply_lines.append("\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
             
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
         return
@@ -289,7 +289,7 @@ def handle_message(event):
     try:
         line_bot_api.reply_message(
             event.reply_token, 
-            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 奧德賽」、「近期活動」、「#揪團」。\n\n💡 忘記指令？輸入「/」即可查看規則喔！")
+            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 奧德賽」、「近期活動」、「#揪團」。\n\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
         )
     except LineBotApiError:
         pass
