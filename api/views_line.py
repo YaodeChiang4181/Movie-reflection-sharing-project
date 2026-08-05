@@ -76,7 +76,7 @@ def handle_message(event):
         display_name = "LINE User"
 
     # 說明指令 (/)
-    if text == '/' or text == '/規則':
+    if text in ['/', '/規則', '／', '／規則']:
         rules_text = (
             "🎬 【影像製作所 Bot 指令規則】\n\n"
             "📝 發布心得格式：\n"
@@ -102,7 +102,7 @@ def handle_message(event):
         return
 
     # 0. 綁定帳號邏輯 (優先處理，避免自動創立輕量帳號時佔用 line_user_id)
-    if text.startswith('#綁定'):
+    if text.startswith('#綁定') or text.startswith('＃綁定'):
         parts = text.split()
         if len(parts) >= 3:
             username_input = parts[1]
@@ -163,7 +163,7 @@ def handle_message(event):
         UserProfile.objects.create(user=user, nickname=random_nickname)
 
     # 1. 發布心得
-    if text.startswith('#心得'):
+    if text.startswith('#心得') or text.startswith('＃心得'):
         movie_match = re.search(r'電影：([^\n]+)', text)
         rating_match = re.search(r'評分：(\d+)', text)
         content_match = re.search(r'心得：(.+)', text, re.DOTALL)
@@ -239,7 +239,7 @@ def handle_message(event):
         return
 
     # 4. 發起揪團活動
-    if text.startswith('#揪團'):
+    if text.startswith('#揪團') or text.startswith('＃揪團'):
         title_match = re.search(r'活動：([^\n]+)', text)
         time_match = re.search(r'時間：([^\n]+)', text)
         location_match = re.search(r'地點：([^\n]+)', text)
