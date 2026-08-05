@@ -7,14 +7,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 
 from linebot import LineBotApi, WebhookHandler
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
 from rest_framework_simplejwt.tokens import RefreshToken
 import urllib.parse
 
 from dotenv import load_dotenv
 
-from .models import User, Review, Movie, Event
+from .models import User, Review, Movie, Event, UserExperience
+from .line_flex_templates import get_exp_feedback_flex
 
 load_dotenv()
 line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN', ''))
@@ -183,10 +184,24 @@ def handle_message(event):
                 source='line'
             )
             
+            # 計算經驗值
+            exp_gained = 25
+            user_exp, _ = UserExperience.objects.get_or_create(user=user)
+            user_exp.exp += exp_gained
+            user_exp.level = (user_exp.exp // 100) + 1
+            user_exp.save()
+            
             # 使用環境變數或寫死的前端網址
             frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
-            reply_text = f"發布成功！感謝您的分享。\n\n點擊查看您的電影頁面：{frontend_url}/movies/{movie.id}\n\n💡 忘記指令？輸入「/規則」即可查看規則喔！"
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+            movie_url = f"{frontend_url}/movies/{movie.id}"
+            
+            # 產生 Flex Message
+            flex_bubble = get_exp_feedback_flex(user, exp_gained, user_exp.level, user_exp.exp, movie_url=movie_url)
+            
+            line_bot_api.reply_message(
+                event.reply_token, 
+                FlexSendMessage(alt_text="發布成功！經驗值增加", contents=flex_bubble)
+            )
             return
         else:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="心得格式錯誤，請參考範例 (不需打括號)：\n#心得\n電影：奧德賽\n評分：5\n心得：真的很好看！"))

@@ -7,7 +7,9 @@ import Auth from './pages/Auth';
 import Search from './pages/Search';
 import Events from './pages/Events';
 import AdminDashboard from './pages/AdminDashboard';
-
+import ReviewForm from './pages/liff/ReviewForm';
+import ProfileCard from './pages/liff/ProfileCard';
+import CampaignScan from './pages/liff/CampaignScan';
 function App() {
   return (
     <BrowserRouter>
@@ -21,6 +23,9 @@ function App() {
           <Route path="/movies/:id" element={<MovieDetail />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/liff/review-form" element={<ReviewForm />} />
+          <Route path="/liff/profile" element={<ProfileCard />} />
+          <Route path="/liff/campaign-scan" element={<CampaignScan />} />
         </Routes>
       </div>
     </BrowserRouter>

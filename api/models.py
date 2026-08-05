@@ -148,3 +148,47 @@ class EmailVerification(models.Model):
 
     def __str__(self):
         return f"{self.email} - {self.code} - {'Verified' if self.is_verified else 'Pending'}"
+
+class UserExperience(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='experience')
+    exp = models.IntegerField(default=0)
+    level = models.IntegerField(default=1)
+    
+    def __str__(self):
+        return f"{self.user.username or self.user.campus_id} - Lv.{self.level} ({self.exp} EXP)"
+
+class Badge(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    image_url = models.URLField(blank=True, null=True)
+    condition_type = models.CharField(max_length=50, help_text="e.g. 'review_count', 'campaign'")
+    condition_value = models.IntegerField(default=0)
+    
+    def __str__(self):
+        return self.name
+
+class UserBadge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='badges')
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'badge')
+
+class Campaign(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    reward_exp = models.IntegerField(default=0)
+    reward_badge = models.ForeignKey(Badge, on_delete=models.SET_NULL, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.name
+
+class CampaignCheckIn(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='campaign_checkins')
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
+    checked_in_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'campaign')
