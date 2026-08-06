@@ -65,24 +65,9 @@ function MovieDetail() {
 
   return (
     <div className={`container ${styles.pageWrapper}`}>
-      <div className={styles.gridContainer}>
-        {/* Left Column: Poster */}
-        <div className={styles.posterWrapper}>
-          <img 
-            src={movie.poster_url || "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=1000&auto=format&fit=crop"} 
-            alt={movie.title} 
-            className={styles.poster}
-          />
-        </div>
-
-        {/* Right Column: Details */}
-        <div className={styles.detailsWrapper}>
-          <h1 className={styles.title}>{movie.title}</h1>
-          
-          <div className={styles.metaInfo}>
-            <span className={styles.metaItem}><Calendar size={16}/> {movie.release_year || '未知年份'}</span>
-            <span className={styles.metaItem}>導演: {movie.director || '未知'}</span>
-          </div>
+      <div>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h1 className={styles.title} style={{ textAlign: 'center', marginBottom: '24px' }}>{movie.title}</h1>
 
           <div className={styles.ratingBox}>
             <div className={styles.stars}>
@@ -97,13 +82,6 @@ function MovieDetail() {
               ))}
             </div>
             <span className={styles.ratingText}>{avgRating} / 5.0 (來自 {reviews.length} 則影評)</span>
-          </div>
-
-          <div className={styles.plotBox}>
-            <h3>劇情簡介</h3>
-            <p>
-              {movie.description || '目前尚無劇情簡介。'}
-            </p>
           </div>
 
           <div className={styles.reviewSection}>
