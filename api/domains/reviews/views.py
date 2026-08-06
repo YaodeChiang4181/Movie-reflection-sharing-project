@@ -18,7 +18,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     
     def get_queryset(self):
-        return Review.objects.filter(is_deleted=False).annotate(score=Count('votes')).order_by('-created_at')
+        qs = Review.objects.filter(is_deleted=False).annotate(score=Count('votes')).order_by('-created_at')
+        movie_id = self.request.query_params.get('movie')
+        if movie_id:
+            qs = qs.filter(movie_id=movie_id)
+        return qs
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

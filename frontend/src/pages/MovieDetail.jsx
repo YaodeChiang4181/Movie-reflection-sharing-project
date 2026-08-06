@@ -1,58 +1,125 @@
-import { useState } from 'react';
-import { Star, Clock, Calendar, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Star, Clock, Calendar, ThumbsUp, ThumbsDown, User, MessageCircle } from 'lucide-react';
 import api from '../api/axios';
 import styles from './MovieDetail.module.css';
 
-// Mock review data for demonstration
-const mockReviewId = 1;
-
 function MovieDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [movie, setMovie] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMovieData = async () => {
+      try {
+        setIsLoading(true);
+        // 1. Fetch movie details
+        const movieRes = await api.get(`movies/${id}/`);
+        setMovie(movieRes.data);
+        
+        // 2. Fetch reviews for this movie, backend handles ordering by '-created_at' by default
+        // We will fetch and then sort them by score in the frontend for "hot" reviews
+        const reviewsRes = await api.get(`reviews/?movie=${id}`);
+        // Sort by score (hotness) descending, then created_at
+        const sortedReviews = reviewsRes.data.results || reviewsRes.data;
+        sortedReviews.sort((a, b) => {
+          const scoreA = a.score || 0;
+          const scoreB = b.score || 0;
+          if (scoreA !== scoreB) return scoreB - scoreA;
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+        setReviews(sortedReviews);
+      } catch (error) {
+        console.error("Failed to fetch movie details:", error);
+        if (error.response?.status === 404) {
+          alert('找不到該部電影！');
+          navigate('/');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (id) {
+      fetchMovieData();
+    }
+  }, [id, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className={`container ${styles.pageWrapper}`} style={{ textAlign: 'center', paddingTop: '100px' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
+      </div>
+    );
+  }
+
+  if (!movie) return null;
+
+  // Calculate average rating
+  const avgRating = reviews.length > 0 
+    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+    : 0;
+
   return (
     <div className={`container ${styles.pageWrapper}`}>
       <div className={styles.gridContainer}>
         {/* Left Column: Poster */}
         <div className={styles.posterWrapper}>
           <img 
-            src="https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=1000&auto=format&fit=crop" 
-            alt="Movie Poster Placeholder" 
+            src={movie.poster_url || "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=1000&auto=format&fit=crop"} 
+            alt={movie.title} 
             className={styles.poster}
           />
         </div>
 
         {/* Right Column: Details */}
         <div className={styles.detailsWrapper}>
-          <h1 className={styles.title}>全面啟動 (Inception)</h1>
+          <h1 className={styles.title}>{movie.title}</h1>
           
           <div className={styles.metaInfo}>
-            <span className={styles.metaItem}><Calendar size={16}/> 2010</span>
-            <span className={styles.metaItem}><Clock size={16}/> 148 分鐘</span>
-            <span className={styles.metaItem}>導演: Christopher Nolan</span>
+            <span className={styles.metaItem}><Calendar size={16}/> {movie.release_year || '未知年份'}</span>
+            <span className={styles.metaItem}>導演: {movie.director || '未知'}</span>
           </div>
 
           <div className={styles.ratingBox}>
             <div className={styles.stars}>
               {[1, 2, 3, 4, 5].map(star => (
-                <Star key={star} size={24} className={styles.starIcon} fill="currentColor" />
+                <Star 
+                  key={star} 
+                  size={24} 
+                  className={styles.starIcon} 
+                  fill={star <= Math.round(avgRating) ? "currentColor" : "none"} 
+                  style={{ color: star <= Math.round(avgRating) ? 'var(--accent-primary)' : 'var(--text-muted)' }}
+                />
               ))}
             </div>
-            <span className={styles.ratingText}>4.8 / 5.0 (來自 342 則影評)</span>
+            <span className={styles.ratingText}>{avgRating} / 5.0 (來自 {reviews.length} 則影評)</span>
           </div>
 
           <div className={styles.plotBox}>
             <h3>劇情簡介</h3>
             <p>
-              唐姆·柯伯是一名「盜夢者」，與搭檔亞瑟利用潛意識進入別人夢境竊取商業機密。
-              在一次任務失敗後，他被要求執行一項看似不可能的任務：「植入想法」...
+              {movie.description || '目前尚無劇情簡介。'}
             </p>
           </div>
 
           <div className={styles.reviewSection}>
             <h3>熱門影評</h3>
-            <ReviewCard reviewId={mockReviewId} initialVoteCount={120} />
+            {reviews.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {reviews.map(review => (
+                  <ReviewCard key={review.id} review={review} />
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: 'var(--text-secondary)', padding: '20px 0' }}>目前還沒有影評，來成為第一位評論的人吧！</p>
+            )}
           </div>
 
-          <button className="btn-primary" style={{marginTop: '24px'}}>
-            撰寫影評
+          <button className="btn-primary" style={{marginTop: '24px'}} onClick={() => navigate('/')}>
+            回首頁看更多
           </button>
         </div>
       </div>
@@ -60,10 +127,10 @@ function MovieDetail() {
   );
 }
 
-function ReviewCard({ reviewId, initialVoteCount }) {
+function ReviewCard({ review }) {
   // 樂觀 UI (Optimistic UI) 狀態管理
-  const [voteCount, setVoteCount] = useState(initialVoteCount);
-  const [currentVote, setCurrentVote] = useState(0); // 1 = up, -1 = down, 0 = none
+  const [voteCount, setVoteCount] = useState(review.score || 0);
+  const [currentVote, setCurrentVote] = useState(review.user_voted ? 1 : 0); // 簡化版，預設為1或0
   const [isVoting, setIsVoting] = useState(false);
 
   const handleVote = async (voteType) => {
@@ -84,7 +151,6 @@ function ReviewCard({ reviewId, initialVoteCount }) {
       newVoteCount = voteCount - voteType;
     } else {
       // 改變投票或新投票
-      // 如果原本有投過票，要先扣除原本的，加上新的
       const diff = voteType - currentVote;
       newVoteCount = voteCount + diff;
     }
@@ -94,7 +160,7 @@ function ReviewCard({ reviewId, initialVoteCount }) {
 
     // 2. 發送背景 API 請求
     try {
-      await api.post(`reviews/${reviewId}/vote/`, { vote_type: voteType });
+      await api.post(`reviews/${review.id}/vote/`, { vote_type: voteType });
     } catch (error) {
       // 3. 失敗處理：退回原狀態並提示錯誤
       setCurrentVote(prevVote);
@@ -112,37 +178,62 @@ function ReviewCard({ reviewId, initialVoteCount }) {
 
   return (
     <div className={styles.reviewCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+          <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold' }}>
+            {review.user?.nickname ? review.user.nickname.charAt(0).toUpperCase() : '?'}
+          </div>
+          <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{review.user?.nickname || '未知使用者'}</span>
+          <span>給了 {review.rating} 顆星</span>
+        </div>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          {new Date(review.created_at).toLocaleDateString('zh-TW')}
+        </span>
+      </div>
+
       <p className={styles.reviewText}>
-        這是我看過最震撼的科幻電影！配樂跟剪輯真的是神作等級，強烈建議去電影院看 IMAX。
+        {review.content}
       </p>
       
-      <div className={styles.voteActions}>
-        <button 
-          className={`${styles.voteBtn} ${currentVote === 1 ? styles.voteActive : ''}`}
-          onClick={() => handleVote(1)}
-          disabled={isVoting}
-          aria-label="推"
-        >
-          <ThumbsUp size={18} />
-        </button>
-        
-        <span className={styles.voteCount} style={{
-          color: currentVote === 1 ? 'var(--success)' : currentVote === -1 ? 'var(--danger)' : 'inherit'
-        }}>
-          {voteCount > 0 ? '+' : ''}{voteCount}
-        </span>
+      <div className={styles.voteActions} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '20px' }}>
+            <button 
+              className={`${styles.voteBtn} ${currentVote === 1 ? styles.voteActive : ''}`}
+              onClick={() => handleVote(1)}
+              disabled={isVoting}
+              aria-label="推"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: currentVote === 1 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}
+            >
+              <ThumbsUp size={16} />
+            </button>
+            
+            <span className={styles.voteCount} style={{
+              color: currentVote === 1 ? 'var(--accent-primary)' : currentVote === -1 ? 'var(--danger)' : 'var(--text-primary)',
+              fontWeight: 'bold', minWidth: '20px', textAlign: 'center'
+            }}>
+              {voteCount}
+            </span>
 
-        <button 
-          className={`${styles.voteBtn} ${currentVote === -1 ? styles.voteActiveDown : ''}`}
-          onClick={() => handleVote(-1)}
-          disabled={isVoting}
-          aria-label="噓"
-        >
-          <ThumbsDown size={18} />
-        </button>
+            <button 
+              className={`${styles.voteBtn} ${currentVote === -1 ? styles.voteActiveDown : ''}`}
+              onClick={() => handleVote(-1)}
+              disabled={isVoting}
+              aria-label="噓"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: currentVote === -1 ? 'var(--danger)' : 'var(--text-secondary)' }}
+            >
+              <ThumbsDown size={16} />
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+          <MessageCircle size={16} /> 留言 ({review.comments_count || 0})
+        </div>
       </div>
     </div>
   );
 }
 
 export default MovieDetail;
+
