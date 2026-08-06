@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ThumbsUp, MessageCircle, Edit2, Trash2, Send } from 'lucide-react';
+import { X, ThumbsUp, ThumbsDown, MessageCircle, Edit2, Trash2, Send } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import ReviewForm from './ReviewForm';
@@ -25,22 +25,48 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
     }
   };
 
-  const handleVote = async () => {
+  const handleVote = async (voteType) => {
     if (!isLoggedIn) {
       alert('必須登入才能對心得進行評價！');
       return;
     }
+    
+    const prevReview = currentReview;
+    const currentVote = prevReview.user_voted || 0;
+    
+    let newUpvotes = prevReview.upvotes || 0;
+    let newDownvotes = prevReview.downvotes || 0;
+    let newCurrentVote = voteType;
+
+    if (currentVote === voteType) {
+      newCurrentVote = 0;
+      if (voteType === 1) newUpvotes -= 1;
+      if (voteType === -1) newDownvotes -= 1;
+    } else {
+      if (currentVote === 1) newUpvotes -= 1;
+      if (currentVote === -1) newDownvotes -= 1;
+      if (voteType === 1) newUpvotes += 1;
+      if (voteType === -1) newDownvotes += 1;
+    }
+
+    setCurrentReview(prev => ({
+      ...prev,
+      user_voted: newCurrentVote,
+      upvotes: newUpvotes,
+      downvotes: newDownvotes
+    }));
+
     try {
-      const res = await api.post(`reviews/${currentReview.id}/vote/`, { vote_type: 1 });
-      const isAdded = res.data.message === 'Vote added.' || res.data.message === 'Vote updated.';
-      setCurrentReview(prev => ({
-        ...prev,
-        user_voted: !prev.user_voted,
-        score: prev.score + (prev.user_voted ? -1 : 1) 
-      }));
+      await api.post(`reviews/${currentReview.id}/vote/`, { vote_type: voteType });
       if (onReviewUpdated) onReviewUpdated();
     } catch (err) {
       console.error(err);
+      setCurrentReview(prevReview);
+      if (err.response?.status === 401) {
+        alert('請先登入才能投票！');
+      } else {
+        alert('投票失敗，請稍後再試。');
+      }
     }
   };
 
@@ -153,18 +179,31 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
           </div>
         )}
 
-        {/* Vote Button */}
-        <div style={{ display: 'flex', marginBottom: '32px' }}>
+        {/* Vote Buttons */}
+        <div style={{ display: 'flex', marginBottom: '32px', gap: '12px' }}>
           <button 
-            onClick={handleVote}
+            onClick={() => handleVote(1)}
             style={{ 
               ...voteBtnStyle, 
-              background: currentReview.user_voted ? 'var(--accent-primary)' : 'transparent',
-              color: currentReview.user_voted ? '#fff' : 'var(--text-primary)'
+              background: currentReview.user_voted === 1 ? 'var(--accent-primary)' : 'transparent',
+              color: currentReview.user_voted === 1 ? '#fff' : 'var(--text-primary)'
             }}
           >
             <ThumbsUp size={18} /> 
-            {currentReview.user_voted ? '已推薦' : '推薦'} ({currentReview.score || 0})
+            {currentReview.upvotes || 0} 推
+          </button>
+          
+          <button 
+            onClick={() => handleVote(-1)}
+            style={{ 
+              ...voteBtnStyle, 
+              borderColor: 'var(--danger)',
+              background: currentReview.user_voted === -1 ? 'var(--danger)' : 'transparent',
+              color: currentReview.user_voted === -1 ? '#fff' : 'var(--text-primary)'
+            }}
+          >
+            <ThumbsDown size={18} /> 
+            {currentReview.downvotes || 0} 倒讚
           </button>
         </div>
 

@@ -18,7 +18,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     
     def get_queryset(self):
-        qs = Review.objects.filter(is_deleted=False).annotate(score=Count('votes')).order_by('-created_at')
+        qs = Review.objects.filter(is_deleted=False).annotate(
+            upvotes=Count('votes', filter=Q(votes__vote_type=1)),
+            downvotes=Count('votes', filter=Q(votes__vote_type=-1))
+        ).order_by('-created_at')
         movie_id = self.request.query_params.get('movie')
         if movie_id:
             qs = qs.filter(movie_id=movie_id)
@@ -48,7 +51,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
     def deleted_reviews(self, request):
-        deleted = Review.objects.filter(is_deleted=True).annotate(score=Count('votes')).order_by('-created_at')
+        deleted = Review.objects.filter(is_deleted=True).annotate(
+            upvotes=Count('votes', filter=Q(votes__vote_type=1)),
+            downvotes=Count('votes', filter=Q(votes__vote_type=-1))
+        ).order_by('-created_at')
         serializer = self.get_serializer(deleted, many=True)
         return Response(serializer.data)
 
@@ -156,7 +162,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         cached_data = cache.get(cache_key)
         
         if not cached_data:
-            trending_reviews = self.get_queryset().order_by('-score', '-created_at')[:10]
+            trending_reviews = self.get_queryset().order_by('-upvotes', '-created_at')[:10]
             serializer = self.get_serializer(trending_reviews, many=True)
             cached_data = serializer.data
             cache.set(cache_key, cached_data, 60 * 10)

@@ -30,19 +30,22 @@ class ReviewSerializer(serializers.ModelSerializer):
     tag_names = serializers.ListField(
         child=serializers.CharField(max_length=50), write_only=True, required=False
     )
-    score = serializers.IntegerField(read_only=True, required=False)
+    upvotes = serializers.IntegerField(read_only=True, required=False)
+    downvotes = serializers.IntegerField(read_only=True, required=False)
     user_voted = serializers.SerializerMethodField()
     comments_count = serializers.IntegerField(source='comments.count', read_only=True)
     
     class Meta:
         model = Review
-        fields = ('id', 'user', 'movie', 'movie_title', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'score', 'user_voted', 'comments_count')
+        fields = ('id', 'user', 'movie', 'movie_title', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
 
     def get_user_voted(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return Vote.objects.filter(review=obj, user=request.user).exists()
-        return False
+            vote = Vote.objects.filter(review=obj, user=request.user).first()
+            if vote:
+                return vote.vote_type
+        return 0
 
     def create(self, validated_data):
         tag_names = validated_data.pop('tag_names', [])

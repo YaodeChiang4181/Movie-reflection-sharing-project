@@ -130,8 +130,9 @@ function MovieDetail() {
 
 function ReviewCard({ review }) {
   const { isLoggedIn } = useAuth();
-  const [voteCount, setVoteCount] = useState(review.score || 0);
-  const [currentVote, setCurrentVote] = useState(review.user_voted ? 1 : 0);
+  const [upvotes, setUpvotes] = useState(review.upvotes || 0);
+  const [downvotes, setDownvotes] = useState(review.downvotes || 0);
+  const [currentVote, setCurrentVote] = useState(review.user_voted || 0);
   const [isVoting, setIsVoting] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
   
@@ -174,25 +175,32 @@ function ReviewCard({ review }) {
     
     // 儲存先前的狀態，以便失敗時復原
     const prevVote = currentVote;
-    const prevCount = voteCount;
+    const prevUpvotes = upvotes;
+    const prevDownvotes = downvotes;
     
     // 1. 樂觀地立即更新畫面 (Optimistic Update)
     setIsVoting(true);
-    let newVoteCount = voteCount;
+    let newUpvotes = upvotes;
+    let newDownvotes = downvotes;
     let newCurrentVote = voteType;
 
     if (currentVote === voteType) {
       // 收回投票
       newCurrentVote = 0;
-      newVoteCount = voteCount - voteType;
+      if (voteType === 1) newUpvotes -= 1;
+      if (voteType === -1) newDownvotes -= 1;
     } else {
       // 改變投票或新投票
-      const diff = voteType - currentVote;
-      newVoteCount = voteCount + diff;
+      if (currentVote === 1) newUpvotes -= 1;
+      if (currentVote === -1) newDownvotes -= 1;
+      
+      if (voteType === 1) newUpvotes += 1;
+      if (voteType === -1) newDownvotes += 1;
     }
 
     setCurrentVote(newCurrentVote);
-    setVoteCount(newVoteCount);
+    setUpvotes(newUpvotes);
+    setDownvotes(newDownvotes);
 
     // 2. 發送背景 API 請求
     try {
@@ -200,7 +208,8 @@ function ReviewCard({ review }) {
     } catch (error) {
       // 3. 失敗處理：退回原狀態並提示錯誤
       setCurrentVote(prevVote);
-      setVoteCount(prevCount);
+      setUpvotes(prevUpvotes);
+      setDownvotes(prevDownvotes);
       
       if (error.response?.status === 401) {
         alert('請先登入才能投票！');
@@ -273,32 +282,35 @@ function ReviewCard({ review }) {
       <div className={styles.voteActions} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '20px' }}>
-            <button 
-              className={`${styles.voteBtn} ${currentVote === 1 ? styles.voteActive : ''}`}
-              onClick={() => handleVote(1)}
-              disabled={isVoting}
-              aria-label="推"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: currentVote === 1 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}
-            >
-              <ThumbsUp size={16} />
-            </button>
-            
-            <span className={styles.voteCount} style={{
-              color: currentVote === 1 ? 'var(--accent-primary)' : currentVote === -1 ? 'var(--danger)' : 'var(--text-primary)',
-              fontWeight: 'bold', minWidth: '20px', textAlign: 'center'
-            }}>
-              {voteCount}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button 
+                className={`${styles.voteBtn} ${currentVote === 1 ? styles.voteActive : ''}`}
+                onClick={() => handleVote(1)}
+                disabled={isVoting}
+                aria-label="推"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: currentVote === 1 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}
+              >
+                <ThumbsUp size={16} />
+              </button>
+              <span className={styles.voteCount} style={{ color: currentVote === 1 ? 'var(--accent-primary)' : 'var(--text-primary)', fontWeight: 'bold' }}>
+                {upvotes}
+              </span>
+            </div>
 
-            <button 
-              className={`${styles.voteBtn} ${currentVote === -1 ? styles.voteActiveDown : ''}`}
-              onClick={() => handleVote(-1)}
-              disabled={isVoting}
-              aria-label="噓"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: currentVote === -1 ? 'var(--danger)' : 'var(--text-secondary)' }}
-            >
-              <ThumbsDown size={16} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
+              <button 
+                className={`${styles.voteBtn} ${currentVote === -1 ? styles.voteActiveDown : ''}`}
+                onClick={() => handleVote(-1)}
+                disabled={isVoting}
+                aria-label="噓"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: currentVote === -1 ? 'var(--danger)' : 'var(--text-secondary)' }}
+              >
+                <ThumbsDown size={16} />
+              </button>
+              <span className={styles.voteCount} style={{ color: currentVote === -1 ? 'var(--danger)' : 'var(--text-primary)', fontWeight: 'bold' }}>
+                {downvotes}
+              </span>
+            </div>
           </div>
         </div>
 

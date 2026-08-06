@@ -499,9 +499,11 @@ def handle_message(event):
 
     if text == '熱門影評':
         try:
-            from django.db.models import Count
+            from django.db.models import Count, Q
             # 撈取按讚數最高的 5 篇心得
-            trending_reviews = Review.objects.filter(is_deleted=False).annotate(score=Count('votes')).order_by('-score', '-created_at')[:5]
+            trending_reviews = Review.objects.filter(is_deleted=False).annotate(
+                upvotes=Count('votes', filter=Q(votes__vote_type=1))
+            ).order_by('-upvotes', '-created_at')[:5]
             
             if not trending_reviews:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前還沒有熱門影評喔！趕快來發布第一篇吧！"))
@@ -510,7 +512,7 @@ def handle_message(event):
             reply_lines = ["🔥 全站最熱門影評："]
             for r in trending_reviews:
                 content_str = str(r.content)[:20] if r.content else ""
-                reply_lines.append(f"⭐ {r.movie.title} ({r.score} 個讚)\n   「{content_str}...」")
+                reply_lines.append(f"⭐ {r.movie.title} ({r.upvotes} 個推)\n   「{content_str}...」")
                 
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
             reply_lines.append(f"\n👉 點此前往網站看完整熱門影評：\n{frontend_url}")
