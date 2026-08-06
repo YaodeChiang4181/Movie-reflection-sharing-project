@@ -235,9 +235,12 @@ def handle_message(event):
     
     # 攔截關鍵指令，強制退出目前的狀態 (避免在輸入電影名稱時，按到選單按鈕變成輸入電影名稱)
     reserved_commands = ['寫心得', '影迷名片', '我要揪團', '近期活動', '查', '熱門影評', '取消']
+    is_hash_cmd = any(text.startswith(c) for c in ['#心得', '＃心得', '#揪團', '＃揪團', '#綁定', '＃綁定'])
+    
     is_reserved = (
         text in reserved_commands or 
-        text.startswith(('/', '／', '#', '＃', '查 ', '搜尋 '))
+        text.startswith(('/', '／', '查 ', '搜尋 ')) or
+        is_hash_cmd
     )
     
     if is_reserved:
