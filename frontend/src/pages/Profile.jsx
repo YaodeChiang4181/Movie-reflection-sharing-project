@@ -67,8 +67,8 @@ function Profile() {
 
   // Calculate stats
   const totalReviews = reviews.length;
-  // If score is included in the backend, sum it up. Otherwise fallback to 0.
-  const totalVotes = reviews.reduce((sum, review) => sum + (review.score || 0), 0);
+  // If upvotes is included in the backend, sum it up. Otherwise fallback to 0.
+  const totalVotes = reviews.reduce((sum, review) => sum + (review.upvotes || 0), 0);
 
   return (
     <div className={`container ${styles.pageWrapper}`}>

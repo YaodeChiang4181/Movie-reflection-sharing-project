@@ -162,19 +162,19 @@ function Search() {
                   onClick={(e) => { e.stopPropagation(); handleVote(review.id); }}
                   style={{ 
                     display: 'flex', alignItems: 'center', gap: '6px', 
-                    background: review.user_voted ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                    background: review.user_voted === 1 ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
                     border: '1px solid rgba(255,255,255,0.1)', 
-                    color: review.user_voted ? 'var(--accent-primary)' : 'var(--text-primary)',
+                    color: review.user_voted === 1 ? 'var(--accent-primary)' : 'var(--text-primary)',
                     padding: '4px 12px', borderRadius: '20px',
                     cursor: 'pointer', transition: 'all 0.2s ease', marginLeft: 'auto'
                   }}
                   onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
                   onMouseOut={(e) => { 
-                    e.currentTarget.style.background = review.user_voted ? 'rgba(139, 92, 246, 0.2)' : 'transparent'; 
-                    e.currentTarget.style.color = review.user_voted ? 'var(--accent-primary)' : 'var(--text-primary)'; 
+                    e.currentTarget.style.background = review.user_voted === 1 ? 'rgba(139, 92, 246, 0.2)' : 'transparent'; 
+                    e.currentTarget.style.color = review.user_voted === 1 ? 'var(--accent-primary)' : 'var(--text-primary)'; 
                   }}
                 >
-                  <ThumbsUp size={16} /> 推薦 ({review.score || 0})
+                  <ThumbsUp size={16} /> 推薦 ({review.upvotes || 0})
                 </button>
               </div>
             </div>
