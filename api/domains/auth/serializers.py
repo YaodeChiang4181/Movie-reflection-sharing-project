@@ -14,20 +14,30 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('nickname',)
 
 class UserSerializer(serializers.ModelSerializer):
-    nickname = serializers.CharField(source='profile.nickname', read_only=True)
+    nickname = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ('campus_id', 'nickname', 'date_joined')
 
+    def get_nickname(self, obj):
+        if hasattr(obj, 'profile') and obj.profile:
+            return obj.profile.nickname
+        return obj.username or obj.campus_id or "Unknown"
+
 class UserMeSerializer(serializers.ModelSerializer):
-    nickname = serializers.CharField(source='profile.nickname', read_only=True)
+    nickname = serializers.SerializerMethodField()
     real_name = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined')
+
+    def get_nickname(self, obj):
+        if hasattr(obj, 'profile') and obj.profile:
+            return obj.profile.nickname
+        return obj.username or obj.campus_id or "Unknown"
 
     def get_real_name(self, obj):
         if hasattr(obj, 'identity') and obj.identity:
@@ -43,7 +53,7 @@ class UserMeSerializer(serializers.ModelSerializer):
 
 class AdminUserSerializer(serializers.ModelSerializer):
     """管理後台專用：顯示真實姓名、信箱（兼容校內/校外使用者）"""
-    nickname = serializers.CharField(source='profile.nickname', read_only=True)
+    nickname = serializers.SerializerMethodField()
     real_name = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
     user_type = serializers.SerializerMethodField()
@@ -51,6 +61,11 @@ class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('campus_id', 'nickname', 'real_name', 'email', 'user_type', 'date_joined')
+
+    def get_nickname(self, obj):
+        if hasattr(obj, 'profile') and obj.profile:
+            return obj.profile.nickname
+        return obj.username or obj.campus_id or "Unknown"
 
     def get_real_name(self, obj):
         if hasattr(obj, 'identity') and obj.identity:
@@ -178,7 +193,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         data['user'] = {
             'campus_id': self.user.campus_id,
-            'nickname': getattr(self.user, 'profile', None) and self.user.profile.nickname,
+            'nickname': self.user.profile.nickname if hasattr(self.user, 'profile') and self.user.profile else self.user.username,
             'is_staff': self.user.is_staff
         }
         return data
