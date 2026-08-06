@@ -217,6 +217,24 @@ def handle_message(event):
     state_record, _ = LineBotState.objects.get_or_create(line_user_id=line_user_id)
     user_state = state_record.state
     
+    # 攔截關鍵指令，強制退出目前的狀態 (避免在輸入電影名稱時，按到選單按鈕變成輸入電影名稱)
+    reserved_commands = ['寫心得', '影迷名片', '我要揪團', '近期活動', '查', '熱門影評', '取消']
+    is_reserved = (
+        text in reserved_commands or 
+        text.startswith(('/', '／', '#', '＃', '查 ', '搜尋 '))
+    )
+    
+    if is_reserved:
+        if user_state:
+            state_record.state = ""
+            state_record.data = {}
+            state_record.save()
+            user_state = ""
+            
+        if text == '取消':
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="✅ 已為您取消目前的動作。"))
+            return
+            
     if text == '查':
         state_record.state = "WAITING_FOR_SEARCH_QUERY"
         state_record.save()
