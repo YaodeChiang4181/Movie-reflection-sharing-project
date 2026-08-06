@@ -1,46 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import liff from '@line/liff';
+import React from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ProfileCard = () => {
-  const [profile, setProfile] = useState(null);
-  const [isLiffReady, setIsLiffReady] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const liffId = import.meta.env.VITE_LIFF_ID;
-    if (!liffId) {
-      setError('VITE_LIFF_ID 未設定');
-      return;
-    }
-
-    liff.init({ liffId })
-      .then(() => {
-        setIsLiffReady(true);
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        } else {
-          liff.getProfile().then(p => setProfile(p));
-        }
-      })
-      .catch((err) => {
-        setError('LIFF 初始化失敗');
-        console.error(err);
-      });
-  }, []);
-
+  const { userProfile, isAuthLoading } = useAuth();
+  
   const handleShare = async () => {
-    if (!liff.isApiAvailable('shareTargetPicker')) {
+    if (!window.liff || !window.liff.isApiAvailable('shareTargetPicker')) {
       alert('您的環境不支援轉發功能');
       return;
     }
     
     try {
-      await liff.shareTargetPicker([
+      await window.liff.shareTargetPicker([
         {
           type: 'text',
-          text: `嗨！我是 ${profile?.displayName}，快來看看我的專屬影迷名片！`
+          text: `嗨！我是 ${userProfile?.line_display_name || userProfile?.username}，快來看看我的專屬影迷名片！`
         }
-        // 實務上可以傳送 Flex Message 卡片，包含 Canva 繪製的雷達圖截圖 URL
       ]);
       alert('分享成功！');
     } catch (err) {
@@ -48,8 +23,12 @@ const ProfileCard = () => {
     }
   };
 
-  if (error) return <div style={{ padding: 20, color: 'red' }}>{error}</div>;
-  if (!isLiffReady || !profile) return <div style={{ padding: 20 }}>載入中...</div>;
+  if (isAuthLoading) return <div style={{ padding: 20 }}>載入中...</div>;
+  if (!userProfile) return <div style={{ padding: 20, color: 'red' }}>無法取得使用者資料，請確認已登入或綁定 LINE 帳號。</div>;
+
+  // 嘗試取得使用者經驗值與等級
+  const level = userProfile.experience?.level || 1;
+  const exp = userProfile.experience?.exp || 0;
 
   return (
     <div style={{ 
@@ -59,7 +38,6 @@ const ProfileCard = () => {
       textAlign: 'center',
       fontFamily: 'sans-serif'
     }}>
-      {/* 這裡可以疊加由 Canva 設計的背景圖 */}
       <div style={{
         background: 'linear-gradient(135deg, #2b5876 0%, #4e4376 100%)',
         borderRadius: '15px',
@@ -68,15 +46,15 @@ const ProfileCard = () => {
         boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
         marginBottom: '20px'
       }}>
-        <img 
-          src={profile.pictureUrl} 
-          alt="Avatar" 
-          style={{ width: '80px', height: '80px', borderRadius: '50%', marginBottom: '15px' }}
-        />
-        <h2 style={{ margin: '0 0 10px 0' }}>{profile.displayName}</h2>
-        <p style={{ margin: 0, opacity: 0.9 }}>Lv. 10 獨立製片信徒</p>
+        {/* 如果有 LINE 的頭像就顯示，沒有就顯示預設圖 */}
+        <div style={{
+          width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#ccc', margin: '0 auto 15px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
+        }}>
+           <span style={{fontSize: '40px'}}>🎬</span>
+        </div>
+        <h2 style={{ margin: '0 0 10px 0' }}>{userProfile.line_display_name || userProfile.username}</h2>
+        <p style={{ margin: 0, opacity: 0.9 }}>Lv. {level} 影迷 (EXP: {exp})</p>
         
-        {/* 雷達圖 Canvas 區塊 (預留給 Chart.js) */}
         <div style={{
           marginTop: '20px',
           height: '200px',

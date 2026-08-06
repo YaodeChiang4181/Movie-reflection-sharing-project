@@ -117,3 +117,58 @@ class VerifyEmailView(APIView):
         record.save()
 
         return Response({'message': '信箱驗證成功'})
+
+class LineLoginView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        access_token = request.data.get('access_token')
+        if not access_token:
+            return Response({'error': 'Missing access_token'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Verify token with LINE
+        headers = {'Authorization': f'Bearer {access_token}'}
+        resp = requests.get('https://api.line.me/v2/profile', headers=headers)
+        if resp.status_code != 200:
+            return Response({'error': 'Invalid LINE token'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        profile_data = resp.json()
+        line_user_id = profile_data.get('userId')
+        display_name = profile_data.get('displayName', 'LINE User')
+        
+        if not line_user_id:
+            return Response({'error': 'Could not get LINE User ID'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user = User.objects.filter(line_user_id=line_user_id).first()
+        
+        if not user:
+            # Create a light account if not found
+            import string
+            
+            def generate_random_campus_id():
+                while True:
+                    cid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
+                    if not User.objects.filter(campus_id=cid).exists():
+                        return cid
+                        
+            campus_id = generate_random_campus_id()
+            user = User.objects.create(
+                campus_id=campus_id,
+                line_user_id=line_user_id,
+                line_display_name=display_name,
+                username=display_name
+            )
+            random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
+            from api.models import UserProfile
+            UserProfile.objects.create(user=user, nickname=random_nickname)
+            
+        # Generate JWT for the user
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserMeSerializer(user).data
+        })
+
