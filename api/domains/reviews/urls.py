@@ -4,7 +4,7 @@ from .views import MovieViewSet, ReviewViewSet
 
 router = DefaultRouter()
 router.register(r'movies', MovieViewSet, basename='movie')
-router.register(r'', ReviewViewSet, basename='review')
+router.register(r'reviews', ReviewViewSet, basename='review')
 
 urlpatterns = [
     # Review endpoints are mounted at /api/reviews/ (from root urls)
