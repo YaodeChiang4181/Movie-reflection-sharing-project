@@ -245,7 +245,68 @@ def handle_message(event):
         
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
         return
+
+    # --- Stateful Review Creation ---
+    if text == '寫心得':
+        cache.set(state_key, "WAITING_FOR_REVIEW_TITLE", 300)  # 5分鐘過期
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="📝 準備發布心得！\n\n請輸入您要分享的【電影名稱】："))
+        return
         
+    if user_state == "WAITING_FOR_REVIEW_TITLE":
+        movie_title = text.strip()
+        cache.set(f"review_title_{line_user_id}", movie_title, 300)
+        cache.set(state_key, "WAITING_FOR_REVIEW_RATING", 300)
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"「{movie_title}」\n\n請輸入您對這部電影的【評分】(請輸入 1 到 5 之間的數字)："))
+        return
+        
+    if user_state == "WAITING_FOR_REVIEW_RATING":
+        rating_text = text.strip()
+        if not rating_text.isdigit() or not (1 <= int(rating_text) <= 5):
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 評分格式錯誤！請輸入 1 到 5 之間的數字："))
+            return
+            
+        rating = int(rating_text)
+        cache.set(f"review_rating_{line_user_id}", rating, 300)
+        cache.set(state_key, "WAITING_FOR_REVIEW_CONTENT", 300)
+        
+        movie_title = cache.get(f"review_title_{line_user_id}")
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"您給了 {rating} 顆星！🌟\n\n最後一步，請輸入您的【心得內容】："))
+        return
+        
+    if user_state == "WAITING_FOR_REVIEW_CONTENT":
+        content = text.strip()
+        movie_title = cache.get(f"review_title_{line_user_id}")
+        rating = cache.get(f"review_rating_{line_user_id}")
+        
+        # Clear cache
+        cache.delete(state_key)
+        cache.delete(f"review_title_{line_user_id}")
+        cache.delete(f"review_rating_{line_user_id}")
+        
+        # Create review
+        movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})
+        
+        review = Review.objects.create(
+            user=user,
+            movie=movie,
+            rating=rating,
+            content=content,
+            source='line'
+        )
+        
+        user_exp = add_user_experience(user, 25)
+        
+        frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
+        movie_url = f"{frontend_url}/movies/{movie.id}"
+        
+        flex_bubble = get_exp_feedback_flex(user, 25, user_exp.level, user_exp.exp, movie_url=movie_url)
+        
+        line_bot_api.reply_message(
+            event.reply_token, 
+            FlexSendMessage(alt_text="發布成功！經驗值增加", contents=flex_bubble)
+        )
+        return
+
     if text == '我要揪團':
         reply_text = (
             "🤝 想要發起電影揪團嗎？請複製以下格式並填寫內容後發送給我：\n\n"
@@ -260,6 +321,40 @@ def handle_message(event):
             "時間：2024-12-31 19:00\n"
             "地點：信義威秀\n"
             "描述：目前缺2人，看完一起吃晚餐！"
+        )
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+        return
+        
+    if text == '影迷名片':
+        from api.models import UserExperience, Review, Vote
+        # 取得公開暱稱
+        try:
+            nickname = user.profile.nickname
+        except:
+            nickname = user.line_display_name or user.username
+            
+        # 取得等級與經驗值
+        user_exp, _ = UserExperience.objects.get_or_create(user=user)
+        level = user_exp.level
+        if level < 1:
+            level = 1
+        current_exp = user_exp.exp
+        exp_needed = level * 100
+        
+        # 已發布心得
+        review_count = Review.objects.filter(user=user, is_deleted=False).count()
+        
+        # 獲得推薦數 (按讚數)
+        likes_received = Vote.objects.filter(review__user=user, vote_type=1).count()
+        
+        reply_text = (
+            "🎬 【您的專屬影迷名片】\n\n"
+            f"👤 公開暱稱：{nickname}\n"
+            f"⭐ 等級：Lv. {level}\n"
+            f"✨ 經驗值：{current_exp} / {exp_needed}\n"
+            f"📝 已發布心得：{review_count} 篇\n"
+            f"👍 獲得推薦數：{likes_received} 次\n\n"
+            "💡 小提示：發布心得 +25 EXP，留言 +10 EXP，獲得按讚 +1 EXP！"
         )
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
         return

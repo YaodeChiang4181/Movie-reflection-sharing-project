@@ -26,8 +26,8 @@ rich_menu_to_create = RichMenu(
     name="影像製作所 主選單",
     chat_bar_text="打開選單",
     areas=[
-        RichMenuArea(bounds=RichMenuBounds(x=0, y=0, width=833, height=843), action=URIAction(label='寫心得', uri=f'{liff_base_url}/liff/review-form')),
-        RichMenuArea(bounds=RichMenuBounds(x=833, y=0, width=834, height=843), action=URIAction(label='影迷名片', uri=f'{liff_base_url}/liff/profile')),
+        RichMenuArea(bounds=RichMenuBounds(x=0, y=0, width=833, height=843), action=MessageAction(label='寫心得', text='寫心得')),
+        RichMenuArea(bounds=RichMenuBounds(x=833, y=0, width=834, height=843), action=MessageAction(label='影迷名片', text='影迷名片')),
         RichMenuArea(bounds=RichMenuBounds(x=1667, y=0, width=833, height=843), action=MessageAction(label='發起揪團', text='我要揪團')),
         RichMenuArea(bounds=RichMenuBounds(x=0, y=843, width=833, height=843), action=MessageAction(label='特映專區', text='近期活動')),
         RichMenuArea(bounds=RichMenuBounds(x=833, y=843, width=834, height=843), action=MessageAction(label='快速查詢', text='查')),
