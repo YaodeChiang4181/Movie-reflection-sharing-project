@@ -10,6 +10,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
   const [newComment, setNewComment] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [currentReview, setCurrentReview] = useState(review);
+  const [isRevealed, setIsRevealed] = useState(false);
   
   useEffect(() => {
     fetchComments();
@@ -117,8 +118,30 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
         </div>
 
         {/* Content */}
-        <div style={{ color: 'var(--text-primary)', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '20px', whiteSpace: 'pre-wrap' }}>
-          {currentReview.content}
+        <div style={{ position: 'relative', marginBottom: '20px' }}>
+          <div 
+            style={{ 
+              color: 'var(--text-primary)', fontSize: '1.1rem', lineHeight: '1.6', whiteSpace: 'pre-wrap',
+              ...(currentReview.is_spoiler && !isRevealed ? { filter: 'blur(8px)', userSelect: 'none', cursor: 'pointer' } : {})
+            }}
+            onClick={() => { if(currentReview.is_spoiler && !isRevealed) setIsRevealed(true); }}
+          >
+            {currentReview.content}
+          </div>
+          
+          {currentReview.is_spoiler && !isRevealed && (
+            <div 
+              style={{ 
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '8px', cursor: 'pointer',
+                fontWeight: 'bold', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+              }}
+              onClick={() => setIsRevealed(true)}
+            >
+              ⚠️ 包含劇透，點擊解鎖
+            </div>
+          )}
         </div>
 
         {/* Tags */}

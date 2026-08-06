@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Clock, Calendar, ThumbsUp, ThumbsDown, User, MessageCircle } from 'lucide-react';
+import { Star, Clock, Calendar, ThumbsUp, ThumbsDown, User, MessageCircle, Send } from 'lucide-react';
 import api from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
 import styles from './MovieDetail.module.css';
 
 function MovieDetail() {
@@ -128,11 +129,45 @@ function MovieDetail() {
 }
 
 function ReviewCard({ review }) {
-  // 樂觀 UI (Optimistic UI) 狀態管理
+  const { isLoggedIn } = useAuth();
   const [voteCount, setVoteCount] = useState(review.score || 0);
-  const [currentVote, setCurrentVote] = useState(review.user_voted ? 1 : 0); // 簡化版，預設為1或0
+  const [currentVote, setCurrentVote] = useState(review.user_voted ? 1 : 0);
   const [isVoting, setIsVoting] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
+  
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [commentsCount, setCommentsCount] = useState(review.comments_count || 0);
+
+  const fetchComments = async () => {
+    try {
+      const res = await api.get(`reviews/${review.id}/comments/`);
+      setComments(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleComments = () => {
+    if (!showComments) {
+      fetchComments();
+    }
+    setShowComments(!showComments);
+  };
+
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim() || !isLoggedIn) return;
+    try {
+      const res = await api.post(`reviews/${review.id}/comments/`, { content: newComment });
+      setComments([res.data, ...comments]);
+      setNewComment('');
+      setCommentsCount(c => c + 1);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleVote = async (voteType) => {
     if (isVoting) return;
@@ -267,10 +302,65 @@ function ReviewCard({ review }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          <MessageCircle size={16} /> 留言 ({review.comments_count || 0})
-        </div>
+        <button 
+          onClick={toggleComments}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+        >
+          <MessageCircle size={16} /> 留言 ({commentsCount})
+        </button>
       </div>
+
+      {showComments && (
+        <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+          {isLoggedIn ? (
+            <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+              <input 
+                type="text" 
+                value={newComment}
+                onChange={e => setNewComment(e.target.value)}
+                placeholder="留下您的評論..."
+                style={{
+                  flex: 1, padding: '10px 16px', background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', 
+                  color: 'var(--text-primary)', outline: 'none'
+                }}
+              />
+              <button 
+                type="submit" 
+                disabled={!newComment.trim()}
+                style={{
+                  background: 'var(--accent-primary)', border: 'none', color: 'white', 
+                  padding: '0 16px', borderRadius: '8px', cursor: 'pointer', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+              >
+                <Send size={16} />
+              </button>
+            </form>
+          ) : (
+            <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>請先登入後再留言。</p>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {comments.map(c => (
+              <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--accent-secondary)', fontWeight: 'bold' }}>{c.user?.nickname}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{new Date(c.created_at).toLocaleString('zh-TW')}</span>
+                </div>
+                <div style={{ color: 'var(--text-primary)', fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
+                  {c.content}
+                </div>
+              </div>
+            ))}
+            {comments.length === 0 && (
+              <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0', fontSize: '0.9rem' }}>
+                目前還沒有留言，來搶頭香吧！
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
