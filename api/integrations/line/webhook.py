@@ -5,24 +5,26 @@ import string
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from datetime import datetime
+from django.utils.timezone import make_aware
+import urllib.parse
 
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
 from rest_framework_simplejwt.tokens import RefreshToken
-import urllib.parse
 
 from dotenv import load_dotenv
 
-from .models import User, Review, Movie, Event, UserExperience
-from .line_flex_templates import get_exp_feedback_flex
+from api.models import User, Review, Movie, Event, UserProfile, OutsiderIdentity
+from api.domains.gamification.services import add_user_experience
+from .flex_templates import get_exp_feedback_flex
 
 load_dotenv()
 line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN', ''))
 handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET', ''))
 
 def generate_random_campus_id():
-    # 產生9碼隨機英數字
     while True:
         campus_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
         if not User.objects.filter(campus_id=campus_id).exists():
@@ -43,40 +45,31 @@ def line_webhook(request):
     return HttpResponseBadRequest('Method not allowed')
 
 def clean_text_from_line(event):
-    """
-    過濾 LINE 專屬表情貼 (避免在網站上顯示為 $ 符號) 以及不可見控制字元，
-    保留一般文字與標準 Unicode 表情符號 (😊)
-    """
     text = event.message.text
     if getattr(event.message, 'emojis', None):
-        # 將表情貼依照 index 反向排序，這樣刪除時才不會影響前面字元的 index
         emojis = sorted(event.message.emojis, key=lambda x: x.index, reverse=True)
         for emoji in emojis:
             start = emoji.index
             end = emoji.index + emoji.length
             text = text[:start] + text[end:]
     
-    # 過濾掉不可見的控制字元 (保留換行 \n)
     text = ''.join(char for char in text if char.isprintable() or char == '\n')
     return text.strip()
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    # LINE Verify 測試會發送假的 replyToken，直接忽略避免噴錯
     if event.reply_token == '00000000000000000000000000000000' or event.reply_token == 'ffffffffffffffffffffffffffffffff':
         return
 
     text = clean_text_from_line(event)
     line_user_id = event.source.user_id
     
-    # 取得 LINE 顯示名稱
     try:
         profile = line_bot_api.get_profile(line_user_id)
         display_name = profile.display_name
     except:
         display_name = "LINE User"
 
-    # 說明指令 (/)
     if text in ['/', '/規則', '／', '／規則']:
         rules_text = (
             "🎬 【影像製作所 Bot 指令規則】\n\n"
@@ -102,7 +95,6 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=rules_text))
         return
 
-    # 0. 綁定帳號邏輯 (優先處理，避免自動創立輕量帳號時佔用 line_user_id)
     if text.startswith('#綁定') or text.startswith('＃綁定'):
         parts = text.split()
         if len(parts) >= 3:
@@ -111,22 +103,17 @@ def handle_message(event):
             
             target_user = None
             if '@' in username_input:
-                # 校外人士使用 Email 綁定
-                from .models import OutsiderIdentity
                 outsider = OutsiderIdentity.objects.filter(email=username_input).first()
                 if outsider:
                     target_user = outsider.user
             else:
-                # 校內學生使用學號綁定
                 target_user = User.objects.filter(campus_id=username_input).first()
                 
             if target_user and target_user.check_password(password):
-                # 檢查是否已經被別人綁定
                 if target_user.line_user_id and target_user.line_user_id != line_user_id:
                     line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 此帳號已被其他 LINE 綁定！"))
                     return
                     
-                # 處理原本可能存在的輕量帳號
                 old_user = User.objects.filter(line_user_id=line_user_id).first()
                 if old_user and old_user.campus_id != target_user.campus_id:
                     if old_user.reviews.count() == 0:
@@ -146,10 +133,8 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="綁定格式錯誤，請參考範例 (中間要有空格，不需括號)：\n#綁定 a12345678 mypassword"))
         return
 
-    # 取得或創建使用者 (一般發文邏輯)
     user = User.objects.filter(line_user_id=line_user_id).first()
     if not user:
-        # 建立輕量帳號
         campus_id = generate_random_campus_id()
         user = User.objects.create(
             campus_id=campus_id,
@@ -158,12 +143,9 @@ def handle_message(event):
             username=display_name
         )
         
-        # 建立隨機公開暱稱 (UserProfile)
         random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
-        from .models import UserProfile
         UserProfile.objects.create(user=user, nickname=random_nickname)
 
-    # 1. 發布心得
     if text.startswith('#心得') or text.startswith('＃心得'):
         movie_match = re.search(r'電影：([^\n]+)', text)
         rating_match = re.search(r'評分：(\d+)', text)
@@ -184,19 +166,12 @@ def handle_message(event):
                 source='line'
             )
             
-            # 計算經驗值
-            exp_gained = 25
-            user_exp, _ = UserExperience.objects.get_or_create(user=user)
-            user_exp.exp += exp_gained
-            user_exp.level = (user_exp.exp // 100) + 1
-            user_exp.save()
+            user_exp = add_user_experience(user, 25)
             
-            # 使用環境變數或寫死的前端網址
             frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
             movie_url = f"{frontend_url}/movies/{movie.id}"
             
-            # 產生 Flex Message
-            flex_bubble = get_exp_feedback_flex(user, exp_gained, user_exp.level, user_exp.exp, movie_url=movie_url)
+            flex_bubble = get_exp_feedback_flex(user, 25, user_exp.level, user_exp.exp, movie_url=movie_url)
             
             line_bot_api.reply_message(
                 event.reply_token, 
@@ -207,7 +182,6 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="心得格式錯誤，請參考範例 (不需打括號)：\n#心得\n電影：奧德賽\n評分：5\n心得：真的很好看！"))
             return
             
-    # 2. 搜尋心得
     if text.startswith('查 ') or text.startswith('搜尋 '):
         keyword = text.split(' ', 1)[1].strip()
         reviews = Review.objects.filter(movie__title__icontains=keyword, is_deleted=False).order_by('-created_at')[:5]
@@ -220,7 +194,6 @@ def handle_message(event):
         for r in reviews:
             reply_lines.append(f"- {r.movie.title} ({r.rating}星): {r.content[:20]}...")
             
-        # 產生自動登入與跳轉網址
         if user:
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
@@ -235,7 +208,24 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
         return
         
-    # 3. 搜尋近期活動
+    if text == '我要揪團':
+        reply_text = (
+            "🤝 想要發起電影揪團嗎？請複製以下格式並填寫內容後發送給我：\n\n"
+            "#揪團\n"
+            "活動：【請填寫活動名稱】\n"
+            "時間：【YYYY-MM-DD HH:MM】\n"
+            "地點：【請填寫地點】\n"
+            "描述：【請填寫想說的話】\n\n"
+            "💡 範例：\n"
+            "#揪團\n"
+            "活動：一起看死侍與金鋼狼\n"
+            "時間：2024-12-31 19:00\n"
+            "地點：信義威秀\n"
+            "描述：目前缺2人，看完一起吃晚餐！"
+        )
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+        return
+
     if text == '近期活動':
         events = Event.objects.filter(event_time__gte=timezone.now()).order_by('event_time')[:5]
         if not events:
@@ -244,7 +234,6 @@ def handle_message(event):
             
         reply_lines = ["📅 近期揪電影活動："]
         for e in events:
-            # 轉換為本地時間顯示 (假設 timezone 已經設為台北)
             time_str = e.event_time.strftime('%m/%d %H:%M')
             reply_lines.append(f"- [{time_str}] {e.title}\n  地點: {e.location}\n  發起人: {e.organizer_nickname}")
             
@@ -253,7 +242,6 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
         return
 
-    # 4. 發起揪團活動
     if text.startswith('#揪團') or text.startswith('＃揪團'):
         title_match = re.search(r'活動：([^\n]+)', text)
         time_match = re.search(r'時間：([^\n]+)', text)
@@ -266,11 +254,7 @@ def handle_message(event):
             location = location_match.group(1).strip()
             description = description_match.group(1).strip() if description_match else ""
             
-            from datetime import datetime
-            from django.utils.timezone import make_aware
-            
             try:
-                # 假設使用者輸入格式為 YYYY-MM-DD HH:MM 或 YYYY/MM/DD HH:MM
                 time_str_clean = time_str.replace('/', '-')
                 event_time = datetime.strptime(time_str_clean, '%Y-%m-%d %H:%M')
                 event_time = make_aware(event_time)
@@ -278,7 +262,6 @@ def handle_message(event):
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text="時間格式錯誤，請使用 YYYY-MM-DD HH:MM 格式，例如：2024-12-31 19:00"))
                 return
             
-            # 取得發起人暱稱
             try:
                 organizer_nickname = user.profile.nickname
             except:
@@ -300,7 +283,6 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="揪團格式錯誤，請參考範例：\n#揪團\n活動：看電影\n時間：2024-12-31 19:00\n地點：信義威秀\n描述：大家一起來"))
             return
 
-    # 若無法辨識的指令，可選擇不回應或給予提示
     try:
         line_bot_api.reply_message(
             event.reply_token, 
@@ -308,4 +290,3 @@ def handle_message(event):
         )
     except LineBotApiError:
         pass
-

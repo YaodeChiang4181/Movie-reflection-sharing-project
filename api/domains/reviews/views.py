@@ -1,57 +1,12 @@
-from rest_framework import generics, viewsets, status
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import RegisterSerializer, CustomTokenObtainPairSerializer, UserMeSerializer, AdminUserSerializer
-
-User = get_user_model()
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
-
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    permission_classes = (AllowAny,)
-    serializer_class = RegisterSerializer
-
-class UserMeView(generics.RetrieveAPIView):
-    serializer_class = UserMeSerializer
-    permission_classes = (IsAuthenticated,)
-
-    def get_object(self):
-        return self.request.user
-
-class AdminUserViewSet(viewsets.ModelViewSet):
-    """管理員專用的使用者管理介面"""
-    serializer_class = AdminUserSerializer
-    permission_classes = [IsAdminUser]
-
-    def get_queryset(self):
-        # 列出所有非管理員的使用者，預先載入兩種身分表避免 N+1
-        return User.objects.filter(is_staff=False).select_related(
-            'profile', 'identity', 'outsider_identity'
-        ).order_by('-date_joined')
-
-    def destroy(self, request, *args, **kwargs):
-        user = self.get_object()
-        # 額外確認不能刪除管理員
-        if user.is_staff:
-            return Response({"error": "Cannot delete admin user"}, status=status.HTTP_403_FORBIDDEN)
-        user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 from django.db import IntegrityError
-from django.db.models import Sum, F, Count, Q, Case, When, Value, IntegerField
-from django.db.models.functions import Coalesce
-from django.utils import timezone
-from datetime import timedelta
+from django.db.models import Count, Q, Case, When, Value, IntegerField
 from django.core.cache import cache
-from .models import Movie, Tag, Review, Vote, Event, Comment, Advertisement
-from .serializers import MovieSerializer, TagSerializer, ReviewSerializer, VoteSerializer, EventSerializer, CommentSerializer, AdvertisementSerializer
+from api.models import Movie, Review, Vote, Comment
+from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.all()
@@ -67,7 +22,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-        # 清除快取，讓首頁立刻更新
         cache.delete('trending_reviews')
 
     def destroy(self, request, *args, **kwargs):
@@ -115,7 +69,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
-        # 嚴格過濾出該名使用者的發文
         user_reviews = self.get_queryset().filter(user=request.user)
         serializer = self.get_serializer(user_reviews, many=True)
         return Response(serializer.data)
@@ -195,21 +148,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def trending(self, request):
-        # 實作排行榜快取機制 (10 分鐘)
         cache_key = 'trending_reviews'
         cached_data = cache.get(cache_key)
         
         if not cached_data:
-            # 移除 7 天的限制，讓舊文章也能在首頁顯示，並依據推薦人數 (score) 排行取前 10 名
             trending_reviews = self.get_queryset().order_by('-score', '-created_at')[:10]
-            
             serializer = self.get_serializer(trending_reviews, many=True)
             cached_data = serializer.data
-            
-            # 寫入快取
             cache.set(cache_key, cached_data, 60 * 10)
             
-        # 動態計算 user_voted，避免快取到特定使用者的按讚狀態而影響其他使用者
         response_data = []
         user = request.user
         user_votes = set()
@@ -224,110 +171,3 @@ class ReviewViewSet(viewsets.ModelViewSet):
             response_data.append(new_item)
             
         return Response(response_data)
-
-class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all().order_by('event_time')
-    serializer_class = EventSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-class AdvertisementViewSet(viewsets.ModelViewSet):
-    queryset = Advertisement.objects.all().order_by('-created_at')
-    serializer_class = AdvertisementSerializer
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
-
-from django.core.mail import send_mail
-from django.utils import timezone
-import random
-from datetime import timedelta
-from .models import EmailVerification
-from rest_framework.views import APIView
-from rest_framework import status
-
-class SendVerificationView(APIView):
-    permission_classes = (AllowAny,)
-
-    def post(self, request):
-        email = request.data.get('email')
-        if not email:
-            return Response({'error': '請提供信箱'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 檢查 1 分鐘內是否已發送
-        one_min_ago = timezone.now() - timedelta(minutes=1)
-        recent = EmailVerification.objects.filter(email=email, created_at__gte=one_min_ago).first()
-        if recent:
-            return Response({'error': '發送過於頻繁，請稍後再試'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-
-        # 產生 6 位數驗證碼
-        code = f"{random.randint(0, 999999):06d}"
-        
-        # 寄信
-        import os
-        import requests
-        try:
-            subject = '【影像製作所】註冊驗證碼'
-            message = f'歡迎註冊影像製作所平台！\n\n您的驗證碼是：{code}\n\n此驗證碼將在 10 分鐘後失效，請勿將驗證碼外洩給他人。'
-            
-            gas_url = os.environ.get('GAS_EMAIL_URL')
-            
-            if gas_url:
-                # 使用 Google Apps Script 發信
-                response = requests.post(gas_url, json={
-                    'email': email,
-                    'subject': subject,
-                    'body': message
-                })
-                if response.status_code != 200:
-                    raise Exception('GAS 回傳錯誤')
-            else:
-                # 本機端開發，或是使用原本的 SMTP
-                send_mail(
-                    subject=subject,
-                    message=message,
-                    from_email=None,  # 預設會使用 settings 中的 DEFAULT_FROM_EMAIL
-                    recipient_list=[email],
-                    fail_silently=False,
-                )
-            
-            # 信件寄出成功後，才刪除舊紀錄並建立新紀錄
-            EmailVerification.objects.filter(email=email, is_verified=False).delete()
-            EmailVerification.objects.create(email=email, code=code)
-            
-            return Response({'message': '驗證碼已發送'})
-        except Exception as e:
-            return Response({'error': f'寄信失敗，請確認伺服器設定'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class VerifyEmailView(APIView):
-    permission_classes = (AllowAny,)
-
-    def post(self, request):
-        email = request.data.get('email')
-        code = request.data.get('code')
-
-        if not email or not code:
-            return Response({'error': '請提供信箱與驗證碼'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 尋找 10 分鐘內的驗證紀錄
-        ten_mins_ago = timezone.now() - timedelta(minutes=10)
-        record = EmailVerification.objects.filter(
-            email=email, 
-            code=code, 
-            created_at__gte=ten_mins_ago,
-            is_verified=False
-        ).first()
-
-        if not record:
-            return Response({'error': '驗證碼錯誤或已過期'}, status=status.HTTP_400_BAD_REQUEST)
-
-        record.is_verified = True
-        record.save()
-
-        return Response({'message': '信箱驗證成功'})

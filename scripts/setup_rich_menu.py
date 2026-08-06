@@ -37,10 +37,10 @@ def create_and_set_rich_menu():
                 bounds=RichMenuBounds(x=833, y=0, width=834, height=843),
                 action=URIAction(label='影迷名片', uri=f'{liff_base_url}/liff/profile')
             ),
-            # 右上: 成就圖鑑 (開啟 LIFF 成就列表)
+            # 右上: 發起揪團 (觸發文字指令)
             RichMenuArea(
                 bounds=RichMenuBounds(x=1667, y=0, width=833, height=843),
-                action=URIAction(label='成就圖鑑', uri=f'{liff_base_url}/liff/achievements')
+                action=MessageAction(label='發起揪團', text='我要揪團')
             ),
             # 左下: 個人特映專區 (觸發文字推播或 LIFF)
             RichMenuArea(
