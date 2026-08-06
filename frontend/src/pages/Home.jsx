@@ -22,15 +22,23 @@ function Home() {
     setReviews(reviews.filter(r => r.id !== id));
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     fetchReviews();
-  }, []);
+  }, [currentPage]);
 
   const fetchReviews = async () => {
     try {
-      // Fetch trending or all reviews
-      const response = await api.get('reviews/trending/');
+      setIsLoading(true);
+      const response = await api.get(`reviews/?sort=hot&page=${currentPage}`);
       setReviews(response.data.results || response.data);
+      if (response.data.count) {
+        setTotalPages(Math.ceil(response.data.count / 20)); // Assuming PAGE_SIZE is 20
+      } else {
+        setTotalPages(1);
+      }
     } catch (err) {
       console.error("Failed to fetch reviews", err);
     } finally {
@@ -184,6 +192,27 @@ function Home() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
+          <button 
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+          >
+            上一頁
+          </button>
+          <span style={{ color: 'var(--text-secondary)' }}>第 {currentPage} 頁 / 共 {totalPages} 頁</span>
+          <button 
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+          >
+            下一頁
+          </button>
         </div>
       )}
     </div>
