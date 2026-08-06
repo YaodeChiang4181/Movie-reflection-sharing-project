@@ -226,55 +226,69 @@ def handle_message(event):
     if user_state == "WAITING_FOR_SEARCH_QUERY":
         state_record.state = ""
         state_record.save()
-        # 把輸入的文字當作 keyword 進行查詢
-        keyword = text.strip()
-        reviews = Review.objects.filter(movie__title__icontains=keyword, is_deleted=False).order_by('-created_at')[:5]
-        
-        if not reviews:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"找不到關於「{keyword}」的心得。"))
-            return
+        try:
+            # 把輸入的文字當作 keyword 進行查詢
+            keyword = text.strip()
+            reviews = Review.objects.filter(movie__title__icontains=keyword, is_deleted=False).order_by('-created_at')[:5]
             
-        reply_lines = [f"🔍 「{keyword}」的心得搜尋結果："]
-        for r in reviews:
-            reply_lines.append(f"- {r.movie.title} ({r.rating}星): {r.content[:20]}...")
-            
-        if user:
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-            frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
-            encoded_keyword = urllib.parse.quote(keyword)
-            search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-            reply_lines.append(f"\n🔗 點此前往網頁查看並自動登入：\n{search_link}")
-            
-        reply_lines.append("\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
+            if not reviews:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"找不到關於「{keyword}」的心得。"))
+                return
+                
+            reply_lines = [f"🔍 「{keyword}」的心得搜尋結果："]
+            for r in reviews:
+                content_str = str(r.content)[:20] if r.content else ""
+                reply_lines.append(f"- {r.movie.title} ({r.rating}星): {content_str}...")
+                
+            if user:
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                refresh_token = str(refresh)
+                frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+                encoded_keyword = urllib.parse.quote(keyword)
+                search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
+                reply_lines.append(f"\n🔗 點此前往網頁查看並自動登入：\n{search_link}")
+                
+            reply_lines.append("\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
+        except Exception as e:
+            try:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"系統查詢時發生錯誤：{str(e)}"))
+            except:
+                pass
         return
         
     if text.startswith('查 ') or text.startswith('搜尋 '):
-        keyword = text.split(' ', 1)[1].strip()
-        reviews = Review.objects.filter(movie__title__icontains=keyword, is_deleted=False).order_by('-created_at')[:5]
-        
-        if not reviews:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"找不到關於「{keyword}」的心得。"))
-            return
+        try:
+            keyword = text.split(' ', 1)[1].strip()
+            reviews = Review.objects.filter(movie__title__icontains=keyword, is_deleted=False).order_by('-created_at')[:5]
             
-        reply_lines = [f"🔍 「{keyword}」的心得搜尋結果："]
-        for r in reviews:
-            reply_lines.append(f"- {r.movie.title} ({r.rating}星): {r.content[:20]}...")
+            if not reviews:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"找不到關於「{keyword}」的心得。"))
+                return
+                
+            reply_lines = [f"🔍 「{keyword}」的心得搜尋結果："]
+            for r in reviews:
+                content_str = str(r.content)[:20] if r.content else ""
+                reply_lines.append(f"- {r.movie.title} ({r.rating}星): {content_str}...")
+                
+            if user:
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                refresh_token = str(refresh)
+                frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+                encoded_keyword = urllib.parse.quote(keyword)
+                search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
+                reply_lines.append(f"\n🔗 點此前往網頁查看並自動登入：\n{search_link}")
+                
+            reply_lines.append("\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
             
-        if user:
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-            frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
-            encoded_keyword = urllib.parse.quote(keyword)
-            search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-            reply_lines.append(f"\n🔗 點此前往網頁查看並自動登入：\n{search_link}")
-            
-        reply_lines.append("\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
-        
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
+        except Exception as e:
+            try:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"系統查詢時發生錯誤：{str(e)}"))
+            except:
+                pass
         return
 
     # --- Stateful Review Creation ---
