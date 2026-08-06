@@ -69,19 +69,21 @@ function MovieDetail() {
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h1 className={styles.title} style={{ textAlign: 'center', marginBottom: '24px' }}>{movie.title}</h1>
 
-          <div className={styles.ratingBox}>
-            <div className={styles.stars}>
-              {[1, 2, 3, 4, 5].map(star => (
-                <Star 
-                  key={star} 
-                  size={24} 
-                  className={styles.starIcon} 
-                  fill={star <= Math.round(avgRating) ? "currentColor" : "none"} 
-                  style={{ color: star <= Math.round(avgRating) ? 'var(--accent-primary)' : 'var(--text-muted)' }}
-                />
-              ))}
+          <div style={{ textAlign: 'center' }}>
+            <div className={styles.ratingBox}>
+              <div className={styles.stars}>
+                {[1, 2, 3, 4, 5].map(star => (
+                  <Star 
+                    key={star} 
+                    size={24} 
+                    className={styles.starIcon} 
+                    fill={star <= Math.round(avgRating) ? "currentColor" : "none"} 
+                    style={{ color: star <= Math.round(avgRating) ? 'var(--accent-primary)' : 'var(--text-muted)' }}
+                  />
+                ))}
+              </div>
+              <span className={styles.ratingText}>{avgRating} / 5.0 (來自 {reviews.length} 則影評)</span>
             </div>
-            <span className={styles.ratingText}>{avgRating} / 5.0 (來自 {reviews.length} 則影評)</span>
           </div>
 
           <div className={styles.reviewSection}>
