@@ -374,7 +374,7 @@ def handle_message(event):
         return
         
     if text == '影迷名片':
-        from api.models import UserExperience, Review, Vote
+        from api.models import UserExperience, Vote
         # 取得公開暱稱
         try:
             nickname = user.profile.nickname
