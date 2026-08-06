@@ -73,13 +73,18 @@ def handle_message(event):
     if text in ['/', '/規則', '／', '／規則']:
         rules_text = (
             "🎬 【影像製作所 Bot 指令規則】\n\n"
+            "如果想直接發布，也可以使用快速格式：\n"
             "📝 發布心得格式：\n"
             "#心得\n"
             "電影：奧德賽\n"
             "評分：5\n"
             "標籤：#動作片 (選填)\n"
-            "心得：這部電影太好看了！\n"
-            "(請直接接文字，不要打括號喔)\n\n"
+            "心得：這部電影太好看了！\n\n"
+            "✏️ 設定專屬暱稱 (限一次)：\n"
+            "#暱稱 你的暱稱\n"
+            "※ 範例：#暱稱 影迷小明\n\n"
+            "🔗 綁定網頁帳號：\n"
+            "#綁定 帳號 密碼\n\n"
             "🔍 搜尋電影評價：\n"
             "查 奧德賽\n\n"
             "📅 尋找近期活動：\n"
@@ -178,6 +183,32 @@ def handle_message(event):
         random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
         UserProfile.objects.create(user=user, nickname=random_nickname)
 
+    if text.startswith('#暱稱') or text.startswith('＃暱稱'):
+        parts = text.split(maxsplit=1)
+        if len(parts) >= 2:
+            import unicodedata
+            new_nickname = unicodedata.normalize('NFKC', parts[1].strip())
+            
+            if not re.match(r'^User_[A-Za-z0-9]{6}$', user.profile.nickname):
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 您已經設定過專屬暱稱了，每位使用者只能設定一次喔！"))
+                return
+                
+            if len(new_nickname) > 50:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 暱稱太長囉，請限制在 50 個字元以內！"))
+                return
+                
+            if UserProfile.objects.filter(nickname=new_nickname).exclude(user=user).exists():
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"❌ 暱稱「{new_nickname}」已經被其他人使用囉，換一個試試看吧！"))
+                return
+                
+            user.profile.nickname = new_nickname
+            user.profile.save()
+            
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"✅ 暱稱設定成功！以後大家都會看到你是「{new_nickname}」囉！"))
+        else:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="暱稱設定格式錯誤，請參考範例 (中間要有空格，不需括號)：\n#暱稱 影迷小明"))
+        return
+
     if text.startswith('#心得') or text.startswith('＃心得'):
         movie_match = re.search(r'電影：([^\n]+)', text)
         rating_match = re.search(r'評分：(\d+)', text)
@@ -241,7 +272,7 @@ def handle_message(event):
     
     # 攔截關鍵指令，強制退出目前的狀態 (避免在輸入電影名稱時，按到選單按鈕變成輸入電影名稱)
     reserved_commands = ['寫心得', '影迷名片', '我要揪團', '近期活動', '查', '熱門影評', '取消']
-    is_hash_cmd = any(text.startswith(c) for c in ['#心得', '＃心得', '#揪團', '＃揪團', '#綁定', '＃綁定'])
+    is_hash_cmd = any(text.startswith(c) for c in ['#心得', '＃心得', '#揪團', '＃揪團', '#綁定', '＃綁定', '#暱稱', '＃暱稱'])
     
     is_reserved = (
         text in reserved_commands or 
