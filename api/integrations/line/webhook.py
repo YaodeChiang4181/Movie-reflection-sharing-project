@@ -341,8 +341,19 @@ def handle_message(event):
         
     if user_state == "WAITING_FOR_REVIEW_CONTENT":
         content = text.strip()
+        state_record.data['review_content'] = content
+        state_record.state = "WAITING_FOR_REVIEW_TAGS"
+        state_record.save()
+        
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="太棒了！📝\n\n最後，請為這篇心得加上【Hashtag】 (請用 # 開頭，例如：#動作片 #好雷)。\n若不需要標籤，請直接輸入「無」或「略過」："))
+        return
+
+    if user_state == "WAITING_FOR_REVIEW_TAGS":
+        tag_text = text.strip()
+        
         movie_title = state_record.data.get('review_title')
         rating = state_record.data.get('review_rating')
+        content = state_record.data.get('review_content')
         
         # Clear state
         state_record.state = ""
@@ -359,6 +370,14 @@ def handle_message(event):
             content=content,
             source='line'
         )
+
+        # Process tags
+        if tag_text not in ['無', '略過', '沒有']:
+            tags = [t.strip() for t in tag_text.split('#') if t.strip()]
+            from api.models import Tag
+            for tag_name in tags:
+                tag_obj, _ = Tag.objects.get_or_create(name=tag_name)
+                review.tags.add(tag_obj)
         
         user_exp = add_user_experience(user, 25)
         
