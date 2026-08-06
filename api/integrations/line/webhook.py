@@ -16,7 +16,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from dotenv import load_dotenv
 
-from api.models import User, Review, Movie, Event, UserProfile, OutsiderIdentity
+from api.models import User, Review, Movie, Event, UserProfile, OutsiderIdentity, LineBotState
 from api.domains.gamification.services import add_user_experience
 from .flex_templates import get_exp_feedback_flex
 
@@ -182,19 +182,19 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="心得格式錯誤，請參考範例 (不需打括號)：\n#心得\n電影：奧德賽\n評分：5\n心得：真的很好看！"))
             return
             
-    from django.core.cache import cache
-    
     # --- Stateful Search Logic ---
-    state_key = f"line_state_{line_user_id}"
-    user_state = cache.get(state_key)
+    state_record, _ = LineBotState.objects.get_or_create(line_user_id=line_user_id)
+    user_state = state_record.state
     
     if text == '查':
-        cache.set(state_key, "WAITING_FOR_SEARCH_QUERY", 120)  # 2分鐘過期
+        state_record.state = "WAITING_FOR_SEARCH_QUERY"
+        state_record.save()
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="🔍 您欲查詢哪部電影呢？\n請直接輸入電影名稱："))
         return
         
     if user_state == "WAITING_FOR_SEARCH_QUERY":
-        cache.delete(state_key)  # 清除狀態
+        state_record.state = ""
+        state_record.save()
         # 把輸入的文字當作 keyword 進行查詢
         keyword = text.strip()
         reviews = Review.objects.filter(movie__title__icontains=keyword, is_deleted=False).order_by('-created_at')[:5]
@@ -248,14 +248,16 @@ def handle_message(event):
 
     # --- Stateful Review Creation ---
     if text == '寫心得':
-        cache.set(state_key, "WAITING_FOR_REVIEW_TITLE", 300)  # 5分鐘過期
+        state_record.state = "WAITING_FOR_REVIEW_TITLE"
+        state_record.save()
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="📝 準備發布心得！\n\n請輸入您要分享的【電影名稱】："))
         return
         
     if user_state == "WAITING_FOR_REVIEW_TITLE":
         movie_title = text.strip()
-        cache.set(f"review_title_{line_user_id}", movie_title, 300)
-        cache.set(state_key, "WAITING_FOR_REVIEW_RATING", 300)
+        state_record.data['review_title'] = movie_title
+        state_record.state = "WAITING_FOR_REVIEW_RATING"
+        state_record.save()
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"「{movie_title}」\n\n請輸入您對這部電影的【評分】(請輸入 1 到 5 之間的數字)："))
         return
         
@@ -266,22 +268,23 @@ def handle_message(event):
             return
             
         rating = int(rating_text)
-        cache.set(f"review_rating_{line_user_id}", rating, 300)
-        cache.set(state_key, "WAITING_FOR_REVIEW_CONTENT", 300)
+        state_record.data['review_rating'] = rating
+        state_record.state = "WAITING_FOR_REVIEW_CONTENT"
+        state_record.save()
         
-        movie_title = cache.get(f"review_title_{line_user_id}")
+        movie_title = state_record.data.get('review_title')
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"您給了 {rating} 顆星！🌟\n\n最後一步，請輸入您的【心得內容】："))
         return
         
     if user_state == "WAITING_FOR_REVIEW_CONTENT":
         content = text.strip()
-        movie_title = cache.get(f"review_title_{line_user_id}")
-        rating = cache.get(f"review_rating_{line_user_id}")
+        movie_title = state_record.data.get('review_title')
+        rating = state_record.data.get('review_rating')
         
-        # Clear cache
-        cache.delete(state_key)
-        cache.delete(f"review_title_{line_user_id}")
-        cache.delete(f"review_rating_{line_user_id}")
+        # Clear state
+        state_record.state = ""
+        state_record.data = {}
+        state_record.save()
         
         # Create review
         movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})

@@ -192,3 +192,12 @@ class CampaignCheckIn(models.Model):
     
     class Meta:
         unique_together = ('user', 'campaign')
+
+class LineBotState(models.Model):
+    line_user_id = models.CharField(max_length=100, unique=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    data = models.JSONField(default=dict, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.line_user_id} - {self.state}"
