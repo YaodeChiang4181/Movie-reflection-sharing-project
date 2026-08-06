@@ -228,4 +228,44 @@ class MergeGhostAccountView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
-
+class RecalculateExpView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def get(self, request):
+        secret = request.query_params.get('secret')
+        if secret != 'movie123':
+            return Response({'error': 'Unauthorized'}, status=403)
+            
+        try:
+            from api.models import User, Review, Comment, Vote, UserExperience
+            from api.domains.gamification.services import add_user_experience
+            from django.db import transaction
+            
+            with transaction.atomic():
+                UserExperience.objects.all().delete()
+                
+                users = User.objects.all()
+                updated_count = 0
+                for user in users:
+                    total_exp = 0
+                    
+                    reviews_count = Review.objects.filter(user=user, is_deleted=False).count()
+                    total_exp += (reviews_count * 25)
+                    
+                    comments_count = Comment.objects.filter(user=user).count()
+                    total_exp += (comments_count * 10)
+                    
+                    likes_received = Vote.objects.filter(review__user=user, vote_type=1).count()
+                    total_exp += (likes_received * 1)
+                    
+                    if total_exp > 0:
+                        add_user_experience(user, total_exp)
+                        updated_count += 1
+                        
+            return Response({
+                'message': 'Success!',
+                'users_updated': updated_count
+            })
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
