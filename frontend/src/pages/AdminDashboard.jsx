@@ -41,7 +41,7 @@ function AdminDashboard() {
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get('admin/users/');
+      const response = await api.get('auth/admin/users/');
       setUsers(response.data.results || response.data);
       setLoading(false);
     } catch (err) {
@@ -53,7 +53,7 @@ function AdminDashboard() {
   const handleKick = async (campus_id, nickname) => {
     if (window.confirm(`確定要徹底刪除使用者 ${nickname} (學號: ${campus_id}) 嗎？此操作無法復原。`)) {
       try {
-        await api.delete(`admin/users/${campus_id}/`);
+        await api.delete(`auth/admin/users/${campus_id}/`);
         setUsers(users.filter(u => u.campus_id !== campus_id));
         alert(`已成功剔除使用者 ${nickname}`);
       } catch (err) {

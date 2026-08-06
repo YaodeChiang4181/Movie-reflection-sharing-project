@@ -22,12 +22,24 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserMeSerializer(serializers.ModelSerializer):
     nickname = serializers.CharField(source='profile.nickname', read_only=True)
-    real_name = serializers.CharField(source='identity.real_name', read_only=True)
-    department = serializers.CharField(source='identity.department', read_only=True)
+    real_name = serializers.SerializerMethodField()
+    department = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined')
+
+    def get_real_name(self, obj):
+        if hasattr(obj, 'identity') and obj.identity:
+            return obj.identity.real_name
+        if hasattr(obj, 'outsider_identity') and obj.outsider_identity:
+            return obj.outsider_identity.real_name
+        return None
+
+    def get_department(self, obj):
+        if hasattr(obj, 'identity') and obj.identity:
+            return obj.identity.department
+        return None
 
 class AdminUserSerializer(serializers.ModelSerializer):
     """管理後台專用：顯示真實姓名、信箱（兼容校內/校外使用者）"""
