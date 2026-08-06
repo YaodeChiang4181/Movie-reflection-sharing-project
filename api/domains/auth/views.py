@@ -172,3 +172,60 @@ class LineLoginView(APIView):
             'user': UserMeSerializer(user).data
         })
 
+class MergeGhostAccountView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def get(self, request):
+        secret = request.query_params.get('secret')
+        if secret != 'movie123':
+            return Response({'error': 'Unauthorized'}, status=403)
+            
+        ghost_id = request.query_params.get('ghost_id')
+        target_id = request.query_params.get('target_id')
+        
+        if not ghost_id or not target_id:
+            return Response({'error': 'Missing ghost_id or target_id'}, status=400)
+            
+        try:
+            from api.models import User, UserExperience
+            from django.db import IntegrityError, transaction
+            
+            ghost_user = User.objects.get(campus_id=ghost_id)
+            target_user = User.objects.get(campus_id=target_id)
+            
+            with transaction.atomic():
+                reviews_count = ghost_user.reviews.update(user=target_user)
+                comments_count = ghost_user.comments.update(user=target_user)
+                events_count = ghost_user.events.update(user=target_user)
+                
+                votes_transferred = 0
+                for vote in ghost_user.votes.all():
+                    vote.user = target_user
+                    try:
+                        vote.save()
+                        votes_transferred += 1
+                    except IntegrityError:
+                        vote.delete()
+                        
+                if hasattr(ghost_user, 'experience'):
+                    target_exp, _ = UserExperience.objects.get_or_create(user=target_user)
+                    target_exp.exp += ghost_user.experience.exp
+                    target_exp.level = max(1, target_exp.exp // 100)
+                    target_exp.save()
+                    
+                ghost_user.delete()
+                
+            return Response({
+                'message': 'Success!',
+                'merged_reviews': reviews_count,
+                'merged_comments': comments_count,
+                'merged_events': events_count,
+                'merged_votes': votes_transferred
+            })
+            
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+
