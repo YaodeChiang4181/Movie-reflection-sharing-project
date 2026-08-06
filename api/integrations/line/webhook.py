@@ -197,6 +197,10 @@ def handle_message(event):
                 source='line'
             )
             
+            from api.models import Tag
+            movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
+            review.tags.add(movie_tag)
+            
             user_exp = add_user_experience(user, 25)
             
             frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
@@ -372,12 +376,18 @@ def handle_message(event):
         )
 
         # Process tags
+        from api.models import Tag
+        
+        # 預設自動加上電影名稱的 tag
+        movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
+        review.tags.add(movie_tag)
+        
         if tag_text not in ['無', '略過', '沒有']:
             tags = [t.strip() for t in tag_text.split('#') if t.strip()]
-            from api.models import Tag
             for tag_name in tags:
-                tag_obj, _ = Tag.objects.get_or_create(name=tag_name)
-                review.tags.add(tag_obj)
+                if tag_name != movie_title:
+                    tag_obj, _ = Tag.objects.get_or_create(name=tag_name)
+                    review.tags.add(tag_obj)
         
         user_exp = add_user_experience(user, 25)
         
