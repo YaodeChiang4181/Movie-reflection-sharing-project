@@ -132,6 +132,7 @@ function ReviewCard({ review }) {
   const [voteCount, setVoteCount] = useState(review.score || 0);
   const [currentVote, setCurrentVote] = useState(review.user_voted ? 1 : 0); // 簡化版，預設為1或0
   const [isVoting, setIsVoting] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
 
   const handleVote = async (voteType) => {
     if (isVoting) return;
@@ -191,9 +192,29 @@ function ReviewCard({ review }) {
         </span>
       </div>
 
-      <p className={styles.reviewText}>
-        {review.content}
-      </p>
+      <div style={{ position: 'relative' }}>
+        <p 
+          className={styles.reviewText}
+          style={review.is_spoiler && !isRevealed ? { filter: 'blur(8px)', userSelect: 'none', cursor: 'pointer' } : {}}
+          onClick={() => { if(review.is_spoiler && !isRevealed) setIsRevealed(true); }}
+        >
+          {review.content}
+        </p>
+        
+        {review.is_spoiler && !isRevealed && (
+          <div 
+            style={{ 
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '8px', cursor: 'pointer',
+              fontWeight: 'bold', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+            }}
+            onClick={() => setIsRevealed(true)}
+          >
+            ⚠️ 包含劇透，點擊解鎖
+          </div>
+        )}
+      </div>
       
       {review.tags && review.tags.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>

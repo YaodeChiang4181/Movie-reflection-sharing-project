@@ -208,10 +208,16 @@ def handle_message(event):
                 tag_text = tag_text.replace('(選填)', '').replace('（選填）', '')
                 if tag_text and tag_text not in ['無', '略過', '沒有']:
                     tags = [t.strip() for t in tag_text.split('#') if t.strip()]
+                    has_spoiler = False
                     for tag_name in tags:
+                        if tag_name in ['爆雷', '有雷', '劇透', '雷']:
+                            has_spoiler = True
                         if tag_name != movie_title:
                             tag_obj, _ = Tag.objects.get_or_create(name=tag_name)
                             review.tags.add(tag_obj)
+                    if has_spoiler:
+                        review.is_spoiler = True
+                        review.save()
             
             user_exp = add_user_experience(user, 25)
             
@@ -399,10 +405,16 @@ def handle_message(event):
         
         if tag_text not in ['無', '略過', '沒有']:
             tags = [t.strip() for t in tag_text.split('#') if t.strip()]
+            has_spoiler = False
             for tag_name in tags:
+                if tag_name in ['爆雷', '有雷', '劇透', '雷']:
+                    has_spoiler = True
                 if tag_name != movie_title:
                     tag_obj, _ = Tag.objects.get_or_create(name=tag_name)
                     review.tags.add(tag_obj)
+            if has_spoiler:
+                review.is_spoiler = True
+                review.save()
         
         user_exp = add_user_experience(user, 25)
         
