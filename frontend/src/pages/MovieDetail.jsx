@@ -195,6 +195,25 @@ function ReviewCard({ review }) {
         {review.content}
       </p>
       
+      {review.tags && review.tags.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+          {review.tags.map(tag => (
+            <span 
+              key={tag.id} 
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                color: 'var(--accent-primary)',
+                padding: '4px 10px',
+                borderRadius: '16px',
+                fontSize: '0.85rem',
+                fontWeight: '500'
+              }}
+            >
+              #{tag.name}
+            </span>
+          ))}
+        </div>
+      )}      
       <div className={styles.voteActions} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '20px' }}>
