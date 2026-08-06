@@ -11,27 +11,18 @@ function MovieDetail() {
   const [movie, setMovie] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReviewsLoading, setIsReviewsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortBy, setSortBy] = useState('hot');
 
+  // Fetch movie info (only once when id changes)
   useEffect(() => {
     const fetchMovieData = async () => {
       try {
         setIsLoading(true);
-        // 1. Fetch movie details
         const movieRes = await api.get(`movies/${id}/`);
         setMovie(movieRes.data);
-        
-        // 2. Fetch reviews for this movie, backend handles ordering by '-created_at' by default
-        // We will fetch and then sort them by score in the frontend for "hot" reviews
-        const reviewsRes = await api.get(`reviews/?movie=${id}`);
-        // Sort by score (hotness) descending, then created_at
-        const sortedReviews = reviewsRes.data.results || reviewsRes.data;
-        sortedReviews.sort((a, b) => {
-          const scoreA = a.score || 0;
-          const scoreB = b.score || 0;
-          if (scoreA !== scoreB) return scoreB - scoreA;
-          return new Date(b.created_at) - new Date(a.created_at);
-        });
-        setReviews(sortedReviews);
       } catch (error) {
         console.error("Failed to fetch movie details:", error);
         if (error.response?.status === 404) {
@@ -42,11 +33,29 @@ function MovieDetail() {
         setIsLoading(false);
       }
     };
-    
-    if (id) {
-      fetchMovieData();
-    }
+    if (id) fetchMovieData();
   }, [id, navigate]);
+
+  // Fetch reviews whenever id, page, or sort changes
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setIsReviewsLoading(true);
+        const res = await api.get(`reviews/?movie=${id}&sort=${sortBy}&page=${currentPage}`);
+        setReviews(res.data.results || res.data);
+        if (res.data.count) {
+          setTotalPages(Math.ceil(res.data.count / 20)); // Assuming PAGE_SIZE is 20
+        } else {
+          setTotalPages(1);
+        }
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error);
+      } finally {
+        setIsReviewsLoading(false);
+      }
+    };
+    if (id) fetchReviews();
+  }, [id, sortBy, currentPage]);
 
   if (isLoading) {
     return (
@@ -87,13 +96,55 @@ function MovieDetail() {
           </div>
 
           <div className={styles.reviewSection}>
-            <h3>熱門影評</h3>
-            {reviews.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {reviews.map(review => (
-                  <ReviewCard key={review.id} review={review} />
-                ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0 }}>影評列表</h3>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => { setSortBy('hot'); setCurrentPage(1); }}
+                  style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--border-color)', background: sortBy === 'hot' ? 'var(--accent-primary)' : 'transparent', color: sortBy === 'hot' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
+                >
+                  🔥 最熱門
+                </button>
+                <button 
+                  onClick={() => { setSortBy('new'); setCurrentPage(1); }}
+                  style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--border-color)', background: sortBy === 'new' ? 'var(--accent-primary)' : 'transparent', color: sortBy === 'new' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
+                >
+                  🆕 最新發布
+                </button>
               </div>
+            </div>
+
+            {isReviewsLoading ? (
+              <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '40px 0' }}>載入中...</p>
+            ) : reviews.length > 0 ? (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {reviews.map(review => (
+                    <ReviewCard key={review.id} review={review} />
+                  ))}
+                </div>
+                
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
+                    <button 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                    >
+                      上一頁
+                    </button>
+                    <span style={{ color: 'var(--text-secondary)' }}>第 {currentPage} 頁 / 共 {totalPages} 頁</span>
+                    <button 
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                    >
+                      下一頁
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <p style={{ color: 'var(--text-secondary)', padding: '20px 0' }}>目前還沒有影評，來成為第一位評論的人吧！</p>
             )}

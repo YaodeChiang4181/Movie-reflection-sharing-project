@@ -21,10 +21,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
         qs = Review.objects.filter(is_deleted=False).annotate(
             upvotes=Count('votes', filter=Q(votes__vote_type=1)),
             downvotes=Count('votes', filter=Q(votes__vote_type=-1))
-        ).order_by('-created_at')
+        )
         movie_id = self.request.query_params.get('movie')
         if movie_id:
             qs = qs.filter(movie_id=movie_id)
+            
+        sort = self.request.query_params.get('sort')
+        if sort == 'hot':
+            qs = qs.order_by('-upvotes', '-created_at')
+        else:
+            qs = qs.order_by('-created_at')
+            
         return qs
     
     def perform_create(self, serializer):
