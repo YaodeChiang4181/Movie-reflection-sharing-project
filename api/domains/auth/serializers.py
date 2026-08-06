@@ -29,10 +29,12 @@ class UserMeSerializer(serializers.ModelSerializer):
     nickname = serializers.SerializerMethodField()
     real_name = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
+    level = serializers.SerializerMethodField()
+    exp = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined')
+        fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp')
 
     def get_nickname(self, obj):
         if hasattr(obj, 'profile') and obj.profile:
@@ -50,6 +52,16 @@ class UserMeSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'identity') and obj.identity:
             return obj.identity.department
         return None
+        
+    def get_level(self, obj):
+        if hasattr(obj, 'experience') and obj.experience:
+            return obj.experience.level
+        return 1
+        
+    def get_exp(self, obj):
+        if hasattr(obj, 'experience') and obj.experience:
+            return obj.experience.exp
+        return 0
 
 class AdminUserSerializer(serializers.ModelSerializer):
     """管理後台專用：顯示真實姓名、信箱（兼容校內/校外使用者）"""

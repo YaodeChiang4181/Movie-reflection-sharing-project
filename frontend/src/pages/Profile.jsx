@@ -88,6 +88,15 @@ function Profile() {
           
           <div className={styles.statsRow}>
             <div className={styles.statBox}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(139, 92, 246, 0.2)', width: '32px', height: '32px', borderRadius: '50%', color: 'var(--accent-primary)', fontWeight: 'bold' }}>
+                Lv
+              </div>
+              <div className={styles.statData}>
+                <span className={styles.statValue}>{userData?.level || 1}</span>
+                <span className={styles.statLabel}>影迷等級 (EXP: {userData?.exp || 0})</span>
+              </div>
+            </div>
+            <div className={styles.statBox}>
               <Film size={20} className={styles.statIcon} />
               <div className={styles.statData}>
                 <span className={styles.statValue}>{totalReviews}</span>
