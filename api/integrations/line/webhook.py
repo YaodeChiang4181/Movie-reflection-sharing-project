@@ -116,11 +116,42 @@ def handle_message(event):
                     
                 old_user = User.objects.filter(line_user_id=line_user_id).first()
                 if old_user and old_user.campus_id != target_user.campus_id:
-                    if old_user.reviews.count() == 0:
-                        old_user.delete()
-                    else:
-                        old_user.line_user_id = None
-                        old_user.save()
+                    # 將舊帳號的心得、留言、揪團活動等移轉給主帳號
+                    old_user.reviews.update(user=target_user)
+                    old_user.comments.update(user=target_user)
+                    old_user.events.update(user=target_user)
+                    
+                    # 處理按讚紀錄 (避免 UniqueConstraint 衝突)
+                    for vote in old_user.votes.all():
+                        from django.db import IntegrityError
+                        vote.user = target_user
+                        try:
+                            vote.save()
+                        except IntegrityError:
+                            # 如果主帳號已經對該篇心得按過讚，則刪除舊帳號的重複讚
+                            vote.delete()
+                            
+                    # 處理打卡紀錄
+                    for checkin in old_user.campaign_checkins.all():
+                        from django.db import IntegrityError
+                        checkin.user = target_user
+                        try:
+                            checkin.save()
+                        except IntegrityError:
+                            checkin.delete()
+                    
+                    # 合併經驗值
+                    if hasattr(old_user, 'experience'):
+                        from api.models import UserExperience
+                        target_exp, _ = UserExperience.objects.get_or_create(user=target_user)
+                        target_exp.exp += old_user.experience.exp
+                        
+                        # 重新計算等級 (每 100 經驗升一級)
+                        target_exp.level = max(1, target_exp.exp // 100)
+                        target_exp.save()
+                        
+                    # 最後刪除已經清空的幽靈舊帳號
+                    old_user.delete()
                         
                 target_user.line_user_id = line_user_id
                 target_user.line_display_name = display_name
