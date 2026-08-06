@@ -77,6 +77,7 @@ def handle_message(event):
             "#心得\n"
             "電影：奧德賽\n"
             "評分：5\n"
+            "標籤：#動作片 (選填)\n"
             "心得：這部電影太好看了！\n"
             "(請直接接文字，不要打括號喔)\n\n"
             "🔍 搜尋電影評價：\n"
@@ -180,6 +181,7 @@ def handle_message(event):
     if text.startswith('#心得') or text.startswith('＃心得'):
         movie_match = re.search(r'電影：([^\n]+)', text)
         rating_match = re.search(r'評分：(\d+)', text)
+        tag_match = re.search(r'標籤：([^\n]+)', text)
         content_match = re.search(r'心得：(.+)', text, re.DOTALL)
         
         if movie_match and rating_match and content_match:
@@ -201,6 +203,16 @@ def handle_message(event):
             movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
             review.tags.add(movie_tag)
             
+            if tag_match:
+                tag_text = tag_match.group(1).strip()
+                tag_text = tag_text.replace('(選填)', '').replace('（選填）', '')
+                if tag_text and tag_text not in ['無', '略過', '沒有']:
+                    tags = [t.strip() for t in tag_text.split('#') if t.strip()]
+                    for tag_name in tags:
+                        if tag_name != movie_title:
+                            tag_obj, _ = Tag.objects.get_or_create(name=tag_name)
+                            review.tags.add(tag_obj)
+            
             user_exp = add_user_experience(user, 25)
             
             frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
@@ -214,7 +226,7 @@ def handle_message(event):
             )
             return
         else:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="心得格式錯誤，請參考範例 (不需打括號)：\n#心得\n電影：奧德賽\n評分：5\n心得：真的很好看！"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="心得格式錯誤，請參考範例 (不需打括號)：\n#心得\n電影：奧德賽\n評分：5\n標籤：#動作片\n心得：真的很好看！"))
             return
             
     # --- Stateful Search Logic ---
