@@ -75,7 +75,7 @@ class UserMeSerializer(serializers.ModelSerializer):
             use_count=Count('reviews')
         ).order_by('-use_count')[:3]
         
-        return [tag.name for tag in tags]
+        return [tag.name.replace('#', '') for tag in tags]
 
 class AdminUserSerializer(serializers.ModelSerializer):
     """管理後台專用：顯示真實姓名、信箱（兼容校內/校外使用者）"""

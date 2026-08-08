@@ -510,7 +510,7 @@ def handle_message(event):
             use_count=Count('reviews')
         ).order_by('-use_count')[:3]
         
-        tag_str = " ".join([f"#{t.name}" for t in top_tags]) if top_tags else "無"
+        tag_str = " ".join([f"#{t.name.replace('#', '')}" for t in top_tags]) if top_tags else "無"
         
         reply_text = (
             "🎬 【您的專屬影迷名片】\n\n"
