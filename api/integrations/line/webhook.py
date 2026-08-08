@@ -519,7 +519,7 @@ def handle_message(event):
             f"✨ 經驗值：{current_exp} / {exp_needed}\n"
             f"📝 已發布心得：{review_count} 篇\n"
             f"👍 獲得推薦數：{likes_received} 次\n"
-            f"🏷️ 常用標籤：{tag_str}\n\n"
+            f"🏷️ 常用標籤：\n{tag_str}\n\n"
             "💡 小提示：發布心得 +25 EXP，留言 +10 EXP，獲得按讚 +1 EXP！"
         )
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
