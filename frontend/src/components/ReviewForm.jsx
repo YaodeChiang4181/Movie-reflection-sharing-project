@@ -19,19 +19,14 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null }) {
     if (!content.trim()) return setError('請填寫心得內容');
     if (!movieId.trim()) return setError('請填寫電影名稱');
 
-    // 解析 Hashtags
+    // 解析 Hashtags (支援空格、逗號、分號、或直接相連的 #)
     let parsedTags = [];
     if (tagsInput.trim()) {
-      const rawTags = tagsInput.split(';');
-      for (let t of rawTags) {
-        const cleanTag = t.trim();
-        if (cleanTag) {
-          if (!cleanTag.startsWith('#')) {
-            return setError('Hashtag 標籤必須以 # 號開頭 (例如: #神作)');
-          }
-          // 移除 # 號後傳給後端
-          parsedTags.push(cleanTag.substring(1));
-        }
+      const matches = tagsInput.match(/#([^\s#,;]+)/g);
+      if (matches) {
+        parsedTags = matches.map(m => m.substring(1));
+      } else if (tagsInput.replace(/[,;\s]+/g, '').length > 0) {
+        return setError('請使用 # 來標記標籤 (例如: #神作 #動作片)');
       }
     }
 
