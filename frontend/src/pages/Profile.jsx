@@ -86,6 +86,24 @@ function Profile() {
             校園 ID: {userData?.campus_id}
           </p>
           
+          {userData?.common_tags?.length > 0 && (
+            <div style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {userData.common_tags.map(tag => (
+                <span key={tag} style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  color: 'var(--accent-primary)', 
+                  padding: '4px 12px', 
+                  borderRadius: '16px',
+                  fontSize: '0.85rem',
+                  fontWeight: 'bold',
+                  border: '1px solid rgba(139, 92, 246, 0.3)'
+                }}>
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+          
           <div className={styles.statsRow}>
             <div className={styles.statBox}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(139, 92, 246, 0.2)', width: '32px', height: '32px', borderRadius: '50%', color: 'var(--accent-primary)', fontWeight: 'bold' }}>

@@ -31,10 +31,11 @@ class UserMeSerializer(serializers.ModelSerializer):
     department = serializers.SerializerMethodField()
     level = serializers.SerializerMethodField()
     exp = serializers.SerializerMethodField()
+    common_tags = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp')
+        fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags')
 
     def get_nickname(self, obj):
         if hasattr(obj, 'profile') and obj.profile:
@@ -62,6 +63,19 @@ class UserMeSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'experience') and obj.experience:
             return obj.experience.exp
         return 0
+
+    def get_common_tags(self, obj):
+        from django.db.models import Count
+        from api.models import Tag
+        
+        tags = Tag.objects.filter(
+            reviews__user=obj, 
+            reviews__is_deleted=False
+        ).annotate(
+            use_count=Count('reviews')
+        ).order_by('-use_count')[:3]
+        
+        return [tag.name for tag in tags]
 
 class AdminUserSerializer(serializers.ModelSerializer):
     """管理後台專用：顯示真實姓名、信箱（兼容校內/校外使用者）"""

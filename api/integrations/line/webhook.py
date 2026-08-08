@@ -500,13 +500,26 @@ def handle_message(event):
         # 獲得推薦數 (按讚數)
         likes_received = Vote.objects.filter(review__user=user, vote_type=1).count()
         
+        # 常用標籤
+        from django.db.models import Count
+        from api.models import Tag
+        top_tags = Tag.objects.filter(
+            reviews__user=user, 
+            reviews__is_deleted=False
+        ).annotate(
+            use_count=Count('reviews')
+        ).order_by('-use_count')[:3]
+        
+        tag_str = " ".join([f"#{t.name}" for t in top_tags]) if top_tags else "無"
+        
         reply_text = (
             "🎬 【您的專屬影迷名片】\n\n"
             f"👤 公開暱稱：{nickname}\n"
             f"⭐ 等級：Lv. {level}\n"
             f"✨ 經驗值：{current_exp} / {exp_needed}\n"
             f"📝 已發布心得：{review_count} 篇\n"
-            f"👍 獲得推薦數：{likes_received} 次\n\n"
+            f"👍 獲得推薦數：{likes_received} 次\n"
+            f"🏷️ 常用標籤：{tag_str}\n\n"
             "💡 小提示：發布心得 +25 EXP，留言 +10 EXP，獲得按讚 +1 EXP！"
         )
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
