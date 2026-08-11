@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, ShieldAlert, UserX, Trash2, X, RefreshCw, Image, Link as LinkIcon, Upload } from 'lucide-react';
+import { Shield, ShieldAlert, UserX, Trash2, X, RefreshCw, Image, Link as LinkIcon, Upload, Activity, BarChart2, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import styles from './AdminDashboard.module.css';
@@ -20,6 +20,9 @@ function AdminDashboard() {
   const [adUrl, setAdUrl] = useState('');
   const [adImage, setAdImage] = useState(null);
   const [adUploading, setAdUploading] = useState(false);
+  
+  // Stats state
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     if (!isLoggedIn || !userProfile?.is_staff) {
@@ -28,7 +31,17 @@ function AdminDashboard() {
     }
     fetchUsers();
     fetchAdvertisements();
+    fetchStats();
   }, [isLoggedIn, userProfile, navigate]);
+
+  const fetchStats = async () => {
+    try {
+      const res = await api.get('auth/admin/stats/');
+      setStats(res.data);
+    } catch(err) {
+      console.error('Failed to fetch stats', err);
+    }
+  };
 
   const fetchAdvertisements = async () => {
     try {
@@ -220,6 +233,58 @@ function AdminDashboard() {
               </div>
             ))}
           </div>
+        )}
+      </div>
+
+      <div className={`glass ${styles.card}`} style={{ marginBottom: '40px' }}>
+        <div className={styles.cardHeader}>
+          <Activity size={20} />
+          <h2>平台數據觀測</h2>
+        </div>
+        
+        {stats ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginTop: '20px' }}>
+            <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>活躍比 (活躍用戶 / 註冊數)</div>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-primary)', marginBottom: '8px' }}>
+                {stats.active_ratio}%
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                {stats.active_users} / {stats.total_users} 人
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                *發布過心得且經驗值高於0
+              </div>
+            </div>
+
+            <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>使用比 (使用過 / 註冊數)</div>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10b981', marginBottom: '8px' }}>
+                {stats.usage_ratio}%
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                {stats.used_users} / {stats.total_users} 人
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                *經驗值高於0
+              </div>
+            </div>
+
+            <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>活用比 (互動貼文 / 總貼文)</div>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b', marginBottom: '8px' }}>
+                {stats.engagement_ratio}%
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                {stats.engaged_posts} / {stats.total_posts} 篇
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                *收到評論、按讚或倒讚之貼文
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
         )}
       </div>
 

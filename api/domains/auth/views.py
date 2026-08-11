@@ -269,3 +269,44 @@ class RecalculateExpView(APIView):
             
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+
+class AdminStatsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        from api.models import User, Review
+        
+        total_users = User.objects.filter(is_staff=False).count()
+        
+        # 使用過：經驗值高過一等的0 (即 exp > 0)
+        used_users = User.objects.filter(is_staff=False, experience__exp__gt=0).count()
+        
+        # 活躍用戶：發布心得過，且經驗值高過0
+        active_users = User.objects.filter(
+            is_staff=False, 
+            experience__exp__gt=0, 
+            reviews__isnull=False
+        ).distinct().count()
+
+        total_posts = Review.objects.filter(is_deleted=False).count()
+
+        # 收到評論、倒讚、按讚的貼文數量
+        engaged_posts = Review.objects.filter(is_deleted=False).exclude(
+            comments__isnull=True, 
+            votes__isnull=True
+        ).count()
+
+        active_ratio = (active_users / total_users) if total_users > 0 else 0
+        usage_ratio = (used_users / total_users) if total_users > 0 else 0
+        engagement_ratio = (engaged_posts / total_posts) if total_posts > 0 else 0
+
+        return Response({
+            'total_users': total_users,
+            'active_users': active_users,
+            'used_users': used_users,
+            'active_ratio': round(active_ratio * 100, 2),
+            'usage_ratio': round(usage_ratio * 100, 2),
+            'total_posts': total_posts,
+            'engaged_posts': engaged_posts,
+            'engagement_ratio': round(engagement_ratio * 100, 2)
+        })
