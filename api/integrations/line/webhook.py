@@ -377,7 +377,7 @@ def handle_message(event):
     if text == '寫心得':
         state_record.state = "WAITING_FOR_REVIEW_TITLE"
         state_record.save()
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="📝 準備發布心得！\n\n請輸入您要分享的【電影名稱】："))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="📝 準備發布心得！\n\n請輸入您要分享的【電影名稱】：\n\n(隨時可以回覆「取消」取消進度喔～)"))
         return
         
     if user_state == "WAITING_FOR_REVIEW_TITLE":
@@ -385,13 +385,13 @@ def handle_message(event):
         state_record.data['review_title'] = movie_title
         state_record.state = "WAITING_FOR_REVIEW_RATING"
         state_record.save()
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"「{movie_title}」\n\n請輸入您對這部電影的【評分】(請輸入 1 到 5 之間的數字)："))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"「{movie_title}」\n\n請輸入您對這部電影的【評分】(請輸入 1 到 5 之間的數字)：\n\n(隨時可以回覆「取消」取消進度喔～)"))
         return
         
     if user_state == "WAITING_FOR_REVIEW_RATING":
         rating_text = text.strip()
         if not rating_text.isdigit() or not (1 <= int(rating_text) <= 5):
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 評分格式錯誤！請輸入 1 到 5 之間的數字："))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 評分格式錯誤！請輸入 1 到 5 之間的數字：\n\n(隨時可以回覆「取消」取消進度喔～)"))
             return
             
         rating = int(rating_text)
@@ -400,7 +400,7 @@ def handle_message(event):
         state_record.save()
         
         movie_title = state_record.data.get('review_title')
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"您給了 {rating} 顆星！🌟\n\n最後一步，請輸入您的【心得內容】："))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"您給了 {rating} 顆星！🌟\n\n最後一步，請輸入您的【心得內容】：\n\n(隨時可以回覆「取消」取消進度喔～)"))
         return
         
     if user_state == "WAITING_FOR_REVIEW_CONTENT":
@@ -409,7 +409,7 @@ def handle_message(event):
         state_record.state = "WAITING_FOR_REVIEW_TAGS"
         state_record.save()
         
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="太棒了！📝\n\n最後，請為這篇心得加上【Hashtag】 (請用 # 開頭，例如：#動作片 #好雷)。\n若不需要標籤，請直接輸入「無」或「略過」："))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="太棒了！📝\n\n最後，請為這篇心得加上【Hashtag】 (請用 # 開頭，例如：#動作片 #好雷)。\n若不需要標籤，請直接輸入「無」或「略過」：\n\n(隨時可以回覆「取消」取消進度喔～)"))
         return
 
     if user_state == "WAITING_FOR_REVIEW_TAGS":

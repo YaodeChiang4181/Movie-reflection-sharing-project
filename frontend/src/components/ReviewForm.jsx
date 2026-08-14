@@ -19,13 +19,17 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null }) {
     if (!content.trim()) return setError('請填寫心得內容');
     if (!movieId.trim()) return setError('請填寫電影名稱');
 
-    // 解析 Hashtags (支援空格、逗號、分號、或直接相連的 #)
+    // 解析 Hashtags (用 # 切割並移除空白和分號)
     let parsedTags = [];
     if (tagsInput.trim()) {
-      const matches = tagsInput.match(/#([^\s#,;]+)/g);
-      if (matches) {
-        parsedTags = matches.map(m => m.substring(1));
-      } else if (tagsInput.replace(/[,;\s]+/g, '').length > 0) {
+      const rawTags = tagsInput.includes('#') ? tagsInput.split('#') : [tagsInput];
+      rawTags.forEach(rawTag => {
+        const cleanedTag = rawTag.replace(/[\s;]/g, '');
+        if (cleanedTag && !parsedTags.includes(cleanedTag)) {
+          parsedTags.push(cleanedTag);
+        }
+      });
+      if (parsedTags.length === 0 && tagsInput.replace(/[\s;]/g, '').length > 0) {
         return setError('請使用 # 來標記標籤 (例如: #神作 #動作片)');
       }
     }
@@ -125,7 +129,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null }) {
             <input 
               type="text"
               className={styles.customInput} 
-              placeholder="(請使用分號 ; 區隔，並以 # 開頭)"
+              placeholder="(請以 # 開頭，例如：#動作片 #好雷,必看)"
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               disabled={isSubmitting}
