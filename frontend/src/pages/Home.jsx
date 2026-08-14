@@ -24,15 +24,16 @@ function Home() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortOption, setSortOption] = useState('hot');
 
   useEffect(() => {
     fetchReviews();
-  }, [currentPage]);
+  }, [currentPage, sortOption]);
 
   const fetchReviews = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get(`reviews/?sort=hot&page=${currentPage}`);
+      const response = await api.get(`reviews/?sort=${sortOption}&page=${currentPage}`);
       setReviews(response.data.results || response.data);
       if (response.data.count) {
         setTotalPages(Math.ceil(response.data.count / 20)); // Assuming PAGE_SIZE is 20
@@ -77,8 +78,31 @@ function Home() {
 
   return (
     <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
-      <header className="flex-between" style={{ marginBottom: '40px' }}>
-        <h1>探索熱門電影心得</h1>
+      <header className="flex-between" style={{ marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+          <h1>探索電影心得</h1>
+          <select 
+            value={sortOption} 
+            onChange={(e) => {
+              setSortOption(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              outline: 'none',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}
+          >
+            <option value="hot">🔥 最熱門</option>
+            <option value="newest">✨ 最新發布</option>
+            <option value="oldest">🕰️ 最早發布</option>
+          </select>
+        </div>
         <button className="btn-primary" onClick={handleComposeClick}>
           發布心得
         </button>

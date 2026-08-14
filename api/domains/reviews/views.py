@@ -29,6 +29,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         sort = self.request.query_params.get('sort')
         if sort == 'hot':
             qs = qs.order_by('-upvotes', '-created_at')
+        elif sort == 'oldest':
+            qs = qs.order_by('created_at')
         else:
             qs = qs.order_by('-created_at')
             
