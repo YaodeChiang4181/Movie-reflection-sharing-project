@@ -8,12 +8,27 @@ function TagInput({ tags, setTags, placeholder = "輸入標籤後按 Enter" }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault(); // 阻擋表單送出
-      const newTag = inputValue.trim();
       
-      if (newTag && !tags.includes(newTag)) {
-        setTags([...tags, newTag]);
-        setInputValue(''); // 清空輸入框
+      // 以 # 分割字串，並過濾掉空字串
+      let rawTags = inputValue.includes('#') ? inputValue.split('#') : [inputValue];
+      
+      let newTagsAdded = false;
+      let updatedTags = [...tags];
+
+      rawTags.forEach(rawTag => {
+        // 去除空格和分號 (包含中間的)
+        const cleanedTag = rawTag.replace(/[\s;]/g, '');
+        
+        if (cleanedTag && !updatedTags.includes(cleanedTag)) {
+          updatedTags.push(cleanedTag);
+          newTagsAdded = true;
+        }
+      });
+
+      if (newTagsAdded) {
+        setTags(updatedTags);
       }
+      setInputValue(''); // 清空輸入框
     }
   };
 
