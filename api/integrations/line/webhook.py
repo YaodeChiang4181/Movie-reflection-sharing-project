@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 
 from api.models import User, Review, Movie, Event, UserProfile, OutsiderIdentity, LineBotState
 from api.domains.gamification.services import add_user_experience
-from .flex_templates import get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, get_event_success_flex
+from .flex_templates import get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, get_event_success_flex, get_auto_login_flex
 
 load_dotenv()
 line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN', ''))
@@ -328,7 +328,7 @@ def handle_message(event):
                 refresh_token = str(refresh)
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-                messages.append(TextSendMessage(text=f"🔗 點此前往網頁查看並自動登入：\n{search_link}"))
+                messages.append(FlexSendMessage(alt_text="🔗 前往網頁版自動登入", contents=get_auto_login_flex(search_link)))
                 
             line_bot_api.reply_message(event.reply_token, messages)
         except Exception as e:
@@ -358,7 +358,7 @@ def handle_message(event):
                 refresh_token = str(refresh)
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-                messages.append(TextSendMessage(text=f"🔗 點此前往網頁查看並自動登入：\n{search_link}"))
+                messages.append(FlexSendMessage(alt_text="🔗 前往網頁版自動登入", contents=get_auto_login_flex(search_link)))
                 
             line_bot_api.reply_message(event.reply_token, messages)
         except Exception as e:

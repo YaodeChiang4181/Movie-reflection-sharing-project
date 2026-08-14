@@ -365,3 +365,46 @@ def get_event_success_flex(event):
             ]
         }
     }
+
+def get_auto_login_flex(url):
+    return {
+        "type": "bubble",
+        "size": "kilo",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "🔗 網頁版自動登入",
+                    "weight": "bold",
+                    "size": "md",
+                    "color": "#111111"
+                },
+                {
+                    "type": "text",
+                    "text": "點擊下方按鈕，即可直接前往網頁並自動登入您的帳號喔！",
+                    "wrap": True,
+                    "color": "#888888",
+                    "size": "sm",
+                    "margin": "md"
+                }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "color": "#8B5CF6",
+                    "action": {
+                        "type": "uri",
+                        "label": "點此前往網頁版",
+                        "uri": url
+                    }
+                }
+            ]
+        }
+    }
