@@ -115,3 +115,253 @@ def get_badge_unlocked_flex(badge_name, description, image_url=None):
         }
         
     return bubble
+
+def get_review_carousel_flex(reviews, frontend_url):
+    bubbles = []
+    for r in reviews:
+        content_str = str(r.content)[:50] + "..." if r.content and len(r.content) > 50 else r.content
+        bubbles.append({
+            "type": "bubble",
+            "size": "micro",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": f"⭐ {r.rating} / 5",
+                        "weight": "bold",
+                        "color": "#FBBF24",
+                        "size": "sm"
+                    }
+                ],
+                "backgroundColor": "#111111"
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": r.movie.title,
+                        "weight": "bold",
+                        "size": "md",
+                        "wrap": True
+                    },
+                    {
+                        "type": "text",
+                        "text": content_str or "無內容",
+                        "size": "xs",
+                        "color": "#888888",
+                        "wrap": True,
+                        "margin": "md",
+                        "maxLines": 3
+                    }
+                ]
+            },
+            "footer": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "button",
+                        "style": "primary",
+                        "color": "#8B5CF6",
+                        "height": "sm",
+                        "action": {
+                            "type": "uri",
+                            "label": "閱讀完整版",
+                            "uri": f"{frontend_url}/movies/{r.movie.id}" if getattr(r, 'movie', None) else frontend_url
+                        }
+                    }
+                ]
+            }
+        })
+    
+    if not bubbles:
+        return None
+        
+    return {
+        "type": "carousel",
+        "contents": bubbles
+    }
+
+def get_events_list_flex(events):
+    bubbles = []
+    for e in events:
+        time_str = e.event_time.strftime('%Y-%m-%d %H:%M')
+        attendee_count = e.attendees.count() if hasattr(e, 'attendees') else 0
+        bubbles.append({
+            "type": "bubble",
+            "size": "kilo",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "🎟️ 電影揪團",
+                        "color": "#ffffff",
+                        "weight": "bold",
+                        "size": "sm"
+                    }
+                ],
+                "backgroundColor": "#EC4899"
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": e.title,
+                        "weight": "bold",
+                        "size": "lg",
+                        "wrap": True
+                    },
+                    {
+                        "type": "box",
+                        "layout": "vertical",
+                        "margin": "lg",
+                        "spacing": "sm",
+                        "contents": [
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "spacing": "sm",
+                                "contents": [
+                                    {"type": "text", "text": "時間", "color": "#aaaaaa", "size": "sm", "flex": 2},
+                                    {"type": "text", "text": time_str, "wrap": True, "color": "#111111", "size": "sm", "flex": 5}
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "spacing": "sm",
+                                "contents": [
+                                    {"type": "text", "text": "地點", "color": "#aaaaaa", "size": "sm", "flex": 2},
+                                    {"type": "text", "text": e.location, "wrap": True, "color": "#111111", "size": "sm", "flex": 5}
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "spacing": "sm",
+                                "contents": [
+                                    {"type": "text", "text": "發起人", "color": "#aaaaaa", "size": "sm", "flex": 2},
+                                    {"type": "text", "text": e.organizer_nickname, "wrap": True, "color": "#111111", "size": "sm", "flex": 5}
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "spacing": "sm",
+                                "contents": [
+                                    {"type": "text", "text": "已參加", "color": "#aaaaaa", "size": "sm", "flex": 2},
+                                    {"type": "text", "text": f"{attendee_count} 人", "wrap": True, "color": "#111111", "size": "sm", "flex": 5}
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "footer": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "button",
+                        "style": "primary",
+                        "color": "#111111",
+                        "action": {
+                            "type": "message",
+                            "label": "我要加入！",
+                            "text": f"加入揪團 {e.join_code}"
+                        }
+                    }
+                ]
+            }
+        })
+    if not bubbles:
+        return None
+    return {
+        "type": "carousel",
+        "contents": bubbles
+    }
+
+def get_event_success_flex(event):
+    time_str = event.event_time.strftime('%Y-%m-%d %H:%M')
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "✅ 揪團建立成功",
+                    "color": "#ffffff",
+                    "weight": "bold",
+                    "size": "lg"
+                }
+            ],
+            "backgroundColor": "#1DB446"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": event.title,
+                    "weight": "bold",
+                    "size": "xl",
+                    "wrap": True
+                },
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "margin": "lg",
+                    "spacing": "sm",
+                    "contents": [
+                        {
+                            "type": "box",
+                            "layout": "baseline",
+                            "spacing": "sm",
+                            "contents": [
+                                {"type": "text", "text": "時間", "color": "#aaaaaa", "size": "sm", "flex": 1},
+                                {"type": "text", "text": time_str, "wrap": True, "color": "#111111", "size": "sm", "flex": 4}
+                            ]
+                        },
+                        {
+                            "type": "box",
+                            "layout": "baseline",
+                            "spacing": "sm",
+                            "contents": [
+                                {"type": "text", "text": "地點", "color": "#aaaaaa", "size": "sm", "flex": 1},
+                                {"type": "text", "text": event.location, "wrap": True, "color": "#111111", "size": "sm", "flex": 4}
+                            ]
+                        },
+                        {
+                            "type": "box",
+                            "layout": "baseline",
+                            "spacing": "sm",
+                            "contents": [
+                                {"type": "text", "text": "代碼", "color": "#aaaaaa", "size": "sm", "flex": 1},
+                                {"type": "text", "text": event.join_code, "weight": "bold", "color": "#EC4899", "size": "sm", "flex": 4}
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": "大家可以使用「近期活動」來查看你的揪團喔！",
+                    "wrap": True,
+                    "color": "#888888",
+                    "size": "xs",
+                    "margin": "xl"
+                }
+            ]
+        }
+    }

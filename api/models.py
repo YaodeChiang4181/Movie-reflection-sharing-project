@@ -1,3 +1,5 @@
+import random
+import string
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
@@ -121,10 +123,21 @@ class Event(models.Model):
     event_time = models.DateTimeField()
     organizer_nickname = models.CharField(max_length=200, default='')
     description = models.TextField(default="")
+    join_code = models.CharField(max_length=10, unique=True, blank=True)
+    attendees = models.ManyToManyField(User, related_name='joined_events', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
+    def save(self, *args, **kwargs):
+        if not self.join_code:
+            # 產生 6 碼英數混合的大寫代碼
+            self.join_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            # 確保代碼不重複
+            while Event.objects.filter(join_code=self.join_code).exists():
+                self.join_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.title
+        return f"{self.title} ({self.join_code})"
 
 class Comment(models.Model):
     review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='comments')

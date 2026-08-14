@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 
 from api.models import User, Review, Movie, Event, UserProfile, OutsiderIdentity, LineBotState
 from api.domains.gamification.services import add_user_experience
-from .flex_templates import get_exp_feedback_flex
+from .flex_templates import get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, get_event_success_flex
 
 load_dotenv()
 line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN', ''))
@@ -317,22 +317,20 @@ def handle_message(event):
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"找不到關於「{keyword}」的心得。"))
                 return
                 
-            reply_lines = [f"🔍 「{keyword}」的心得搜尋結果："]
-            for r in reviews:
-                content_str = str(r.content)[:20] if r.content else ""
-                reply_lines.append(f"- {r.movie.title} ({r.rating}星): {content_str}...")
-                
+            frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+            flex_carousel = get_review_carousel_flex(reviews, frontend_url)
+            
+            messages = [FlexSendMessage(alt_text=f"🔍 「{keyword}」的搜尋結果", contents=flex_carousel)]
+            
             if user:
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
                 refresh_token = str(refresh)
-                frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-                reply_lines.append(f"\n🔗 點此前往網頁查看並自動登入：\n{search_link}")
+                messages.append(TextSendMessage(text=f"🔗 點此前往網頁查看並自動登入：\n{search_link}"))
                 
-            reply_lines.append("\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
+            line_bot_api.reply_message(event.reply_token, messages)
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"系統查詢時發生錯誤：{str(e)}"))
@@ -349,23 +347,20 @@ def handle_message(event):
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"找不到關於「{keyword}」的心得。"))
                 return
                 
-            reply_lines = [f"🔍 「{keyword}」的心得搜尋結果："]
-            for r in reviews:
-                content_str = str(r.content)[:20] if r.content else ""
-                reply_lines.append(f"- {r.movie.title} ({r.rating}星): {content_str}...")
-                
+            frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+            flex_carousel = get_review_carousel_flex(reviews, frontend_url)
+            
+            messages = [FlexSendMessage(alt_text=f"🔍 「{keyword}」的搜尋結果", contents=flex_carousel)]
+            
             if user:
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
                 refresh_token = str(refresh)
-                frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-                reply_lines.append(f"\n🔗 點此前往網頁查看並自動登入：\n{search_link}")
+                messages.append(TextSendMessage(text=f"🔗 點此前往網頁查看並自動登入：\n{search_link}"))
                 
-            reply_lines.append("\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
-            
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
+            line_bot_api.reply_message(event.reply_token, messages)
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"系統查詢時發生錯誤：{str(e)}"))
@@ -628,20 +623,13 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="近期沒有活動喔！趕快來發起一個吧！"))
             return
             
-        reply_lines = ["📅 近期揪電影活動："]
-        for e in events:
-            time_str = e.event_time.strftime('%m/%d %H:%M')
-            reply_lines.append(f"- [{time_str}] {e.title}\n  地點: {e.location}\n  發起人: {e.organizer_nickname}")
-            
-        reply_lines.append("\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
-            
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
+        flex_carousel = get_events_list_flex(events)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="📅 近期電影揪團", contents=flex_carousel))
         return
 
     if text == '熱門影評':
         try:
             from django.db.models import Count, Q
-            # 撈取按讚數最高的 5 篇心得
             trending_reviews = Review.objects.filter(is_deleted=False).annotate(
                 upvotes=Count('votes', filter=Q(votes__vote_type=1))
             ).order_by('-upvotes', '-created_at')[:5]
@@ -650,15 +638,10 @@ def handle_message(event):
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前還沒有熱門影評喔！趕快來發布第一篇吧！"))
                 return
                 
-            reply_lines = ["🔥 全站最熱門影評："]
-            for r in trending_reviews:
-                content_str = str(r.content)[:20] if r.content else ""
-                reply_lines.append(f"⭐ {r.movie.title} ({r.upvotes} 個推)\n   「{content_str}...」")
-                
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
-            reply_lines.append(f"\n👉 點此前往網站看完整熱門影評：\n{frontend_url}")
+            flex_carousel = get_review_carousel_flex(trending_reviews, frontend_url)
             
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text='\n'.join(reply_lines)))
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="🔥 全站熱門影評", contents=flex_carousel))
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"載入熱門影評時發生錯誤：{str(e)}"))
@@ -699,13 +682,50 @@ def handle_message(event):
                 organizer_nickname=organizer_nickname,
                 description=description
             )
+            # 自動加入主辦人
+            if user:
+                new_event.attendees.add(user)
             
-            reply_text = f"✅ 發起活動成功！\n\n活動名稱：{title}\n時間：{time_str}\n地點：{location}\n\n大家可以使用「近期活動」來查看你的揪團喔！"
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+            flex_card = get_event_success_flex(new_event)
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="✅ 揪團建立成功", contents=flex_card))
             return
         else:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="揪團格式錯誤，請參考範例：\n#揪團\n活動：看電影\n時間：2024-12-31 19:00\n地點：信義威秀\n描述：大家一起來"))
             return
+
+    if text.startswith('加入揪團'):
+        try:
+            parts = text.split()
+            if len(parts) < 2:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="指令錯誤！請輸入「加入揪團 [代碼]」"))
+                return
+                
+            join_code = parts[1].strip().upper()
+            event_obj = Event.objects.filter(join_code=join_code).first()
+            
+            if not event_obj:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"找不到代碼為「{join_code}」的活動。請確認代碼是否正確！"))
+                return
+                
+            if not user:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請先設定暱稱或綁定帳號後才能參加揪團喔！"))
+                return
+                
+            if event_obj.attendees.filter(campus_id=user.campus_id).exists():
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"您已經加入過「{event_obj.title}」囉！"))
+                return
+                
+            event_obj.attendees.add(user)
+            current_count = event_obj.attendees.count()
+            
+            reply_text = f"✅ 成功加入【{event_obj.title}】！\n目前共有 {current_count} 人參加。"
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+        except Exception as e:
+            try:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"加入時發生錯誤：{str(e)}"))
+            except:
+                pass
+        return
 
     try:
         line_bot_api.reply_message(
