@@ -98,9 +98,9 @@ function Home() {
               fontSize: '1rem'
             }}
           >
-            <option value="hot">🔥 最熱門</option>
-            <option value="newest">✨ 最新發布</option>
-            <option value="oldest">🕰️ 最早發布</option>
+            <option value="hot">最熱門</option>
+            <option value="newest">最新發布</option>
+            <option value="oldest">最早發布</option>
           </select>
         </div>
         <button className="btn-primary" onClick={handleComposeClick}>

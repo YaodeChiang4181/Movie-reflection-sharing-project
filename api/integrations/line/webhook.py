@@ -528,17 +528,98 @@ def handle_message(event):
         
         tag_str = " ".join([f"#{t.name.replace('#', '')}" for t in top_tags]) if top_tags else "無"
         
-        reply_text = (
-            "🎬 【您的專屬影迷名片】\n\n"
-            f"👤 公開暱稱：{nickname}\n"
-            f"⭐ 等級：Lv. {level}\n"
-            f"✨ 經驗值：{current_exp} / {exp_needed}\n"
-            f"📝 已發布心得：{review_count} 篇\n"
-            f"👍 獲得推薦數：{likes_received} 次\n"
-            f"🏷️ 常用標籤：\n{tag_str}\n\n"
-            "💡 小提示：發布心得 +25 EXP，留言 +10 EXP，獲得按讚 +1 EXP！"
-        )
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+        flex_card = {
+            "type": "bubble",
+            "size": "mega",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "🎬 專屬影迷名片",
+                        "weight": "bold",
+                        "color": "#FFFFFF",
+                        "size": "xl"
+                    }
+                ],
+                "backgroundColor": "#8B5CF6"
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {"type": "text", "text": "👤 暱稱", "size": "sm", "color": "#888888", "flex": 3},
+                            {"type": "text", "text": nickname, "size": "sm", "color": "#111111", "weight": "bold", "flex": 5}
+                        ]
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {"type": "text", "text": "⭐ 等級", "size": "sm", "color": "#888888", "flex": 3},
+                            {"type": "text", "text": f"Lv. {level}", "size": "sm", "color": "#111111", "weight": "bold", "flex": 5}
+                        ],
+                        "margin": "md"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {"type": "text", "text": "✨ 經驗值", "size": "sm", "color": "#888888", "flex": 3},
+                            {"type": "text", "text": f"{current_exp} / {exp_needed}", "size": "sm", "color": "#111111", "flex": 5}
+                        ],
+                        "margin": "md"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {"type": "text", "text": "📝 發布心得", "size": "sm", "color": "#888888", "flex": 3},
+                            {"type": "text", "text": f"{review_count} 篇", "size": "sm", "color": "#111111", "flex": 5}
+                        ],
+                        "margin": "md"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {"type": "text", "text": "👍 獲得推薦", "size": "sm", "color": "#888888", "flex": 3},
+                            {"type": "text", "text": f"{likes_received} 次", "size": "sm", "color": "#111111", "flex": 5}
+                        ],
+                        "margin": "md"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "vertical",
+                        "contents": [
+                            {"type": "text", "text": "🏷️ 常用標籤", "size": "sm", "color": "#888888"},
+                            {"type": "text", "text": tag_str, "size": "sm", "color": "#8B5CF6", "weight": "bold", "wrap": True, "margin": "sm"}
+                        ],
+                        "margin": "lg"
+                    }
+                ]
+            },
+            "footer": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "💡 發布心得 +25 EXP，留言 +10 EXP，獲得按讚 +1 EXP",
+                        "size": "xs",
+                        "color": "#aaaaaa",
+                        "wrap": True,
+                        "align": "center"
+                    }
+                ]
+            }
+        }
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="專屬影迷名片", contents=flex_card))
         return
 
     if text == '近期活動':
