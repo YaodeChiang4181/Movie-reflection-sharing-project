@@ -231,7 +231,7 @@ def get_events_list_flex(events):
                                 "spacing": "sm",
                                 "contents": [
                                     {"type": "text", "text": "時間", "color": "#aaaaaa", "size": "sm", "flex": 2},
-                                    {"type": "text", "text": time_str, "wrap": True, "color": "#111111", "size": "sm", "flex": 5}
+                                    {"type": "text", "text": time_str, "color": "#111111", "size": "sm", "flex": 5}
                                 ]
                             },
                             {
@@ -240,7 +240,7 @@ def get_events_list_flex(events):
                                 "spacing": "sm",
                                 "contents": [
                                     {"type": "text", "text": "地點", "color": "#aaaaaa", "size": "sm", "flex": 2},
-                                    {"type": "text", "text": e.location, "wrap": True, "color": "#111111", "size": "sm", "flex": 5}
+                                    {"type": "text", "text": e.location, "color": "#111111", "size": "sm", "flex": 5}
                                 ]
                             },
                             {
@@ -249,7 +249,7 @@ def get_events_list_flex(events):
                                 "spacing": "sm",
                                 "contents": [
                                     {"type": "text", "text": "發起人", "color": "#aaaaaa", "size": "sm", "flex": 2},
-                                    {"type": "text", "text": e.organizer_nickname, "wrap": True, "color": "#111111", "size": "sm", "flex": 5}
+                                    {"type": "text", "text": e.organizer_nickname, "color": "#111111", "size": "sm", "flex": 5}
                                 ]
                             },
                             {
@@ -258,7 +258,7 @@ def get_events_list_flex(events):
                                 "spacing": "sm",
                                 "contents": [
                                     {"type": "text", "text": "已參加", "color": "#aaaaaa", "size": "sm", "flex": 2},
-                                    {"type": "text", "text": f"{attendee_count} 人", "wrap": True, "color": "#111111", "size": "sm", "flex": 5}
+                                    {"type": "text", "text": f"{attendee_count} 人", "color": "#111111", "size": "sm", "flex": 5}
                                 ]
                             }
                         ]
@@ -331,7 +331,7 @@ def get_event_success_flex(event):
                             "spacing": "sm",
                             "contents": [
                                 {"type": "text", "text": "時間", "color": "#aaaaaa", "size": "sm", "flex": 1},
-                                {"type": "text", "text": time_str, "wrap": True, "color": "#111111", "size": "sm", "flex": 4}
+                                {"type": "text", "text": time_str, "color": "#111111", "size": "sm", "flex": 4}
                             ]
                         },
                         {
@@ -340,7 +340,7 @@ def get_event_success_flex(event):
                             "spacing": "sm",
                             "contents": [
                                 {"type": "text", "text": "地點", "color": "#aaaaaa", "size": "sm", "flex": 1},
-                                {"type": "text", "text": event.location, "wrap": True, "color": "#111111", "size": "sm", "flex": 4}
+                                {"type": "text", "text": event.location, "color": "#111111", "size": "sm", "flex": 4}
                             ]
                         },
                         {

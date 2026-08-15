@@ -650,16 +650,16 @@ def handle_message(event):
         return
 
     if text.startswith('#揪團') or text.startswith('＃揪團'):
-        title_match = re.search(r'活動：([^\n]+)', text)
-        time_match = re.search(r'時間：([^\n]+)', text)
-        location_match = re.search(r'地點：([^\n]+)', text)
-        description_match = re.search(r'描述：(.+)', text, re.DOTALL)
+        title_match = re.search(r'活動[：:]\s*([^\n]+)', text)
+        time_match = re.search(r'時間[：:]\s*([^\n]+)', text)
+        location_match = re.search(r'地點[：:]\s*([^\n]+)', text)
+        description_match = re.search(r'描述[：:]\s*(.+)', text, re.DOTALL)
         
         if title_match and time_match and location_match:
-            title = title_match.group(1).strip()
-            time_str = time_match.group(1).strip()
-            location = location_match.group(1).strip()
-            description = description_match.group(1).strip() if description_match else ""
+            title = title_match.group(1).strip().strip('【】[]')
+            time_str = time_match.group(1).strip().strip('【】[]')
+            location = location_match.group(1).strip().strip('【】[]')
+            description = description_match.group(1).strip().strip('【】[]') if description_match else ""
             
             try:
                 time_str_clean = time_str.replace('/', '-')

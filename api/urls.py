@@ -1,5 +1,9 @@
 from django.urls import path, include
+from django.http import HttpResponse
 from api.domains.auth.views import UserMeView
+
+def ping(request):
+    return HttpResponse("pong")
 
 urlpatterns = [
     # Domain: Auth / Identity
@@ -7,6 +11,9 @@ urlpatterns = [
     
     # 為了不破壞原本前端的 /api/users/me/ 呼叫
     path('users/me/', UserMeView.as_view(), name='user_me'),
+    
+    # 用於 Google Apps Script 等定時喚醒後台的輕量級端點
+    path('ping/', ping, name='ping'),
     
     # Domain: Reviews (Movies, Reviews, Votes, Comments)
     path('', include('api.domains.reviews.urls')),
