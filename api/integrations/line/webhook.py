@@ -288,7 +288,7 @@ def handle_message(event):
     user_state = state_record.state
     
     # 攔截關鍵指令，強制退出目前的狀態 (避免在輸入電影名稱時，按到選單按鈕變成輸入電影名稱)
-    reserved_commands = ['寫心得', '影迷名片', '我要揪團', '近期活動', '查', '熱門影評', '取消']
+    reserved_commands = ['寫心得', '影迷名片', '我要揪團', '近期活動', '查', '影評推薦', '取消']
     is_hash_cmd = any(text.startswith(c) for c in ['#心得', '＃心得', '#揪團', '＃揪團', '#綁定', '＃綁定', '#暱稱', '＃暱稱'])
     
     is_reserved = (
@@ -636,21 +636,29 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="📅 近期電影揪團", contents=flex_carousel))
         return
 
-    if text == '熱門影評':
+    if text == '影評推薦':
         try:
             from django.db.models import Count, Q
-            trending_reviews = Review.objects.filter(is_deleted=False).annotate(
+            # 取前 3 名熱門
+            trending_reviews = list(Review.objects.filter(is_deleted=False).annotate(
                 upvotes=Count('votes', filter=Q(votes__vote_type=1))
-            ).order_by('-upvotes', '-created_at')[:5]
+            ).order_by('-upvotes', '-created_at')[:3])
+            
+            # 取 2 名冷門 (隨機挑選除了前三名以外的心得)
+            exclude_ids = [r.id for r in trending_reviews]
+            cold_reviews = list(Review.objects.filter(is_deleted=False).exclude(id__in=exclude_ids).order_by('?')[:2])
+            
+            # 合併
+            trending_reviews.extend(cold_reviews)
             
             if not trending_reviews:
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前還沒有熱門影評喔！趕快來發布第一篇吧！"))
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前還沒有影評喔！趕快來發布第一篇吧！"))
                 return
                 
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
             flex_carousel = get_review_carousel_flex(trending_reviews, frontend_url)
             
-            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="🔥 全站熱門影評", contents=flex_carousel))
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="✨ 影評推薦", contents=flex_carousel))
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"載入熱門影評時發生錯誤：{str(e)}"))
