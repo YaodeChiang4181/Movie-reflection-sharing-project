@@ -231,32 +231,41 @@ def handle_message(event):
             )
             
             from api.models import Tag
+            from api.utils.tmdb import fetch_movie_genres
+            
             movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
             review.tags.add(movie_tag)
             
+            tags = []
             if tag_match:
                 tag_text = tag_match.group(1).strip()
                 tag_text = tag_text.replace('(選填)', '').replace('（選填）', '')
                 if tag_text and tag_text not in ['無', '略過', '沒有']:
                     # 用 # 分割，並移除每個標籤中包含的空白和分號
                     raw_tags = tag_text.split('#')
-                    tags = []
                     for t in raw_tags:
                         import re
                         cleaned = re.sub(r'[\s;]', '', t)
                         if cleaned:
                             tags.append(cleaned)
                             
-                    has_spoiler = False
-                    for tag_name in tags:
-                        if tag_name in ['爆雷', '有雷', '劇透', '雷']:
-                            has_spoiler = True
-                        if tag_name != movie_title:
-                            tag_obj, _ = Tag.objects.get_or_create(name=tag_name)
-                            review.tags.add(tag_obj)
-                    if has_spoiler:
-                        review.is_spoiler = True
-                        review.save()
+            # Automatically fetch and append TMDB genres
+            tmdb_genres = fetch_movie_genres(movie_title)
+            for genre in tmdb_genres:
+                if genre not in tags:
+                    tags.append(genre)
+                            
+            has_spoiler = False
+            for tag_name in tags:
+                if tag_name in ['爆雷', '有雷', '劇透', '雷']:
+                    has_spoiler = True
+                if tag_name != movie_title:
+                    tag_obj, _ = Tag.objects.get_or_create(name=tag_name)
+                    review.tags.add(tag_obj)
+            
+            if has_spoiler:
+                review.is_spoiler = True
+                review.save()
             
             user_exp = add_user_experience(user, 25)
             

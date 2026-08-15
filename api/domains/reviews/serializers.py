@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db import transaction
 from api.models import Movie, Tag, Review, Vote, Comment
 from api.domains.auth.serializers import UserSerializer
+from api.utils.tmdb import fetch_movie_genres
 
 class MovieSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,6 +52,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         tag_names = validated_data.pop('tag_names', [])
         movie_title = validated_data.pop('movie_title')
         
+        # Automatically fetch and append TMDB genres
+        tmdb_genres = fetch_movie_genres(movie_title)
+        for genre in tmdb_genres:
+            if genre not in tag_names:
+                tag_names.append(genre)
+                
         with transaction.atomic():
             movie, _ = Movie.objects.get_or_create(
                 title=movie_title,
@@ -69,6 +76,12 @@ class ReviewSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         tag_names = validated_data.pop('tag_names', None)
         movie_title = validated_data.pop('movie_title', None)
+
+        if movie_title and tag_names is not None:
+            tmdb_genres = fetch_movie_genres(movie_title)
+            for genre in tmdb_genres:
+                if genre not in tag_names:
+                    tag_names.append(genre)
 
         with transaction.atomic():
             if movie_title:
