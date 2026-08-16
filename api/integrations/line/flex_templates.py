@@ -519,5 +519,4 @@ def get_speed_rate_movie_flex(movie_data, genre_id):
             ]
         }
     }
- 
- 
+
