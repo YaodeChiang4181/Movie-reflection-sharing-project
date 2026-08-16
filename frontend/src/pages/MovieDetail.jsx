@@ -508,8 +508,9 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
             )}
           </div>
         </div>
-        </>
       )}
+      </>
+    )}
     </div>
   );
 }
