@@ -714,6 +714,31 @@ def get_rules_flex():
                 },
                 {"type": "separator", "margin": "lg"},
                 
+                # 急速評星
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "⭐ 急速評星 (無限流抽片)",
+                            "weight": "bold",
+                            "color": "#8B5CF6",
+                            "size": "md"
+                        },
+                        {
+                            "type": "text",
+                            "text": "輸入「急速評星」即可從各大類型或「熱門電影」中抽片！\n✅ 一次給你三部隨機電影 (橫向滑動)\n✅ 打完分數自動再給你三部新片\n✅ 隨時點擊「🛑 結束評星」即可退出",
+                            "color": "#555555",
+                            "size": "sm",
+                            "wrap": True,
+                            "margin": "sm"
+                        }
+                    ],
+                    "margin": "lg"
+                },
+                {"type": "separator", "margin": "lg"},
+                
                 # 其它好用指令
                 {
                     "type": "box",
@@ -839,4 +864,4 @@ def get_speed_rate_score_flex(movie_title, genre_id):
                 }
             ]
         }
-    }
+    }
