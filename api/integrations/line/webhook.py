@@ -282,7 +282,7 @@ def handle_message(event):
     
     is_reserved = (
         text in reserved_commands or 
-        text.startswith(('/', '／', '查 ', '搜尋 ')) or
+        text.startswith(('/', '／', '查 ', '搜尋 ', '回覆漂流瓶 #')) or
         is_hash_cmd
     )
     
@@ -415,17 +415,37 @@ def handle_message(event):
         return
 
     # --- Drift Bottle ---
-    if text.startswith('【漂流瓶感謝 #'):
+    if text.startswith('回覆漂流瓶 #'):
         try:
-            bottle_id_str = text.split('#')[1].split('】')[0]
+            bottle_id_str = text.replace('回覆漂流瓶 #', '').strip()
             bottle_id = int(bottle_id_str)
             bottle = DriftBottle.objects.get(id=bottle_id)
             
+            # 進入等待回覆狀態
+            state_record.state = "WAITING_FOR_BOTTLE_REPLY"
+            state_record.data['reply_bottle_id'] = bottle_id
+            state_record.save()
+            
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"請輸入你想對《{bottle.movie_title}》的推薦人說的感謝或留言：\n\n(回覆「取消」可中斷)"))
+        except Exception as e:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 找不到該漂流瓶。"))
+        return
+
+    if user_state == "WAITING_FOR_BOTTLE_REPLY":
+        bottle_id = state_record.data.get('reply_bottle_id')
+        reply_message = text.strip()
+        
+        state_record.state = ""
+        state_record.data = {}
+        state_record.save()
+        
+        try:
+            bottle = DriftBottle.objects.get(id=bottle_id)
             target_line_user_id = bottle.user.line_user_id
             if target_line_user_id:
                 try:
                     sender_nickname = user.profile.nickname if hasattr(user, 'profile') else (user.line_display_name or "匿名使用者")
-                    push_msg = TextSendMessage(text=f"💌 你的漂流瓶 ({bottle.movie_title}) 收到了回覆！\n\n來自 {sender_nickname} 的感謝：\n{text}")
+                    push_msg = TextSendMessage(text=f"💌 你的漂流瓶 ({bottle.movie_title}) 收到了回覆！\n\n來自 {sender_nickname} 的感謝：\n{reply_message}")
                     line_bot_api.push_message(target_line_user_id, push_msg)
                     line_bot_api.reply_message(event.reply_token, TextSendMessage(text="✨ 感謝已成功發送給推薦人！"))
                 except Exception as e:
