@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Clock, Calendar, ThumbsUp, ThumbsDown, User, MessageCircle, Send } from 'lucide-react';
+import { Star, Clock, Calendar, ThumbsUp, ThumbsDown, User, MessageCircle, Send, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './MovieDetail.module.css';
+import ReviewForm from '../components/ReviewForm';
 
 function MovieDetail() {
   const { id } = useParams();
@@ -130,7 +131,9 @@ function MovieDetail() {
                         <div>
                           <h4 style={{ color: 'var(--accent-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>🔥 熱度心得貼文</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            {hotReviews.map(review => <ReviewCard key={review.id} review={review} />)}
+                            {hotReviews.map(review => (
+                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} />
+                            ))}
                           </div>
                         </div>
                       )}
@@ -139,7 +142,9 @@ function MovieDetail() {
                         <div>
                           <h4 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>📝 一般心得貼文</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            {normalReviews.map(review => <ReviewCard key={review.id} review={review} />)}
+                            {normalReviews.map(review => (
+                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} />
+                            ))}
                           </div>
                         </div>
                       )}
@@ -200,18 +205,33 @@ function MovieDetail() {
   );
 }
 
-function ReviewCard({ review }) {
-  const { isLoggedIn } = useAuth();
+function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
+  const { isLoggedIn, userProfile } = useAuth();
   const [upvotes, setUpvotes] = useState(review.upvotes || 0);
   const [downvotes, setDownvotes] = useState(review.downvotes || 0);
   const [currentVote, setCurrentVote] = useState(review.user_voted || 0);
   const [isVoting, setIsVoting] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  
+  const isAuthor = isLoggedIn && userProfile?.campus_id === review.user?.campus_id;
   
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [commentsCount, setCommentsCount] = useState(review.comments_count || 0);
+
+  const handleDelete = async () => {
+    if (window.confirm("確定要刪除這篇心得嗎？")) {
+      try {
+        await api.delete(`reviews/${review.id}/`);
+        if (onReviewDeleted) onReviewDeleted(review.id);
+      } catch (err) {
+        alert("刪除失敗");
+      }
+    }
+  };
 
   const fetchComments = async () => {
     try {
@@ -295,7 +315,7 @@ function ReviewCard({ review }) {
 
   return (
     <div className={styles.reviewCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
           <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold' }}>
             {review.user?.nickname ? review.user.nickname.charAt(0).toUpperCase() : '?'}
@@ -303,13 +323,57 @@ function ReviewCard({ review }) {
           <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{review.user?.nickname || '未知使用者'}</span>
           <span>給了 {review.rating} 顆星</span>
         </div>
-        <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          {new Date(review.created_at).toLocaleDateString('zh-TW')}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            {new Date(review.created_at).toLocaleDateString('zh-TW')}
+          </span>
+          {isAuthor && (
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              >
+                <MoreVertical size={18} />
+              </button>
+              
+              {showMenu && (
+                <div style={{ 
+                  position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                  borderRadius: '8px', overflow: 'hidden', zIndex: 10, minWidth: '120px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }}>
+                  <button 
+                    onClick={() => { setIsEditing(true); setShowMenu(false); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left' }}
+                    className="hover-bg-tertiary"
+                  >
+                    <Edit2 size={16} /> 編輯
+                  </button>
+                  <button 
+                    onClick={() => { handleDelete(); setShowMenu(false); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', textAlign: 'left' }}
+                    className="hover-bg-tertiary"
+                  >
+                    <Trash2 size={16} /> 刪除
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div style={{ position: 'relative' }}>
-        <p 
+      {isEditing ? (
+        <ReviewForm 
+          initialData={review}
+          onSuccess={() => { setIsEditing(false); if(onReviewUpdated) onReviewUpdated(); }}
+          onCancel={() => setIsEditing(false)}
+        />
+      ) : (
+        <>
+          <div style={{ position: 'relative' }}>
+            <p 
           className={styles.reviewText}
           style={review.is_spoiler && !isRevealed ? { filter: 'blur(8px)', userSelect: 'none', cursor: 'pointer' } : {}}
           onClick={() => { if(review.is_spoiler && !isRevealed) setIsRevealed(true); }}
@@ -443,7 +507,7 @@ function ReviewCard({ review }) {
               </p>
             )}
           </div>
-        </div>
+        </>
       )}
     </div>
   );
