@@ -809,6 +809,14 @@ def handle_postback(event):
     if action in ['speed_rate_genre', 'speed_rate_no']:
         genre_id = parsed_data.get('genre_id')
         from api.utils.tmdb import fetch_random_movie_by_genre
+        from django.conf import settings as django_settings
+        
+        # 診斷：檢查 TMDB_API_KEY 是否存在
+        tmdb_key = getattr(django_settings, 'TMDB_API_KEY', '')
+        if not tmdb_key:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️ 系統設定異常：TMDB API Key 尚未設定，請聯繫管理員在 Render 環境變數中加入 TMDB_API_KEY。"))
+            return
+        
         movie_data = fetch_random_movie_by_genre(genre_id)
         
         if not movie_data:
