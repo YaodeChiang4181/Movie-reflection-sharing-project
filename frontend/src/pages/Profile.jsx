@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, ThumbsUp, MessageSquare, Star, TrendingUp } from 'lucide-react';
+import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';
@@ -8,16 +8,16 @@ import styles from './Profile.module.css';
 
 // 根據等級取得身分標章
 function getBadge(level) {
-  if (level >= 5) return { title: '青銅冒險家', emoji: '🥉', color: '#CD7F32' };
-  if (level >= 2) return { title: '唉呦不錯呦', emoji: '✨', color: '#FFD700' };
-  if (level >= 1) return { title: '初出茅廬', emoji: '🌱', color: '#6BCB77' };
+  if (level >= 5) return { title: '青銅冒險家', emoji: '', color: '#CD7F32' };
+  if (level >= 2) return { title: '唉呦不錯呦', emoji: '', color: '#FFD700' };
+  if (level >= 1) return { title: '初出茅廬', emoji: '', color: '#6BCB77' };
   return { title: '新手影迷', emoji: '🎬', color: '#888888' };
 }
 
 function Profile() {
   const { isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
-  
+
   const [userData, setUserData] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [commentedReviews, setCommentedReviews] = useState([]);
@@ -88,10 +88,10 @@ function Profile() {
       {/* ===== 影迷卡片 ===== */}
       <div className={styles.fanCard}>
         <div className={styles.fanCardGlow} />
-        
+
         {/* 頂部裝飾線 */}
         <div className={styles.fanCardTopBar} />
-        
+
         <div className={styles.fanCardContent}>
           {/* 左側：頭像 + 基本資訊 */}
           <div className={styles.fanCardLeft}>
@@ -104,16 +104,16 @@ function Profile() {
               {/* 等級圈 */}
               <div className={styles.levelBadge}>Lv.{level}</div>
             </div>
-            
+
             <div className={styles.nameSection}>
               <h1 className={styles.nickname}>{userData?.nickname || 'NCU User'}</h1>
-              
+
               {/* 身分標章 */}
               <div className={styles.badgeTag} style={{ '--badge-color': badge.color }}>
                 <span>{badge.emoji}</span>
                 <span>{badge.title}</span>
               </div>
-              
+
               <p className={styles.realInfo}>
                 {userData?.real_name} · {userData?.department}
               </p>
@@ -171,13 +171,13 @@ function Profile() {
 
       {/* ===== Tabs 切換 ===== */}
       <div className={styles.tabBar}>
-        <button 
+        <button
           className={`${styles.tabBtn} ${activeTab === 'my' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('my')}
         >
           <Film size={16} /> 我的心得 ({reviews.length})
         </button>
-        <button 
+        <button
           className={`${styles.tabBtn} ${activeTab === 'commented' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('commented')}
         >
@@ -196,8 +196,8 @@ function Profile() {
               {activeTab === 'my' ? '這裡還空空如也' : '您還沒有在任何心得下方留言過'}
             </h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-              {activeTab === 'my' 
-                ? '趕快回到首頁，建立您的第一座影像殿堂吧！' 
+              {activeTab === 'my'
+                ? '趕快回到首頁，建立您的第一座影像殿堂吧！'
                 : '到首頁逛逛，留下你的想法吧！'}
             </p>
             <button className="btn-primary" onClick={() => navigate('/')}>
@@ -207,8 +207,8 @@ function Profile() {
         ) : (
           <div className={styles.reviewList}>
             {currentReviews.map(review => (
-              <div 
-                key={review.id} 
+              <div
+                key={review.id}
                 className={styles.reviewCard}
                 onClick={() => setSelectedReview(review)}
               >
@@ -244,9 +244,9 @@ function Profile() {
 
       {/* Review Modal */}
       {selectedReview && (
-        <ReviewModal 
-          review={selectedReview} 
-          onClose={() => setSelectedReview(null)} 
+        <ReviewModal
+          review={selectedReview}
+          onClose={() => setSelectedReview(null)}
           onReviewUpdated={handleReviewUpdated}
           onReviewDeleted={handleReviewDeleted}
         />
