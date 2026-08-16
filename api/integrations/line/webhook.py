@@ -218,7 +218,7 @@ def handle_message(event):
         movie_match = re.search(r'電影：([^\n]+)', text)
         rating_match = re.search(r'評分：(\d+)', text)
         tag_match = re.search(r'標籤：([^\n]+)', text)
-        content_match = re.search(r'心得：(.+)', text, re.DOTALL)
+        content_match = re.search(r'心得：(.*)', text, re.DOTALL)
         
         if movie_match and rating_match and content_match:
             movie_title = movie_match.group(1).strip()

@@ -16,7 +16,8 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!content.trim()) return setError('請填寫心得內容');
+    // 允許無內容的簡易評分貼文
+    // if (!content.trim()) return setError('請填寫心得內容');
     if (!movieId.trim()) return setError('請填寫電影名稱');
 
     // 解析 Hashtags (用 # 切割並移除空白和分號)
