@@ -667,3 +667,88 @@ def get_rules_flex():
             ]
         }
     }
+
+def get_speed_rate_score_flex(movie_title):
+    return {
+        "type": "bubble",
+        "size": "kilo",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": f"請為《{movie_title}》打分數",
+                    "weight": "bold",
+                    "size": "md",
+                    "wrap": True
+                },
+                {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "margin": "md",
+                    "spacing": "sm",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "color": "#FFD700",
+                            "action": {
+                                "type": "postback",
+                                "label": "1星",
+                                "data": f"action=speed_rate_score&score=1&title={movie_title}"
+                            }
+                        },
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "color": "#FFD700",
+                            "action": {
+                                "type": "postback",
+                                "label": "2星",
+                                "data": f"action=speed_rate_score&score=2&title={movie_title}"
+                            }
+                        },
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "color": "#FFD700",
+                            "action": {
+                                "type": "postback",
+                                "label": "3星",
+                                "data": f"action=speed_rate_score&score=3&title={movie_title}"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "margin": "sm",
+                    "spacing": "sm",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "color": "#FFD700",
+                            "action": {
+                                "type": "postback",
+                                "label": "4星",
+                                "data": f"action=speed_rate_score&score=4&title={movie_title}"
+                            }
+                        },
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "color": "#FFD700",
+                            "action": {
+                                "type": "postback",
+                                "label": "5星",
+                                "data": f"action=speed_rate_score&score=5&title={movie_title}"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }

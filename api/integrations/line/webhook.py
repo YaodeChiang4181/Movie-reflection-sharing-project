@@ -22,7 +22,7 @@ from api.utils.text_utils import normalize_movie_title
 from .flex_templates import (
     get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, 
     get_event_success_flex, get_auto_login_flex, get_speed_rate_genres_flex, 
-    get_speed_rate_movie_flex, get_rules_flex
+    get_speed_rate_movie_flex, get_rules_flex, get_speed_rate_score_flex
 )
 
 load_dotenv()
@@ -849,24 +849,50 @@ def handle_postback(event):
         
     if action == 'speed_rate_yes':
         movie_title = parsed_data.get('movie_title')
-        # 切換使用者狀態
-        state_record, _ = LineBotState.objects.get_or_create(line_user_id=line_user_id)
-        state_record.state = "WAITING_FOR_SPEED_RATING"
-        state_record.data = {'review_title': movie_title}
-        state_record.save()
         
-        # 顯示 Quick Reply
-        quick_reply_buttons = []
-        for i in range(1, 6):
-            quick_reply_buttons.append(QuickReplyButton(
-                action=MessageAction(label=f"{i} 星", text=str(i))
-            ))
+        # 顯示評分卡片 (不再使用 Quick Reply)
+        flex_card = get_speed_rate_score_flex(movie_title)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text=f"請為《{movie_title}》打分數", contents=flex_card))
+        return
+
+    if action == 'speed_rate_score':
+        rating = int(parsed_data.get('score'))
+        raw_movie_title = parsed_data.get('title')
+        movie_title = normalize_movie_title(raw_movie_title)
+        
+        user = User.objects.filter(line_user_id=line_user_id).first()
+        if not user:
+            return
             
-        line_bot_api.reply_message(
-            event.reply_token, 
-            TextSendMessage(
-                text=f"太棒了！請為《{movie_title}》打個分數吧 (1~5 星)：",
-                quick_reply=QuickReply(items=quick_reply_buttons)
-            )
+        # Create review with empty content
+        movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})
+        
+        review = Review.objects.create(
+            user=user,
+            movie=movie,
+            rating=rating,
+            content="", 
+            source='line'
         )
+        
+        # Add TMDB genres automatically
+        from api.utils.tmdb import fetch_movie_genres
+        from api.models import Tag
+        
+        movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
+        review.tags.add(movie_tag)
+        
+        tmdb_genres = fetch_movie_genres(movie_title)
+        for genre in tmdb_genres:
+            if genre != movie_title:
+                tag_obj, _ = Tag.objects.get_or_create(name=genre)
+                review.tags.add(tag_obj)
+                
+        user_exp = add_user_experience(user, 10)
+        
+        frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
+        movie_url = f"{frontend_url}/movies/{movie.id}"
+        
+        flex_bubble = get_exp_feedback_flex(user, 10, user_exp.level, user_exp.exp, movie_url=movie_url)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="評分成功！經驗值增加", contents=flex_bubble))
         return
