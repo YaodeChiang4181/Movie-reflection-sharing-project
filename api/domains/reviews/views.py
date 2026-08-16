@@ -12,7 +12,7 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.annotate(
         avg_rating=Avg('reviews__rating', filter=Q(reviews__is_deleted=False)),
         review_count=Count('reviews', filter=Q(reviews__is_deleted=False))
-    ).order_by('-review_count', '-id')
+    ).filter(review_count__gt=0).order_by('-review_count', '-id')
     serializer_class = MovieSerializer
     permission_classes = (AllowAny,)
 
