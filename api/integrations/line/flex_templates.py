@@ -408,3 +408,114 @@ def get_auto_login_flex(url):
             ]
         }
     }
+
+def get_speed_rate_genres_flex(genres_subset):
+    bubbles = []
+    for genre_id, genre_name in genres_subset:
+        bubble = {
+            "type": "bubble",
+            "size": "micro",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": f"🎬 {genre_name}",
+                        "weight": "bold",
+                        "size": "sm",
+                        "color": "#111111",
+                        "align": "center"
+                    }
+                ],
+                "paddingAll": "xl"
+            },
+            "footer": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "button",
+                        "style": "primary",
+                        "color": "#C084FC",
+                        "height": "sm",
+                        "action": {
+                            "type": "postback",
+                            "label": "開始評分",
+                            "data": f"action=speed_rate_genre&genre_id={genre_id}"
+                        }
+                    }
+                ],
+                "paddingAll": "md"
+            }
+        }
+        bubbles.append(bubble)
+        
+    return {
+        "type": "carousel",
+        "contents": bubbles
+    }
+
+def get_speed_rate_movie_flex(movie_data, genre_id):
+    title = movie_data.get('title', '未知電影')
+    poster = movie_data.get('poster_url') or "https://via.placeholder.com/500x750?text=No+Poster"
+    
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "hero": {
+            "type": "image",
+            "url": poster,
+            "size": "full",
+            "aspectRatio": "2:3",
+            "aspectMode": "cover"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": title,
+                    "weight": "bold",
+                    "size": "xl",
+                    "wrap": True
+                },
+                {
+                    "type": "text",
+                    "text": "請問你看過這部電影嗎？",
+                    "size": "sm",
+                    "color": "#888888",
+                    "margin": "md"
+                }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "horizontal",
+            "spacing": "sm",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "color": "#1DB446",
+                    "action": {
+                        "type": "postback",
+                        "label": "看過 (是)",
+                        "data": f"action=speed_rate_yes&movie_title={title}"
+                    },
+                    "flex": 1
+                },
+                {
+                    "type": "button",
+                    "style": "secondary",
+                    "action": {
+                        "type": "postback",
+                        "label": "沒看過 (否)",
+                        "data": f"action=speed_rate_no&genre_id={genre_id}"
+                    },
+                    "flex": 1
+                }
+            ]
+        }
+    }

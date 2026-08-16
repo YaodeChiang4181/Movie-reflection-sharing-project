@@ -118,11 +118,52 @@ function MovieDetail() {
               <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '40px 0' }}>載入中...</p>
             ) : reviews.length > 0 ? (
               <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {reviews.map(review => (
-                    <ReviewCard key={review.id} review={review} />
-                  ))}
-                </div>
+                {/* 分為三區塊: 熱門、一般、簡易分數 */}
+                {(() => {
+                  const hotReviews = reviews.filter(r => r.content && r.upvotes > 0).sort((a,b) => b.upvotes - a.upvotes);
+                  const normalReviews = reviews.filter(r => r.content && r.upvotes === 0);
+                  const speedRatings = reviews.filter(r => !r.content);
+                  
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      {hotReviews.length > 0 && (
+                        <div>
+                          <h4 style={{ color: 'var(--accent-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>🔥 熱度心得貼文</h4>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {hotReviews.map(review => <ReviewCard key={review.id} review={review} />)}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {normalReviews.length > 0 && (
+                        <div>
+                          <h4 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>📝 一般心得貼文</h4>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {normalReviews.map(review => <ReviewCard key={review.id} review={review} />)}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {speedRatings.length > 0 && (
+                        <div>
+                          <h4 style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '1.2rem' }}>⭐ 簡易心得版塊 (急速評星)</h4>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
+                            {speedRatings.map(review => (
+                              <div key={review.id} className="glass" style={{ padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <User size={16} style={{ color: 'var(--text-secondary)' }} /> {review.user?.nickname || '匿名'}
+                                </span>
+                                <span style={{ color: 'var(--accent-primary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <Star size={16} fill="currentColor" /> {review.rating} / 5
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 
                 {/* Pagination */}
                 {totalPages > 1 && (

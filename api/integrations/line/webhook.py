@@ -10,7 +10,7 @@ from django.utils.timezone import make_aware
 import urllib.parse
 
 from linebot import LineBotApi, WebhookHandler
-from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage, PostbackEvent, QuickReply, QuickReplyButton, MessageAction
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -18,7 +18,11 @@ from dotenv import load_dotenv
 
 from api.models import User, Review, Movie, Event, UserProfile, OutsiderIdentity, LineBotState
 from api.domains.gamification.services import add_user_experience
-from .flex_templates import get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, get_event_success_flex, get_auto_login_flex
+from .flex_templates import (
+    get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, 
+    get_event_success_flex, get_auto_login_flex, get_speed_rate_genres_flex, 
+    get_speed_rate_movie_flex
+)
 
 load_dotenv()
 line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN', ''))
@@ -288,7 +292,7 @@ def handle_message(event):
     user_state = state_record.state
     
     # 攔截關鍵指令，強制退出目前的狀態 (避免在輸入電影名稱時，按到選單按鈕變成輸入電影名稱)
-    reserved_commands = ['寫心得', '影迷名片', '我要揪團', '近期活動', '查', '影評推薦', '取消']
+    reserved_commands = ['寫心得', '影迷名片', '急速評星', '近期活動', '查', '影評推薦', '取消']
     is_hash_cmd = any(text.startswith(c) for c in ['#心得', '＃心得', '#揪團', '＃揪團', '#綁定', '＃綁定', '#暱稱', '＃暱稱'])
     
     is_reserved = (
@@ -375,6 +379,53 @@ def handle_message(event):
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"系統查詢時發生錯誤：{str(e)}"))
             except:
                 pass
+        return
+        
+    if user_state == "WAITING_FOR_SPEED_RATING":
+        rating_text = text.strip()
+        if not rating_text.isdigit() or not (1 <= int(rating_text) <= 5):
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 評分格式錯誤！請輸入 1 到 5 之間的數字 (或點擊上方的按鈕)：\n\n(隨時可以回覆「取消」取消進度喔～)"))
+            return
+            
+        rating = int(rating_text)
+        movie_title = state_record.data.get('review_title')
+        
+        # Clear state
+        state_record.state = ""
+        state_record.data = {}
+        state_record.save()
+        
+        # Create review with empty content
+        movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})
+        
+        review = Review.objects.create(
+            user=user,
+            movie=movie,
+            rating=rating,
+            content="", 
+            source='line'
+        )
+        
+        # Add TMDB genres automatically
+        from api.utils.tmdb import fetch_movie_genres
+        from api.models import Tag
+        
+        movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
+        review.tags.add(movie_tag)
+        
+        tmdb_genres = fetch_movie_genres(movie_title)
+        for genre in tmdb_genres:
+            if genre != movie_title:
+                tag_obj, _ = Tag.objects.get_or_create(name=genre)
+                review.tags.add(tag_obj)
+                
+        user_exp = add_user_experience(user, 10)
+        
+        frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
+        movie_url = f"{frontend_url}/movies/{movie.id}"
+        
+        flex_bubble = get_exp_feedback_flex(user, 10, user_exp.level, user_exp.exp, movie_url=movie_url)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="評分成功！經驗值增加", contents=flex_bubble))
         return
 
     # --- Stateful Review Creation ---
@@ -480,22 +531,15 @@ def handle_message(event):
         )
         return
 
-    if text == '我要揪團':
-        reply_text = (
-            "🤝 想要發起電影揪團嗎？請複製以下格式並填寫內容後發送給我：\n\n"
-            "#揪團\n"
-            "活動：【請填寫活動名稱】\n"
-            "時間：【YYYY-MM-DD HH:MM】\n"
-            "地點：【請填寫地點】\n"
-            "描述：【請填寫想說的話】\n\n"
-            "💡 範例：\n"
-            "#揪團\n"
-            "活動：一起看死侍與金鋼狼\n"
-            "時間：2024-12-31 19:00\n"
-            "地點：信義威秀\n"
-            "描述：目前缺2人，看完一起吃晚餐！"
-        )
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+    if text == '急速評星':
+        from api.utils.tmdb import GENRE_MAP
+        import random
+        all_genres = list(GENRE_MAP.items())
+        random.shuffle(all_genres)
+        genres_subset = all_genres[:10]
+        
+        flex_carousel = get_speed_rate_genres_flex(genres_subset)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="選擇你想評分的電影類型", contents=flex_carousel))
         return
         
     if text == '影迷名片':
@@ -747,7 +791,52 @@ def handle_message(event):
     try:
         line_bot_api.reply_message(
             event.reply_token, 
-            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 奧德賽」、「近期活動」、「#揪團」。\n\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
+            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 奧德賽」、「近期活動」、「急速評星」。\n\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
         )
     except LineBotApiError:
         pass
+
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    line_user_id = event.source.user_id
+    data = event.postback.data
+    import urllib.parse
+    parsed_data = dict(urllib.parse.parse_qsl(data))
+    action = parsed_data.get('action')
+    
+    if action in ['speed_rate_genre', 'speed_rate_no']:
+        genre_id = parsed_data.get('genre_id')
+        from api.utils.tmdb import fetch_random_movie_by_genre
+        movie_data = fetch_random_movie_by_genre(genre_id)
+        
+        if not movie_data:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="抱歉，目前抓取電影發生異常，請稍後再試！"))
+            return
+            
+        flex_card = get_speed_rate_movie_flex(movie_data, genre_id)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="請問你看過這部電影嗎？", contents=flex_card))
+        return
+        
+    if action == 'speed_rate_yes':
+        movie_title = parsed_data.get('movie_title')
+        # 切換使用者狀態
+        state_record, _ = LineBotState.objects.get_or_create(line_user_id=line_user_id)
+        state_record.state = "WAITING_FOR_SPEED_RATING"
+        state_record.data = {'review_title': movie_title}
+        state_record.save()
+        
+        # 顯示 Quick Reply
+        quick_reply_buttons = []
+        for i in range(1, 6):
+            quick_reply_buttons.append(QuickReplyButton(
+                action=MessageAction(label=f"{i} 星", text=str(i))
+            ))
+            
+        line_bot_api.reply_message(
+            event.reply_token, 
+            TextSendMessage(
+                text=f"太棒了！請為《{movie_title}》打個分數吧 (1~5 星)：",
+                quick_reply=QuickReply(items=quick_reply_buttons)
+            )
+        )
+        return

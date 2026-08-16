@@ -3,13 +3,16 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 from django.db import IntegrityError
-from django.db.models import Count, Q, Case, When, Value, IntegerField
+from django.db.models import Count, Q, Case, When, Value, IntegerField, Avg
 from django.core.cache import cache
 from api.models import Movie, Review, Vote, Comment
 from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Movie.objects.all()
+    queryset = Movie.objects.annotate(
+        avg_rating=Avg('reviews__rating', filter=Q(reviews__is_deleted=False)),
+        review_count=Count('reviews', filter=Q(reviews__is_deleted=False))
+    ).order_by('-review_count', '-id')
     serializer_class = MovieSerializer
     permission_classes = (AllowAny,)
 

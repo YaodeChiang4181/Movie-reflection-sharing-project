@@ -6,6 +6,9 @@ from api.domains.auth.serializers import UserSerializer
 from api.utils.tmdb import fetch_movie_genres
 
 class MovieSerializer(serializers.ModelSerializer):
+    avg_rating = serializers.FloatField(read_only=True)
+    review_count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Movie
         fields = '__all__'

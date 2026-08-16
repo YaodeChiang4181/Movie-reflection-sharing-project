@@ -1,6 +1,7 @@
 import urllib.request
 import urllib.parse
 import json
+import random
 from django.conf import settings
 
 GENRE_MAP = {
@@ -57,3 +58,40 @@ def fetch_movie_genres(movie_title):
         pass
         
     return []
+
+def fetch_random_movie_by_genre(genre_id):
+    """
+    Fetch a random popular movie from TMDB for a given genre_id.
+    Returns a dict with 'title' and 'poster_url' (or None if failed).
+    """
+    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    if not api_key:
+        return None
+
+    try:
+        # 為了隨機性，我們在最熱門的前 5 頁中隨機抽一頁
+        page = random.randint(1, 5)
+        url = f"https://api.themoviedb.org/3/discover/movie?api_key={api_key}&language=zh-TW&with_genres={genre_id}&sort_by=popularity.desc&page={page}"
+        
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            
+            if data.get('results') and len(data['results']) > 0:
+                # 在該頁的 20 筆結果中隨機抽一部
+                movie = random.choice(data['results'])
+                
+                title = movie.get('title')
+                poster_path = movie.get('poster_path')
+                poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
+                
+                return {
+                    'title': title,
+                    'poster_url': poster_url,
+                    'overview': movie.get('overview', '')
+                }
+    except Exception as e:
+        print(f"TMDB Discover Error: {e}")
+        pass
+        
+    return None
