@@ -994,7 +994,7 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
                     "action": {
                         "type": "uri",
                         "label": "發送你的感謝！",
-                        "uri": f"line://msg/text/?【漂流瓶感謝 #{bottle.id}】謝謝你的推薦！"
+                        "uri": f"line://msg/text/?%E3%80%90%E6%BC%82%E6%B5%81%E7%93%B6%E6%84%9F%E8%AC%9D%20%23{bottle.id}%E3%80%91%E8%AC%9D%E8%AC%9D%E4%BD%A0%E7%9A%84%E6%8E%A8%E8%96%A6%EF%BC%81"
                     }
                 }
             ]
