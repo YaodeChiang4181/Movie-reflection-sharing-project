@@ -560,6 +560,20 @@ def handle_message(event):
         current_exp = user_exp.exp
         exp_needed = level * 100
         
+        # 身分標章
+        if level >= 5:
+            badge_title = "🥉 青銅冒險家"
+            badge_color = "#CD7F32"
+        elif level >= 2:
+            badge_title = "✨ 唉呦不錯呦"
+            badge_color = "#FFD700"
+        elif level >= 1:
+            badge_title = "🌱 初出茅廬"
+            badge_color = "#6BCB77"
+        else:
+            badge_title = "🎬 新手影迷"
+            badge_color = "#888888"
+        
         # 已發布心得
         review_count = Review.objects.filter(user=user, is_deleted=False).count()
         
@@ -576,7 +590,11 @@ def handle_message(event):
             use_count=Count('reviews')
         ).order_by('-use_count')[:3]
         
-        tag_str = " ".join([f"#{t.name.replace('#', '')}" for t in top_tags]) if top_tags else "無"
+        tag_str = " ".join([f"#{t.name.replace('#', '')}" for t in top_tags]) if top_tags else "尚無"
+        
+        # 經驗值進度條（用方塊視覺化）
+        progress_blocks = int((current_exp / exp_needed) * 10) if exp_needed > 0 else 0
+        progress_bar = "▓" * progress_blocks + "░" * (10 - progress_blocks)
         
         flex_card = {
             "type": "bubble",
@@ -591,58 +609,86 @@ def handle_message(event):
                         "weight": "bold",
                         "color": "#FFFFFF",
                         "size": "xl"
+                    },
+                    {
+                        "type": "text",
+                        "text": badge_title,
+                        "size": "md",
+                        "color": badge_color,
+                        "weight": "bold",
+                        "margin": "sm"
                     }
                 ],
-                "backgroundColor": "#8B5CF6"
+                "backgroundColor": "#2D1B69",
+                "paddingAll": "20px"
             },
             "body": {
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
+                    # 暱稱區塊
                     {
-                        "type": "box",
-                        "layout": "horizontal",
-                        "contents": [
-                            {"type": "text", "text": "👤 暱稱", "size": "sm", "color": "#888888", "flex": 3},
-                            {"type": "text", "text": nickname, "size": "sm", "color": "#111111", "weight": "bold", "flex": 5}
-                        ]
+                        "type": "text",
+                        "text": nickname,
+                        "weight": "bold",
+                        "size": "xxl",
+                        "color": "#111111"
                     },
+                    {"type": "separator", "margin": "lg"},
+                    # 等級與經驗值
                     {
                         "type": "box",
-                        "layout": "horizontal",
+                        "layout": "vertical",
                         "contents": [
-                            {"type": "text", "text": "⭐ 等級", "size": "sm", "color": "#888888", "flex": 3},
-                            {"type": "text", "text": f"Lv. {level}", "size": "sm", "color": "#111111", "weight": "bold", "flex": 5}
+                            {
+                                "type": "box",
+                                "layout": "horizontal",
+                                "contents": [
+                                    {"type": "text", "text": f"⭐ Lv. {level}", "size": "md", "color": "#8B5CF6", "weight": "bold", "flex": 3},
+                                    {"type": "text", "text": f"EXP {current_exp}/{exp_needed}", "size": "sm", "color": "#888888", "align": "end", "flex": 5}
+                                ]
+                            },
+                            {
+                                "type": "text",
+                                "text": progress_bar,
+                                "size": "sm",
+                                "color": "#8B5CF6",
+                                "margin": "sm"
+                            }
                         ],
-                        "margin": "md"
+                        "margin": "lg"
                     },
+                    {"type": "separator", "margin": "lg"},
+                    # 數據統計
                     {
                         "type": "box",
                         "layout": "horizontal",
                         "contents": [
-                            {"type": "text", "text": "✨ 經驗值", "size": "sm", "color": "#888888", "flex": 3},
-                            {"type": "text", "text": f"{current_exp} / {exp_needed}", "size": "sm", "color": "#111111", "flex": 5}
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {"type": "text", "text": str(review_count), "size": "xl", "weight": "bold", "color": "#111111", "align": "center"},
+                                    {"type": "text", "text": "📝 發布心得", "size": "xs", "color": "#888888", "align": "center", "margin": "sm"}
+                                ],
+                                "flex": 1
+                            },
+                            {"type": "separator"},
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {"type": "text", "text": str(likes_received), "size": "xl", "weight": "bold", "color": "#111111", "align": "center"},
+                                    {"type": "text", "text": "👍 獲得推薦", "size": "xs", "color": "#888888", "align": "center", "margin": "sm"}
+                                ],
+                                "flex": 1
+                            }
                         ],
-                        "margin": "md"
+                        "margin": "lg",
+                        "paddingAll": "sm"
                     },
-                    {
-                        "type": "box",
-                        "layout": "horizontal",
-                        "contents": [
-                            {"type": "text", "text": "📝 發布心得", "size": "sm", "color": "#888888", "flex": 3},
-                            {"type": "text", "text": f"{review_count} 篇", "size": "sm", "color": "#111111", "flex": 5}
-                        ],
-                        "margin": "md"
-                    },
-                    {
-                        "type": "box",
-                        "layout": "horizontal",
-                        "contents": [
-                            {"type": "text", "text": "👍 獲得推薦", "size": "sm", "color": "#888888", "flex": 3},
-                            {"type": "text", "text": f"{likes_received} 次", "size": "sm", "color": "#111111", "flex": 5}
-                        ],
-                        "margin": "md"
-                    },
+                    {"type": "separator", "margin": "lg"},
+                    # 常用標籤
                     {
                         "type": "box",
                         "layout": "vertical",
@@ -660,8 +706,8 @@ def handle_message(event):
                 "contents": [
                     {
                         "type": "text",
-                        "text": "💡 發布心得 +25 EXP，留言 +10 EXP，獲得按讚 +1 EXP",
-                        "size": "xs",
+                        "text": "💡 發布心得 +25 EXP｜留言 +10 EXP｜被按讚 +1 EXP",
+                        "size": "xxs",
                         "color": "#aaaaaa",
                         "wrap": True,
                         "align": "center"

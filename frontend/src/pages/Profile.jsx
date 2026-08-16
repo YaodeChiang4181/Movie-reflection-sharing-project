@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, ThumbsUp, MessageSquare } from 'lucide-react';
+import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';
 import styles from './Profile.module.css';
+
+// 根據等級取得身分標章
+function getBadge(level) {
+  if (level >= 5) return { title: '青銅冒險家', emoji: '🥉', color: '#CD7F32' };
+  if (level >= 2) return { title: '唉呦不錯呦', emoji: '✨', color: '#FFD700' };
+  if (level >= 1) return { title: '初出茅廬', emoji: '🌱', color: '#6BCB77' };
+  return { title: '新手影迷', emoji: '🎬', color: '#888888' };
+}
 
 function Profile() {
   const { isLoggedIn, logout } = useAuth();
@@ -15,6 +23,7 @@ function Profile() {
   const [commentedReviews, setCommentedReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedReview, setSelectedReview] = useState(null);
+  const [activeTab, setActiveTab] = useState('my'); // 'my' or 'commented'
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -47,7 +56,6 @@ function Profile() {
   }, [isLoggedIn, navigate, logout]);
 
   const handleReviewUpdated = () => {
-    // 重新載入以獲取最新資料
     api.get('reviews/me/').then(res => setReviews(res.data));
     api.get('reviews/commented_by_me/').then(res => setCommentedReviews(res.data));
   };
@@ -65,107 +73,168 @@ function Profile() {
     );
   }
 
-  // Calculate stats
   const totalReviews = reviews.length;
-  // If upvotes is included in the backend, sum it up. Otherwise fallback to 0.
   const totalVotes = reviews.reduce((sum, review) => sum + (review.upvotes || 0), 0);
+  const level = userData?.level || 0;
+  const exp = userData?.exp || 0;
+  const badge = getBadge(level);
+  const expNeeded = Math.max(level, 1) * 100;
+  const expProgress = Math.min((exp / expNeeded) * 100, 100);
+
+  const currentReviews = activeTab === 'my' ? reviews : commentedReviews;
 
   return (
     <div className={`container ${styles.pageWrapper}`}>
-      {/* Profile Header Card */}
-      <div className={`glass ${styles.profileCard}`}>
-        <div className={styles.avatarWrapper}>
-          <div className={styles.avatar}>
-            <UserPlaceholder />
-          </div>
-        </div>
-        <div className={styles.userInfo}>
-          <h1 className={styles.username}>{userData?.nickname || 'NCU User'}</h1>
-          <p className={styles.email}>真實姓名: {userData?.real_name} | 科系: {userData?.department}</p>
-          <p className={styles.email} style={{ fontSize: '0.85rem', marginTop: '4px', opacity: 0.7 }}>
-            校園 ID: {userData?.campus_id}
-          </p>
-          
-          {userData?.common_tags?.length > 0 && (
-            <div style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              {userData.common_tags.map(tag => (
-                <span key={tag} style={{ 
-                  background: 'var(--bg-tertiary)', 
-                  color: 'var(--accent-primary)', 
-                  padding: '4px 12px', 
-                  borderRadius: '16px',
-                  fontSize: '0.85rem',
-                  fontWeight: 'bold',
-                  border: '1px solid rgba(139, 92, 246, 0.3)'
-                }}>
-                  #{tag}
+      {/* ===== 影迷卡片 ===== */}
+      <div className={styles.fanCard}>
+        <div className={styles.fanCardGlow} />
+        
+        {/* 頂部裝飾線 */}
+        <div className={styles.fanCardTopBar} />
+        
+        <div className={styles.fanCardContent}>
+          {/* 左側：頭像 + 基本資訊 */}
+          <div className={styles.fanCardLeft}>
+            <div className={styles.avatarContainer}>
+              <div className={styles.avatar}>
+                <span className={styles.avatarText}>
+                  {(userData?.nickname || 'U').charAt(0).toUpperCase()}
                 </span>
-              ))}
-            </div>
-          )}
-          
-          <div className={styles.statsRow}>
-            <div className={styles.statBox}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(139, 92, 246, 0.2)', width: '32px', height: '32px', borderRadius: '50%', color: 'var(--accent-primary)', fontWeight: 'bold' }}>
-                Lv
               </div>
-              <div className={styles.statData}>
-                <span className={styles.statValue}>{userData?.level || 1}</span>
-                <span className={styles.statLabel}>影迷等級 (EXP: {userData?.exp || 0})</span>
+              {/* 等級圈 */}
+              <div className={styles.levelBadge}>Lv.{level}</div>
+            </div>
+            
+            <div className={styles.nameSection}>
+              <h1 className={styles.nickname}>{userData?.nickname || 'NCU User'}</h1>
+              
+              {/* 身分標章 */}
+              <div className={styles.badgeTag} style={{ '--badge-color': badge.color }}>
+                <span>{badge.emoji}</span>
+                <span>{badge.title}</span>
+              </div>
+              
+              <p className={styles.realInfo}>
+                {userData?.real_name} · {userData?.department}
+              </p>
+              <p className={styles.campusId}>
+                校園 ID: {userData?.campus_id}
+              </p>
+            </div>
+          </div>
+
+          {/* 右側：數據面板 */}
+          <div className={styles.fanCardRight}>
+            {/* 經驗值進度條 */}
+            <div className={styles.expSection}>
+              <div className={styles.expHeader}>
+                <span className={styles.expLabel}>
+                  <TrendingUp size={14} /> 經驗值
+                </span>
+                <span className={styles.expNumbers}>{exp} / {expNeeded}</span>
+              </div>
+              <div className={styles.expBarOuter}>
+                <div className={styles.expBarInner} style={{ width: `${expProgress}%` }} />
               </div>
             </div>
-            <div className={styles.statBox}>
-              <Film size={20} className={styles.statIcon} />
-              <div className={styles.statData}>
-                <span className={styles.statValue}>{totalReviews}</span>
-                <span className={styles.statLabel}>已發布心得</span>
+
+            {/* 數據格子 */}
+            <div className={styles.statsGrid}>
+              <div className={styles.statCard}>
+                <Film size={20} className={styles.statCardIcon} />
+                <span className={styles.statCardValue}>{totalReviews}</span>
+                <span className={styles.statCardLabel}>已發布心得</span>
               </div>
-            </div>
-            <div className={styles.statBox}>
-              <ThumbsUp size={20} className={styles.statIcon} />
-              <div className={styles.statData}>
-                <span className={styles.statValue}>{totalVotes}</span>
-                <span className={styles.statLabel}>獲得推薦</span>
+              <div className={styles.statCard}>
+                <ThumbsUp size={20} className={styles.statCardIcon} />
+                <span className={styles.statCardValue}>{totalVotes}</span>
+                <span className={styles.statCardLabel}>獲得推薦</span>
+              </div>
+              <div className={styles.statCard}>
+                <MessageSquare size={20} className={styles.statCardIcon} />
+                <span className={styles.statCardValue}>{commentedReviews.length}</span>
+                <span className={styles.statCardLabel}>留言互動</span>
               </div>
             </div>
           </div>
         </div>
+
+        {/* 常用標籤 */}
+        {userData?.common_tags?.length > 0 && (
+          <div className={styles.tagsBar}>
+            {userData.common_tags.map(tag => (
+              <span key={tag} className={styles.commonTag}>#{tag}</span>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Reviews Section */}
+      {/* ===== Tabs 切換 ===== */}
+      <div className={styles.tabBar}>
+        <button 
+          className={`${styles.tabBtn} ${activeTab === 'my' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('my')}
+        >
+          <Film size={16} /> 我的心得 ({reviews.length})
+        </button>
+        <button 
+          className={`${styles.tabBtn} ${activeTab === 'commented' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('commented')}
+        >
+          <MessageSquare size={16} /> 留言過的 ({commentedReviews.length})
+        </button>
+      </div>
+
+      {/* ===== 心得列表 ===== */}
       <div className={styles.reviewsSection}>
-        <h2 className={styles.sectionTitle}>我的觀影心得</h2>
-        
-        {reviews.length === 0 ? (
-          <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-            <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>這裡還空空如也</h2>
+        {currentReviews.length === 0 ? (
+          <div className="glass" style={{ padding: '48px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>
+              {activeTab === 'my' ? '📝' : '💬'}
+            </div>
+            <h2 style={{ color: 'var(--text-primary)', marginBottom: '12px', fontSize: '1.2rem' }}>
+              {activeTab === 'my' ? '這裡還空空如也' : '您還沒有在任何心得下方留言過'}
+            </h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-              趕快回到首頁，建立您的第一座影像殿堂吧！
+              {activeTab === 'my' 
+                ? '趕快回到首頁，建立您的第一座影像殿堂吧！' 
+                : '到首頁逛逛，留下你的想法吧！'}
             </p>
             <button className="btn-primary" onClick={() => navigate('/')}>
-              去首頁發布心得
+              去首頁看看
             </button>
           </div>
         ) : (
           <div className={styles.reviewList}>
-            {reviews.map(review => (
+            {currentReviews.map(review => (
               <div 
                 key={review.id} 
                 className={styles.reviewCard}
                 onClick={() => setSelectedReview(review)}
-                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
-                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <h3>{review.movie?.title || '未命名電影'}</h3>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '12px' }}>
-                  {new Date(review.created_at).toLocaleDateString('zh-TW')}
-                </span>
-                <p>{review.content}</p>
-                <div className={styles.tags}>
-                  {review.tags?.map(tag => (
-                    <span key={tag.id} className={styles.tag}>{tag.name}</span>
-                  ))}
+                <div className={styles.reviewCardHeader}>
+                  <div>
+                    <h3 className={styles.reviewTitle}>{review.movie?.title || '未命名電影'}</h3>
+                    <span className={styles.reviewMeta}>
+                      {new Date(review.created_at).toLocaleDateString('zh-TW')}
+                      {activeTab === 'commented' && ` · 作者: ${review.user?.nickname}`}
+                    </span>
+                  </div>
+                  <div className={styles.reviewRating}>
+                    <Star size={14} fill="currentColor" /> {review.rating}/5
+                  </div>
+                </div>
+                <p className={styles.reviewContent}>{review.content}</p>
+                {review.tags?.length > 0 && (
+                  <div className={styles.tags}>
+                    {review.tags.map(tag => (
+                      <span key={tag.id} className={styles.tag}>#{tag.name}</span>
+                    ))}
+                  </div>
+                )}
+                <div className={styles.reviewFooter}>
+                  <span><ThumbsUp size={14} /> {review.upvotes || 0}</span>
+                  <span><MessageSquare size={14} /> {review.comments_count || 0}</span>
                 </div>
               </div>
             ))}
@@ -173,41 +242,7 @@ function Profile() {
         )}
       </div>
 
-      {/* Commented Reviews Section */}
-      <div className={styles.reviewsSection} style={{ marginTop: '40px' }}>
-        <h2 className={styles.sectionTitle}>我留言過的心得</h2>
-        
-        {commentedReviews.length === 0 ? (
-          <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-            <p style={{ color: 'var(--text-secondary)' }}>您還沒有在任何心得下方留言過。</p>
-          </div>
-        ) : (
-          <div className={styles.reviewList}>
-            {commentedReviews.map(review => (
-              <div 
-                key={review.id} 
-                className={styles.reviewCard} 
-                onClick={() => setSelectedReview(review)}
-                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
-                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <h3>{review.movie?.title || '未命名電影'}</h3>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '12px' }}>
-                  {new Date(review.created_at).toLocaleDateString('zh-TW')} • 作者: {review.user?.nickname}
-                </span>
-                <p style={{
-                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
-                }}>
-                  {review.content}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Review Modal for both sections */}
+      {/* Review Modal */}
       {selectedReview && (
         <ReviewModal 
           review={selectedReview} 
@@ -217,15 +252,6 @@ function Profile() {
         />
       )}
     </div>
-  );
-}
-
-function UserPlaceholder() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width: '100%', height: '100%', color: '#a3a3a3'}}>
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
   );
 }
 
