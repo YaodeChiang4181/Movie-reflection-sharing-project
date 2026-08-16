@@ -451,73 +451,161 @@ def get_speed_rate_genres_flex(genres_subset):
         }
         bubbles.append(bubble)
         
-    return {
-        "type": "carousel",
-        "contents": bubbles
-    }
-
-def get_speed_rate_movie_flex(movie_data, genre_id):
-    title = movie_data.get('title', '未知電影')
-    poster = movie_data.get('poster_url') or "https://via.placeholder.com/500x750?text=No+Poster"
-    
-    return {
+    # 新增固定的「熱門」選項
+    hot_bubble = {
         "type": "bubble",
-        "size": "mega",
-        "hero": {
-            "type": "image",
-            "url": poster,
-            "size": "full",
-            "aspectRatio": "2:3",
-            "aspectMode": "cover"
-        },
+        "size": "micro",
         "body": {
             "type": "box",
             "layout": "vertical",
             "contents": [
                 {
                     "type": "text",
-                    "text": title,
+                    "text": "🔥 熱門隨機抽",
                     "weight": "bold",
-                    "size": "xl",
-                    "wrap": True
-                },
-                {
-                    "type": "text",
-                    "text": "請問你看過這部電影嗎？",
                     "size": "sm",
-                    "color": "#888888",
-                    "margin": "md"
+                    "color": "#111111",
+                    "align": "center"
                 }
-            ]
+            ],
+            "paddingAll": "xl"
         },
         "footer": {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "color": "#F43F5E",
+                    "height": "sm",
+                    "action": {
+                        "type": "postback",
+                        "label": "開始評分",
+                        "data": "action=speed_rate_genre&genre_id=popular"
+                    }
+                }
+            ],
+            "paddingAll": "md"
+        }
+    }
+    bubbles.append(hot_bubble)
+
+        
+    return {
+        "type": "carousel",
+        "contents": bubbles
+    }
+
+def get_speed_rate_movies_carousel_flex(movies_data, genre_id):
+    bubbles = []
+    
+    for movie_data in movies_data:
+        title = movie_data.get('title', '未知電影')
+        poster = movie_data.get('poster_url') or "https://via.placeholder.com/500x750?text=No+Poster"
+        
+        bubble = {
+            "type": "bubble",
+            "size": "mega",
+            "hero": {
+                "type": "image",
+                "url": poster,
+                "size": "full",
+                "aspectRatio": "2:3",
+                "aspectMode": "cover"
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": title,
+                        "weight": "bold",
+                        "size": "xl",
+                        "wrap": True
+                    }
+                ]
+            },
+            "footer": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "button",
+                        "style": "primary",
+                        "color": "#1DB446",
+                        "action": {
+                            "type": "postback",
+                            "label": "我要評分！",
+                            "data": f"action=speed_rate_yes&movie_title={title}&genre_id={genre_id}"
+                        }
+                    }
+                ]
+            }
+        }
+        bubbles.append(bubble)
+        
+    # 新增「換一換 / 結束」的卡片
+    more_bubble = {
+        "type": "bubble",
+        "size": "mega",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "都不想看？",
+                    "weight": "bold",
+                    "size": "xl",
+                    "align": "center",
+                    "margin": "xxl"
+                },
+                {
+                    "type": "text",
+                    "text": "換一組電影看看吧！",
+                    "color": "#888888",
+                    "size": "sm",
+                    "align": "center",
+                    "margin": "md"
+                }
+            ],
+            "justifyContent": "center",
+            "alignItems": "center"
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
             "spacing": "sm",
             "contents": [
                 {
                     "type": "button",
                     "style": "primary",
-                    "color": "#1DB446",
+                    "color": "#8B5CF6",
                     "action": {
                         "type": "postback",
-                        "label": "看過 (是)",
-                        "data": f"action=speed_rate_yes&movie_title={title}"
-                    },
-                    "flex": 1
+                        "label": "再來三部",
+                        "data": f"action=speed_rate_genre&genre_id={genre_id}"
+                    }
                 },
                 {
                     "type": "button",
                     "style": "secondary",
                     "action": {
-                        "type": "postback",
-                        "label": "沒看過 (否)",
-                        "data": f"action=speed_rate_no&genre_id={genre_id}"
-                    },
-                    "flex": 1
+                        "type": "message",
+                        "label": "🛑 結束評星",
+                        "text": "取消"
+                    }
                 }
             ]
         }
+    }
+    bubbles.append(more_bubble)
+
+    return {
+        "type": "carousel",
+        "contents": bubbles
     }
 
 
@@ -668,7 +756,7 @@ def get_rules_flex():
         }
     }
 
-def get_speed_rate_score_flex(movie_title):
+def get_speed_rate_score_flex(movie_title, genre_id):
     return {
         "type": "bubble",
         "size": "kilo",
@@ -696,7 +784,7 @@ def get_speed_rate_score_flex(movie_title):
                             "action": {
                                 "type": "postback",
                                 "label": "1星",
-                                "data": f"action=speed_rate_score&score=1&title={movie_title}"
+                                "data": f"action=speed_rate_score&score=1&title={movie_title}&genre_id={genre_id}"
                             }
                         },
                         {
@@ -706,7 +794,7 @@ def get_speed_rate_score_flex(movie_title):
                             "action": {
                                 "type": "postback",
                                 "label": "2星",
-                                "data": f"action=speed_rate_score&score=2&title={movie_title}"
+                                "data": f"action=speed_rate_score&score=2&title={movie_title}&genre_id={genre_id}"
                             }
                         },
                         {
@@ -716,7 +804,7 @@ def get_speed_rate_score_flex(movie_title):
                             "action": {
                                 "type": "postback",
                                 "label": "3星",
-                                "data": f"action=speed_rate_score&score=3&title={movie_title}"
+                                "data": f"action=speed_rate_score&score=3&title={movie_title}&genre_id={genre_id}"
                             }
                         }
                     ]
@@ -734,7 +822,7 @@ def get_speed_rate_score_flex(movie_title):
                             "action": {
                                 "type": "postback",
                                 "label": "4星",
-                                "data": f"action=speed_rate_score&score=4&title={movie_title}"
+                                "data": f"action=speed_rate_score&score=4&title={movie_title}&genre_id={genre_id}"
                             }
                         },
                         {
@@ -744,7 +832,7 @@ def get_speed_rate_score_flex(movie_title):
                             "action": {
                                 "type": "postback",
                                 "label": "5星",
-                                "data": f"action=speed_rate_score&score=5&title={movie_title}"
+                                "data": f"action=speed_rate_score&score=5&title={movie_title}&genre_id={genre_id}"
                             }
                         }
                     ]

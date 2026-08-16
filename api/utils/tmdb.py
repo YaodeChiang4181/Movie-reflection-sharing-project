@@ -98,3 +98,45 @@ def fetch_random_movie_by_genre(genre_id):
             pass
             
     return None
+
+def fetch_random_movies_by_genre(genre_id, count=3):
+    """
+    Fetch multiple random popular movies from TMDB for a given genre_id.
+    If genre_id is 'popular', fetches general popular movies without genre filtering.
+    Returns a list of dicts with 'title', 'poster_url', and 'overview'.
+    """
+    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    if not api_key:
+        return []
+
+    for attempt in range(2):
+        try:
+            page = random.randint(1, 5)
+            if str(genre_id) == 'popular':
+                url = f"https://api.themoviedb.org/3/movie/popular?api_key={api_key}&language=zh-TW&page={page}"
+            else:
+                url = f"https://api.themoviedb.org/3/discover/movie?api_key={api_key}&language=zh-TW&with_genres={genre_id}&sort_by=popularity.desc&page={page}"
+            
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=8) as response:
+                data = json.loads(response.read().decode('utf-8'))
+                
+                if data.get('results') and len(data['results']) >= count:
+                    movies = random.sample(data['results'], min(count, len(data['results'])))
+                    result_list = []
+                    for movie in movies:
+                        title = movie.get('title')
+                        poster_path = movie.get('poster_path')
+                        poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
+                        
+                        result_list.append({
+                            'title': title,
+                            'poster_url': poster_url,
+                            'overview': movie.get('overview', '')
+                        })
+                    return result_list
+        except Exception as e:
+            print(f"TMDB Discover Multiple Error on attempt {attempt + 1}: {e}")
+            pass
+            
+    return []

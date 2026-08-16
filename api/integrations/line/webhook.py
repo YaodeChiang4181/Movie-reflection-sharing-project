@@ -22,7 +22,7 @@ from api.utils.text_utils import normalize_movie_title
 from .flex_templates import (
     get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, 
     get_event_success_flex, get_auto_login_flex, get_speed_rate_genres_flex, 
-    get_speed_rate_movie_flex, get_rules_flex, get_speed_rate_score_flex
+    get_speed_rate_movies_carousel_flex, get_rules_flex, get_speed_rate_score_flex
 )
 
 load_dotenv()
@@ -837,7 +837,7 @@ def handle_postback(event):
     
     if action in ['speed_rate_genre', 'speed_rate_no']:
         genre_id = parsed_data.get('genre_id')
-        from api.utils.tmdb import fetch_random_movie_by_genre
+        from api.utils.tmdb import fetch_random_movies_by_genre
         from django.conf import settings as django_settings
         
         # 診斷：檢查 TMDB_API_KEY 是否存在
@@ -846,18 +846,19 @@ def handle_postback(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️ 系統設定異常：TMDB API Key 尚未設定，請聯繫管理員在 Render 環境變數中加入 TMDB_API_KEY。"))
             return
         
-        movie_data = fetch_random_movie_by_genre(genre_id)
+        movies_data = fetch_random_movies_by_genre(genre_id, count=3)
         
-        if not movie_data:
+        if not movies_data:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="抱歉，目前抓取電影發生異常，請稍後再試！"))
             return
             
-        flex_card = get_speed_rate_movie_flex(movie_data, genre_id)
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="請問你看過這部電影嗎？", contents=flex_card))
+        flex_card = get_speed_rate_movies_carousel_flex(movies_data, genre_id)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="請挑選您看過的電影", contents=flex_card))
         return
         
     if action == 'speed_rate_yes':
         movie_title = parsed_data.get('movie_title')
+        genre_id = parsed_data.get('genre_id', 'popular')
         
         # 防止重複評價
         movie = Movie.objects.filter(title=movie_title).first()
@@ -867,7 +868,7 @@ def handle_postback(event):
             return
         
         # 顯示評分卡片 (不再使用 Quick Reply)
-        flex_card = get_speed_rate_score_flex(movie_title)
+        flex_card = get_speed_rate_score_flex(movie_title, genre_id)
         line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text=f"請為《{movie_title}》打分數", contents=flex_card))
         return
 
@@ -875,6 +876,7 @@ def handle_postback(event):
         rating = int(parsed_data.get('score'))
         raw_movie_title = parsed_data.get('title')
         movie_title = normalize_movie_title(raw_movie_title)
+        genre_id = parsed_data.get('genre_id', 'popular')
         
         user = User.objects.filter(line_user_id=line_user_id).first()
         if not user:
@@ -921,5 +923,15 @@ def handle_postback(event):
         movie_url = f"{frontend_url}/movies/{movie.id}"
         
         flex_bubble = get_exp_feedback_flex(user, 10, user_exp.level, user_exp.exp, movie_url=movie_url)
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="評分成功！經驗值增加", contents=flex_bubble))
+        
+        # 評分完畢後自動推送下三部電影
+        from api.utils.tmdb import fetch_random_movies_by_genre
+        next_movies_data = fetch_random_movies_by_genre(genre_id, count=3)
+        messages_to_send = [FlexSendMessage(alt_text="評分成功！經驗值增加", contents=flex_bubble)]
+        
+        if next_movies_data:
+            next_movies_flex = get_speed_rate_movies_carousel_flex(next_movies_data, genre_id)
+            messages_to_send.append(FlexSendMessage(alt_text="為您推薦更多電影", contents=next_movies_flex))
+            
+        line_bot_api.reply_message(event.reply_token, messages_to_send)
         return
