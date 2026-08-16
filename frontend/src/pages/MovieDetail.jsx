@@ -507,6 +507,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
               </p>
             )}
           </div>
+        </div>
         </>
       )}
     </div>
