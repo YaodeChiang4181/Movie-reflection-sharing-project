@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp } from 'lucide-react';
+import { Film, ThumbsUp, MessageSquare, Star, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';
