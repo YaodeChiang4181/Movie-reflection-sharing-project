@@ -16,13 +16,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from dotenv import load_dotenv
 
-from api.models import User, Review, Movie, Event, UserProfile, OutsiderIdentity, LineBotState
+from api.models import User, Review, Movie, Event, UserProfile, OutsiderIdentity, LineBotState, DriftBottle
 from api.domains.gamification.services import add_user_experience
 from api.utils.text_utils import normalize_movie_title
 from .flex_templates import (
     get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, 
     get_event_success_flex, get_auto_login_flex, get_speed_rate_genres_flex, 
-    get_speed_rate_movies_carousel_flex, get_rules_flex, get_speed_rate_score_flex
+    get_speed_rate_movies_carousel_flex, get_rules_flex, get_speed_rate_score_flex,
+    get_drift_bottle_menu_flex, get_drift_bottle_recommend_flex
 )
 
 load_dotenv()
@@ -411,6 +412,87 @@ def handle_message(event):
         
         flex_bubble = get_exp_feedback_flex(user, 10, user_exp.level, user_exp.exp, movie_url=movie_url)
         line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="評分成功！經驗值增加", contents=flex_bubble))
+        return
+
+    # --- Drift Bottle ---
+    if text.startswith('【漂流瓶感謝 #'):
+        try:
+            bottle_id_str = text.split('#')[1].split('】')[0]
+            bottle_id = int(bottle_id_str)
+            bottle = DriftBottle.objects.get(id=bottle_id)
+            
+            target_line_user_id = bottle.user.line_user_id
+            if target_line_user_id:
+                try:
+                    sender_nickname = user.profile.nickname if hasattr(user, 'profile') else (user.line_display_name or "匿名使用者")
+                    push_msg = TextSendMessage(text=f"💌 你的漂流瓶 ({bottle.movie_title}) 收到了回覆！\n\n來自 {sender_nickname} 的感謝：\n{text}")
+                    line_bot_api.push_message(target_line_user_id, push_msg)
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="✨ 感謝已成功發送給推薦人！"))
+                except Exception as e:
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 發送感謝失敗，對方可能封鎖了機器人。"))
+            else:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 原推薦人尚未綁定 LINE，無法發送感謝。"))
+        except Exception as e:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 處理感謝訊息時發生錯誤。"))
+        return
+
+    if text == '片單漂流瓶':
+        flex = get_drift_bottle_menu_flex()
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="片單漂流瓶", contents=flex))
+        return
+
+    if text == '推薦電影':
+        if not user:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️ 請先完成 #綁定 才能使用漂流瓶功能喔！"))
+            return
+        state_record.state = "WAITING_FOR_DRIFT_MOVIE_TITLE"
+        state_record.save()
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="🌊 準備將你的推薦裝進瓶中！\n\n請輸入你要推薦的【電影名稱】：\n\n(回覆「取消」可中斷)"))
+        return
+
+    if user_state == "WAITING_FOR_DRIFT_MOVIE_TITLE":
+        movie_title = text.strip()
+        state_record.data['drift_movie_title'] = movie_title
+        state_record.state = "WAITING_FOR_DRIFT_MOVIE_MESSAGE"
+        state_record.save()
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"推薦電影：「{movie_title}」\n\n請輸入你想對收到這個漂流瓶的人說的【一句話或簡短留言】 (若不留言請輸入「略過」)：\n\n(回覆「取消」可中斷)"))
+        return
+
+    if user_state == "WAITING_FOR_DRIFT_MOVIE_MESSAGE":
+        message = text.strip()
+        if message in ['略過', '無', '沒有']:
+            message = ""
+            
+        movie_title = state_record.data.get('drift_movie_title')
+        
+        state_record.state = ""
+        state_record.data = {}
+        state_record.save()
+        
+        DriftBottle.objects.create(
+            user=user,
+            movie_title=movie_title,
+            message=message
+        )
+        
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="🌊 你的漂流瓶已經成功丟入海中！感謝你的推薦 ✨"))
+        return
+
+    if text == '來部推薦':
+        bottles = list(DriftBottle.objects.all())
+        if not bottles:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前海裡還沒有漂流瓶哦～趕快點擊「推薦電影」成為第一個丟瓶子的人吧！🌊"))
+            return
+            
+        bottle = random.choice(bottles)
+        
+        try:
+            nickname = bottle.user.profile.nickname
+        except UserProfile.DoesNotExist:
+            nickname = bottle.user.line_display_name or "匿名使用者"
+            
+        flex = get_drift_bottle_recommend_flex(bottle, nickname)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="你撈到了一個漂流瓶", contents=flex))
         return
 
     # --- Stateful Review Creation ---

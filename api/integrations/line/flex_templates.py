@@ -865,3 +865,138 @@ def get_speed_rate_score_flex(movie_title, genre_id):
             ]
         }
     }
+
+def get_drift_bottle_menu_flex():
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "hero": {
+            "type": "image",
+            "url": "https://images.unsplash.com/photo-1596484552834-6a58f850d0a1?q=80&w=1000&auto=format&fit=crop",
+            "size": "full",
+            "aspectRatio": "20:13",
+            "aspectMode": "cover"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "🌊 片單漂流瓶",
+                    "weight": "bold",
+                    "size": "xl"
+                },
+                {
+                    "type": "text",
+                    "text": "將你喜愛的電影裝進瓶中，或是撈起別人留下的推薦！",
+                    "margin": "md",
+                    "size": "sm",
+                    "color": "#666666",
+                    "wrap": True
+                }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "color": "#1DB446",
+                    "action": {
+                        "type": "message",
+                        "label": "推薦電影",
+                        "text": "推薦電影"
+                    }
+                },
+                {
+                    "type": "button",
+                    "style": "secondary",
+                    "action": {
+                        "type": "message",
+                        "label": "來部推薦",
+                        "text": "來部推薦"
+                    }
+                }
+            ]
+        }
+    }
+
+def get_drift_bottle_recommend_flex(bottle, nickname):
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "🌊 你撈到了一個漂流瓶！",
+                    "weight": "bold",
+                    "color": "#1DB446",
+                    "size": "sm"
+                },
+                {
+                    "type": "text",
+                    "text": bottle.movie_title,
+                    "weight": "bold",
+                    "size": "xxl",
+                    "margin": "md",
+                    "wrap": True
+                },
+                {
+                    "type": "text",
+                    "text": f"推薦人：{nickname}",
+                    "size": "xs",
+                    "color": "#888888",
+                    "margin": "sm"
+                },
+                {
+                    "type": "separator",
+                    "margin": "xxl"
+                },
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "margin": "xxl",
+                    "spacing": "sm",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "推薦留言：",
+                            "color": "#555555",
+                            "size": "sm"
+                        },
+                        {
+                            "type": "text",
+                            "text": bottle.message if bottle.message else "(推薦人沒有留下留言)",
+                            "wrap": True,
+                            "size": "md",
+                            "color": "#111111"
+                        }
+                    ]
+                }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "color": "#F2A900",
+                    "action": {
+                        "type": "uri",
+                        "label": "發送你的感謝！",
+                        "uri": f"line://msg/text/?【漂流瓶感謝 #{bottle.id}】謝謝你的推薦！"
+                    }
+                }
+            ]
+        }
+    }

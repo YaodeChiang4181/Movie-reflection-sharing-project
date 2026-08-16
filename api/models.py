@@ -214,3 +214,13 @@ class LineBotState(models.Model):
 
     def __str__(self):
         return f"{self.line_user_id} - {self.state}"
+
+class DriftBottle(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='drift_bottles')
+    movie_title = models.CharField(max_length=200, verbose_name="推薦電影")
+    message = models.TextField(blank=True, null=True, verbose_name="推薦留言")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.campus_id} - {self.movie_title}"
+
