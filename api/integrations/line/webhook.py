@@ -22,7 +22,7 @@ from api.utils.text_utils import normalize_movie_title
 from .flex_templates import (
     get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, 
     get_event_success_flex, get_auto_login_flex, get_speed_rate_genres_flex, 
-    get_speed_rate_movie_flex
+    get_speed_rate_movie_flex, get_rules_flex
 )
 
 load_dotenv()
@@ -76,34 +76,8 @@ def handle_message(event):
         display_name = "LINE User"
 
     if text in ['/', '/規則', '／', '／規則']:
-        rules_text = (
-            "🎬 【影像製作所 Bot 指令規則】\n\n"
-            "如果想直接發布，也可以使用快速格式：\n"
-            "📝 發布心得格式：\n"
-            "#心得\n"
-            "電影：奧德賽\n"
-            "評分：5\n"
-            "標籤：#動作片 (選填)\n"
-            "心得：這部電影太好看了！\n\n"
-            "✏️ 設定專屬暱稱 (限一次)：\n"
-            "#暱稱 你的暱稱\n"
-            "※ 範例：#暱稱 影迷小明\n\n"
-            "🔗 綁定網頁帳號：\n"
-            "#綁定 帳號 密碼\n\n"
-            "🔍 搜尋電影評價：\n"
-            "查 奧德賽\n\n"
-            "📅 尋找近期活動：\n"
-            "近期活動\n\n"
-            "🤝 發起揪團活動：\n"
-            "#揪團\n"
-            "活動：看電影\n"
-            "時間：2024-12-31 19:00\n"
-            "地點：信義威秀\n"
-            "描述：大家一起來看死侍\n\n"
-            "🔗 舊用戶綁定：\n"
-            "#綁定 123456789/myemail@gmail.com mypassword"
-        )
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=rules_text))
+        flex_card = get_rules_flex()
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="影像製作所 Bot 指令規則", contents=flex_card))
         return
 
     if text.startswith('#綁定') or text.startswith('＃綁定'):
