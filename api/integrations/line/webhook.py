@@ -277,7 +277,7 @@ def handle_message(event):
     user_state = state_record.state
     
     # 攔截關鍵指令，強制退出目前的狀態 (避免在輸入電影名稱時，按到選單按鈕變成輸入電影名稱)
-    reserved_commands = ['寫心得', '發布感想', '影迷名片', '急速評星', '近期活動', '查', '快速查詢', '影評推薦', '取消']
+    reserved_commands = ['寫心得', '發布感想', '影迷名片', '急速評星', '近期活動', '查', '快速查詢', '影評推薦', '取消', '片單漂流瓶', '推薦電影', '來部推薦']
     is_hash_cmd = any(text.startswith(c) for c in ['#心得', '＃心得', '#揪團', '＃揪團', '#綁定', '＃綁定', '#暱稱', '＃暱稱'])
     
     is_reserved = (
@@ -600,7 +600,6 @@ def handle_message(event):
 
     if text == '急速評星':
         from api.utils.tmdb import GENRE_MAP
-        import random
         all_genres = list(GENRE_MAP.items())
         random.shuffle(all_genres)
         genres_subset = all_genres[:10]
