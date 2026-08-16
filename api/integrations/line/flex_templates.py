@@ -520,3 +520,150 @@ def get_speed_rate_movie_flex(movie_data, genre_id):
         }
     }
 
+
+
+def get_rules_flex():
+    return {
+        "type": "bubble",
+        "size": "giga",
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "🎬 影像製作所 Bot 指令規則",
+                    "weight": "bold",
+                    "color": "#FFFFFF",
+                    "size": "xl"
+                },
+                {
+                    "type": "text",
+                    "text": "輕鬆探索、評分與分享電影心得！",
+                    "color": "#e0e0e0",
+                    "size": "sm",
+                    "margin": "md"
+                }
+            ],
+            "backgroundColor": "#8B5CF6",
+            "paddingAll": "20px"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                # 發表心得
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "📝 發布心得 (快速格式)",
+                            "weight": "bold",
+                            "color": "#8B5CF6",
+                            "size": "md"
+                        },
+                        {
+                            "type": "text",
+                            "text": "#心得\n電影：奧德賽\n評分：5\n標籤：#動作片 (選填)\n心得：這部電影太好看了！\n(💡 心得為選填，無文字即為簡易評分貼文)",
+                            "color": "#555555",
+                            "size": "sm",
+                            "wrap": True,
+                            "margin": "sm"
+                        }
+                    ]
+                },
+                {"type": "separator", "margin": "lg"},
+                
+                # 設定專屬暱稱
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "✏️ 設定專屬暱稱 (限一次)",
+                            "weight": "bold",
+                            "color": "#8B5CF6",
+                            "size": "md"
+                        },
+                        {
+                            "type": "text",
+                            "text": "#暱稱 你的暱稱\n※ 範例：#暱稱 影迷小明",
+                            "color": "#555555",
+                            "size": "sm",
+                            "wrap": True,
+                            "margin": "sm"
+                        }
+                    ],
+                    "margin": "lg"
+                },
+                {"type": "separator", "margin": "lg"},
+
+                # 綁定網頁帳號
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "🔗 綁定網頁/舊帳號",
+                            "weight": "bold",
+                            "color": "#8B5CF6",
+                            "size": "md"
+                        },
+                        {
+                            "type": "text",
+                            "text": "#綁定 帳號 密碼",
+                            "color": "#555555",
+                            "size": "sm",
+                            "wrap": True,
+                            "margin": "sm"
+                        }
+                    ],
+                    "margin": "lg"
+                },
+                {"type": "separator", "margin": "lg"},
+                
+                # 其它好用指令
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "💡 其它好用指令",
+                            "weight": "bold",
+                            "color": "#8B5CF6",
+                            "size": "md"
+                        },
+                        {
+                            "type": "text",
+                            "text": "🔍 搜尋電影評價：查 奧德賽\n📅 找活動：近期活動\n🤝 揪團看片：\n#揪團\n活動：看電影\n時間：2024-12-31 19:00\n地點：信義威秀\n描述：大家一起來看死侍",
+                            "color": "#555555",
+                            "size": "sm",
+                            "wrap": True,
+                            "margin": "sm"
+                        }
+                    ],
+                    "margin": "lg"
+                }
+            ],
+            "paddingAll": "20px"
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "💡 任何時候輸入「/規則」都能看到這張卡片喔！",
+                    "size": "xs",
+                    "color": "#aaaaaa",
+                    "align": "center",
+                    "wrap": True
+                }
+            ]
+        }
+    }
