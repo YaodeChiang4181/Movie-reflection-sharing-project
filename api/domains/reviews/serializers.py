@@ -4,6 +4,7 @@ from django.db import transaction
 from api.models import Movie, Tag, Review, Vote, Comment
 from api.domains.auth.serializers import UserSerializer
 from api.utils.tmdb import fetch_movie_genres
+from api.utils.text_utils import normalize_movie_title
 
 class MovieSerializer(serializers.ModelSerializer):
     avg_rating = serializers.FloatField(read_only=True)
@@ -52,8 +53,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         return 0
 
     def create(self, validated_data):
+        raw_movie_title = validated_data.pop('movie_title')
+        movie_title = normalize_movie_title(raw_movie_title)
         tag_names = validated_data.pop('tag_names', [])
-        movie_title = validated_data.pop('movie_title')
         
         # Automatically fetch and append TMDB genres
         tmdb_genres = fetch_movie_genres(movie_title)
@@ -77,17 +79,20 @@ class ReviewSerializer(serializers.ModelSerializer):
         return review
 
     def update(self, instance, validated_data):
+        raw_movie_title = validated_data.pop('movie_title', None)
         tag_names = validated_data.pop('tag_names', None)
-        movie_title = validated_data.pop('movie_title', None)
 
-        if movie_title and tag_names is not None:
-            tmdb_genres = fetch_movie_genres(movie_title)
-            for genre in tmdb_genres:
-                if genre not in tag_names:
-                    tag_names.append(genre)
+        if raw_movie_title:
+            movie_title = normalize_movie_title(raw_movie_title)
+            if tag_names is not None:
+                tmdb_genres = fetch_movie_genres(movie_title)
+                for genre in tmdb_genres:
+                    if genre not in tag_names:
+                        tag_names.append(genre)
 
         with transaction.atomic():
-            if movie_title:
+            if raw_movie_title:
+                movie_title = normalize_movie_title(raw_movie_title)
                 movie, _ = Movie.objects.get_or_create(
                     title=movie_title,
                     defaults={'director': 'Unknown', 'release_year': timezone.now().year}

@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 
 from api.models import User, Review, Movie, Event, UserProfile, OutsiderIdentity, LineBotState
 from api.domains.gamification.services import add_user_experience
+from api.utils.text_utils import normalize_movie_title
 from .flex_templates import (
     get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, 
     get_event_success_flex, get_auto_login_flex, get_speed_rate_genres_flex, 
@@ -388,7 +389,8 @@ def handle_message(event):
             return
             
         rating = int(rating_text)
-        movie_title = state_record.data.get('review_title')
+        raw_movie_title = state_record.data.get('review_title')
+        movie_title = normalize_movie_title(raw_movie_title)
         
         # Clear state
         state_record.state = ""
@@ -436,7 +438,7 @@ def handle_message(event):
         return
         
     if user_state == "WAITING_FOR_REVIEW_TITLE":
-        movie_title = text.strip()
+        movie_title = normalize_movie_title(text.strip())
         state_record.data['review_title'] = movie_title
         state_record.state = "WAITING_FOR_REVIEW_RATING"
         state_record.save()
