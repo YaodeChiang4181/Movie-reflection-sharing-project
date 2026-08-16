@@ -201,13 +201,22 @@ def handle_message(event):
             
             movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})
             
-            review = Review.objects.create(
-                user=user,
-                movie=movie,
-                rating=rating,
-                content=content,
-                source='line'
-            )
+            existing_review = Review.objects.filter(user=user, movie=movie).first()
+            if existing_review:
+                existing_review.rating = rating
+                existing_review.content = content
+                existing_review.save()
+                review = existing_review
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"✅ 已為您更新《{movie_title}》的心得內容！\n(註：重複評價不會再次獲得經驗值喔)"))
+                return
+            else:
+                review = Review.objects.create(
+                    user=user,
+                    movie=movie,
+                    rating=rating,
+                    content=content,
+                    source='line'
+                )
             
             from api.models import Tag
             from api.utils.tmdb import fetch_movie_genres
@@ -850,6 +859,13 @@ def handle_postback(event):
     if action == 'speed_rate_yes':
         movie_title = parsed_data.get('movie_title')
         
+        # 防止重複評價
+        movie = Movie.objects.filter(title=movie_title).first()
+        user = User.objects.filter(line_user_id=line_user_id).first()
+        if movie and user and Review.objects.filter(user=user, movie=movie).exists():
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"⚠️ 您已經評價過《{movie_title}》囉！"))
+            return
+        
         # 顯示評分卡片 (不再使用 Quick Reply)
         flex_card = get_speed_rate_score_flex(movie_title)
         line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text=f"請為《{movie_title}》打分數", contents=flex_card))
@@ -864,9 +880,20 @@ def handle_postback(event):
         if not user:
             return
             
-        # Create review with empty content
         movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})
         
+        # Check if already exists to prevent spam
+        existing_review = Review.objects.filter(user=user, movie=movie).first()
+        if existing_review:
+            if existing_review.rating == rating and existing_review.content == "":
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"⚠️ 您已經為《{movie_title}》打過 {rating} 星囉！"))
+            else:
+                existing_review.rating = rating
+                existing_review.save()
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"✅ 已為您將《{movie_title}》的評分更新為 {rating} 星！\n(註：重複評分不會再次獲得經驗值喔)"))
+            return
+            
+        # Create review with empty content
         review = Review.objects.create(
             user=user,
             movie=movie,
