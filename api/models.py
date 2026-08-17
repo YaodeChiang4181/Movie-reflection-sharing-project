@@ -219,6 +219,7 @@ class DriftBottle(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='drift_bottles')
     movie_title = models.CharField(max_length=200, verbose_name="推薦電影")
     message = models.TextField(blank=True, null=True, verbose_name="推薦留言")
+    fished_count = models.IntegerField(default=0, verbose_name="撈起次數")
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

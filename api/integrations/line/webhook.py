@@ -499,12 +499,29 @@ def handle_message(event):
         return
 
     if text == '來部推薦':
-        bottles = list(DriftBottle.objects.all())
+        # 取得全海域漂流瓶總數
+        total_bottles = DriftBottle.objects.count()
+        
+        # 排除自己的瓶子
+        bottles_query = DriftBottle.objects.exclude(user=user)
+        
+        bottles = list(bottles_query)
         if not bottles:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前海裡還沒有漂流瓶哦～趕快點擊「推薦電影」成為第一個丟瓶子的人吧！🌊"))
+            # 如果海裡有瓶子，只是剛好全都是自己的
+            if total_bottles > 0:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前海裡只有你丟的漂流瓶哦～等待其他人丟瓶子吧！🌊"))
+            else:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前海裡還沒有漂流瓶哦～趕快點擊「推薦電影」成為第一個丟瓶子的人吧！🌊"))
             return
             
         bottle = random.choice(bottles)
+        
+        # 紀錄次數與條件刪除
+        bottle.fished_count += 1
+        if total_bottles > 30 and bottle.fished_count >= 5:
+            bottle.delete()
+        else:
+            bottle.save()
         
         try:
             nickname = bottle.user.profile.nickname
