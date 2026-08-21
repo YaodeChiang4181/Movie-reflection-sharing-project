@@ -16,11 +16,10 @@ function Home() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortOption, setSortOption] = useState('popular');
 
   useEffect(() => {
     fetchMovies();
-  }, [currentPage, sortOption]);
+  }, [currentPage]);
 
   const fetchMovies = async () => {
     try {
@@ -73,25 +72,6 @@ function Home() {
       <header className="flex-between" style={{ marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
           <h1>探索電影心得</h1>
-          <select 
-            value={sortOption} 
-            onChange={(e) => {
-              setSortOption(e.target.value);
-              setCurrentPage(1);
-            }}
-            style={{
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              outline: 'none',
-              cursor: 'pointer',
-              fontSize: '1rem'
-            }}
-          >
-            <option value="popular">熱門電影</option>
-          </select>
         </div>
         <button className="btn-primary" onClick={handleComposeClick}>
           發布心得
