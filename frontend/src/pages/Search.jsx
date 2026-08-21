@@ -92,8 +92,7 @@ function Search() {
     <div className="container" style={{ 
       paddingTop: '80px', 
       paddingBottom: '60px',
-      minHeight: '100vh',
-      background: 'radial-gradient(circle at top, rgba(108,92,231,0.15) 0%, transparent 60%)'
+      minHeight: '100vh'
     }}>
       <header style={{ marginBottom: '40px', textAlign: 'center' }}>
         <h1 style={{ marginBottom: '24px' }}>電影心得精準搜尋</h1>

@@ -43,6 +43,8 @@
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-primary);
+  background-image: radial-gradient(circle at top, rgba(108,92,231,0.12) 0%, transparent 60%);
+  background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
