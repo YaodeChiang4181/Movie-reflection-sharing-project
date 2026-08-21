@@ -10,7 +10,34 @@ function Search() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
+  const [recommendedTags, setRecommendedTags] = useState(['🔥 動作', '😂 喜劇', '🚀 科幻', '🎬 劇情']);
   const { isLoggedIn } = useAuth();
+
+  useEffect(() => {
+    const fetchLatestTags = async () => {
+      try {
+        const res = await api.get('reviews/');
+        const reviewsList = res.data.results || res.data;
+        const tagCounts = {};
+        
+        reviewsList.forEach(review => {
+          if (review.tags) {
+            review.tags.forEach(tag => {
+              tagCounts[tag.name] = (tagCounts[tag.name] || 0) + 1;
+            });
+          }
+        });
+        
+        const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
+        if (sortedTags.length > 0) {
+          setRecommendedTags(sortedTags.slice(0, 4));
+        }
+      } catch (err) {
+        console.error("Failed to fetch tags", err);
+      }
+    };
+    fetchLatestTags();
+  }, []);
 
   const performSearch = async (searchQuery) => {
     setIsLoading(true);
@@ -62,14 +89,13 @@ function Search() {
   };
 
   return (
-    <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
-      <header style={{ 
-        marginBottom: '40px', 
-        textAlign: 'center',
-        background: 'radial-gradient(circle, rgba(108,92,231,0.15) 0%, transparent 70%)',
-        padding: '40px 0',
-        borderRadius: '20px'
-      }}>
+    <div className="container" style={{ 
+      paddingTop: '80px', 
+      paddingBottom: '60px',
+      minHeight: '100vh',
+      background: 'radial-gradient(circle at top, rgba(108,92,231,0.15) 0%, transparent 60%)'
+    }}>
+      <header style={{ marginBottom: '40px', textAlign: 'center' }}>
         <h1 style={{ marginBottom: '24px' }}>電影心得精準搜尋</h1>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0', maxWidth: '600px', margin: '0 auto' }}>
           <input 
@@ -91,11 +117,11 @@ function Search() {
 
         {!hasSearched && !isLoading && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
-            {['🔥 奧斯卡得獎片', '🎬 A24 選片', '🍿 院線熱映', '🎞 經典修復'].map(tag => (
+            {recommendedTags.map(tag => (
               <button
                 key={tag}
                 onClick={() => {
-                  const keyword = tag.slice(3); // Remove the emoji and space
+                  const keyword = tag.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]\s?/, ''); // Remove emoji prefix if any
                   setQuery(keyword);
                   performSearch(keyword);
                 }}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ThumbsUp, MessageCircle, Film } from 'lucide-react';
+import { ThumbsUp, MessageCircle } from 'lucide-react';
+import TmdbPoster from '../components/TmdbPoster';
 import ReviewForm from '../components/ReviewForm';
 import ReviewModal from '../components/ReviewModal';
 import api from '../api/axios';
@@ -128,17 +129,10 @@ function Home() {
               onClick={() => navigate(`/movies/${movie.id}`)}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                {movie.poster_url ? (
-                  <img 
-                    src={movie.poster_url} 
-                    alt={movie.title} 
-                    style={{ width: '60px', height: '90px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }}
-                  />
-                ) : (
-                  <div style={{ width: '60px', height: '90px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
-                    <Film size={24} style={{ color: 'var(--text-muted)' }} />
-                  </div>
-                )}
+                <TmdbPoster 
+                  title={movie.title} 
+                  style={{ width: '60px', height: '90px', borderRadius: '8px', flexShrink: 0 }}
+                />
                 <h3 style={{ color: '#F1F5F9', fontSize: '1.4rem', margin: 0 }}>
                   {movie.title}
                 </h3>

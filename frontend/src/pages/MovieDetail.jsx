@@ -15,7 +15,6 @@ function MovieDetail() {
   const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortBy, setSortBy] = useState('hot');
 
   // Fetch movie info (only once when id changes)
   useEffect(() => {
@@ -41,7 +40,7 @@ function MovieDetail() {
     if (!id) return;
     try {
       setIsReviewsLoading(true);
-      const res = await api.get(`reviews/?movie=${id}&sort=${sortBy}&page=${currentPage}`);
+      const res = await api.get(`reviews/?movie=${id}&page=${currentPage}`);
       setReviews(res.data.results || res.data);
       if (res.data.count) {
         setTotalPages(Math.ceil(res.data.count / 20)); // Assuming PAGE_SIZE is 20
@@ -55,10 +54,9 @@ function MovieDetail() {
     }
   };
 
-  // Fetch reviews whenever id, page, or sort changes
   useEffect(() => {
     fetchReviews();
-  }, [id, sortBy, currentPage]);
+  }, [id, currentPage]);
 
   if (isLoading) {
     return (
@@ -101,20 +99,6 @@ function MovieDetail() {
           <div className={styles.reviewSection}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ margin: 0 }}>影評列表</h3>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button 
-                  onClick={() => { setSortBy('hot'); setCurrentPage(1); }}
-                  style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--border-color)', background: sortBy === 'hot' ? 'var(--accent-primary)' : 'transparent', color: sortBy === 'hot' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
-                >
-                  🔥 最熱門
-                </button>
-                <button 
-                  onClick={() => { setSortBy('new'); setCurrentPage(1); }}
-                  style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--border-color)', background: sortBy === 'new' ? 'var(--accent-primary)' : 'transparent', color: sortBy === 'new' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
-                >
-                  🆕 最新發布
-                </button>
-              </div>
             </div>
 
             {isReviewsLoading ? (
