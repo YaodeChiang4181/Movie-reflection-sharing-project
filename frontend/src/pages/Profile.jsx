@@ -89,8 +89,10 @@ function Profile() {
       <div className={styles.fanCard}>
         <div className={styles.fanCardGlow} />
 
-        {/* 頂部裝飾線 */}
-        <div className={styles.fanCardTopBar} />
+        {/* 頂部 UID */}
+        <div className={styles.fanCardTopUID}>
+          UID: {userData?.id?.toString().padStart(9, '0') || '000000000'}
+        </div>
 
         <div className={styles.fanCardContent}>
           {/* 左側：頭像 + 基本資訊 */}

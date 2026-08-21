@@ -25,16 +25,17 @@
   pointer-events: none;
 }
 
-.fanCardTopBar {
-  height: 4px;
-  background: linear-gradient(90deg, #8B5CF6, #C084FC, #F472B6, #8B5CF6);
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+.fanCardTopUID {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-align: right;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
 }
 
 .fanCardContent {
@@ -195,9 +196,9 @@
   align-items: center;
   gap: 6px;
   padding: 16px 8px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(248, 249, 250, 0.08);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(248, 249, 250, 0.15);
   transition: background 0.2s;
 }
 

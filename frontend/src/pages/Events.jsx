@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Clock, AlignLeft, User } from 'lucide-react';
+import { Calendar, MapPin, Clock, AlignLeft, User, Ticket } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import EventForm from '../components/EventForm';
@@ -72,7 +72,12 @@ function Events() {
         {isLoading ? (
           <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
         ) : events.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)' }}>目前沒有任何活動，來發起第一場揪團吧！</p>
+          <div className="glass" style={{ padding: '60px', textAlign: 'center', borderRadius: 'var(--radius-lg)' }}>
+            <Ticket size={64} style={{ color: 'var(--accent-primary)', marginBottom: '20px', opacity: 0.8 }} />
+            <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前還沒有任何活動</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>來發起第一場揪團，尋找一起看電影的好夥伴吧！</p>
+            <button className="btn-primary" onClick={handleCreateEvent}>+ 發起第一場觀影活動</button>
+          </div>
         ) : (
           events.map(event => (
             <div key={event.id} className={`glass ${styles.eventCard}`}>

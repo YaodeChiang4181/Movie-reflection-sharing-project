@@ -905,7 +905,7 @@ def get_drift_bottle_menu_flex():
                 {
                     "type": "button",
                     "style": "primary",
-                    "color": "#1DB446",
+                    "color": "#0984E3",
                     "action": {
                         "type": "message",
                         "label": "推薦電影",
@@ -937,7 +937,7 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
                     "type": "text",
                     "text": "🌊 你撈到了一個漂流瓶！",
                     "weight": "bold",
-                    "color": "#1DB446",
+                    "color": "#0984E3",
                     "size": "sm"
                 },
                 {

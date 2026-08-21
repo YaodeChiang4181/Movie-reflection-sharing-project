@@ -63,7 +63,13 @@ function Search() {
 
   return (
     <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
-      <header style={{ marginBottom: '40px', textAlign: 'center' }}>
+      <header style={{ 
+        marginBottom: '40px', 
+        textAlign: 'center',
+        background: 'radial-gradient(circle, rgba(108,92,231,0.15) 0%, transparent 70%)',
+        padding: '40px 0',
+        borderRadius: '20px'
+      }}>
         <h1 style={{ marginBottom: '24px' }}>電影心得精準搜尋</h1>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', maxWidth: '600px', margin: '0 auto' }}>
           <input 

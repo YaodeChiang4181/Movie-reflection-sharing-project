@@ -135,7 +135,7 @@ function Home() {
                     style={{ width: '60px', height: '90px', objectFit: 'cover', borderRadius: '4px' }}
                   />
                 )}
-                <h3 style={{ color: 'var(--accent-primary)', fontSize: '1.4rem', margin: 0 }}>
+                <h3 style={{ color: '#F1F5F9', fontSize: '1.4rem', margin: 0 }}>
                   {movie.title}
                 </h3>
               </div>
