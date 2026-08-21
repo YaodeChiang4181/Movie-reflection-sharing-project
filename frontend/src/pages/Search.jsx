@@ -71,7 +71,7 @@ function Search() {
         borderRadius: '20px'
       }}>
         <h1 style={{ marginBottom: '24px' }}>電影心得精準搜尋</h1>
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', maxWidth: '600px', margin: '0 auto' }}>
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0', maxWidth: '600px', margin: '0 auto' }}>
           <input 
             type="text" 
             value={query}
@@ -80,13 +80,43 @@ function Search() {
             style={{ 
               flex: 1, padding: '16px 24px', fontSize: '1.1rem',
               background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '30px', color: 'white', outline: 'none'
+              borderRight: 'none',
+              borderRadius: '30px 0 0 30px', color: 'white', outline: 'none'
             }}
           />
-          <button type="submit" className="btn-primary" style={{ padding: '0 32px', borderRadius: '30px' }} disabled={isLoading}>
+          <button type="submit" className="btn-primary" style={{ padding: '0 32px', borderRadius: '0 30px 30px 0' }} disabled={isLoading}>
             <SearchIcon size={20} /> 搜尋
           </button>
         </form>
+
+        {!hasSearched && !isLoading && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
+            {['🔥 奧斯卡得獎片', '🎬 A24 選片', '🍿 院線熱映', '🎞 經典修復'].map(tag => (
+              <button
+                key={tag}
+                onClick={() => {
+                  const keyword = tag.slice(3); // Remove the emoji and space
+                  setQuery(keyword);
+                  performSearch(keyword);
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: 'var(--text-primary)',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       {selectedReview && (

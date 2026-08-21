@@ -122,13 +122,13 @@
 }
 
 .realInfo {
-  color: var(--text-secondary);
+  color: #94A3B8;
   font-size: 0.92rem;
   margin: 0;
 }
 
 .campusId {
-  color: var(--text-muted);
+  color: #94A3B8;
   font-size: 0.82rem;
   margin: 0;
   opacity: 0.7;
@@ -231,13 +231,13 @@
 }
 
 .commonTag {
-  background: rgba(139, 92, 246, 0.12);
-  color: var(--accent-primary);
+  background: rgba(110, 86, 207, 0.2);
+  color: #D8B4FE;
   padding: 5px 14px;
   border-radius: 20px;
   font-size: 0.82rem;
   font-weight: 600;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 /* ===== Tabs ===== */
@@ -351,12 +351,13 @@
 }
 
 .tag {
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(110, 86, 207, 0.2);
   padding: 3px 10px;
   border-radius: 20px;
   font-size: 0.8rem;
-  color: var(--accent-primary);
+  color: #D8B4FE;
   font-weight: 500;
+  border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .reviewFooter {

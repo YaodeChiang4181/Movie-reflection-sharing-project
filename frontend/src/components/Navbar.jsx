@@ -35,8 +35,8 @@ function Navbar() {
               <span>電影迷活動板</span>
             </Link>
             {userProfile?.is_staff && (
-              <Link to="/admin" className={styles.navLink} style={{ color: '#ff4d4f' }}>
-                管理後台
+              <Link to="/admin" className={styles.navLink} style={{ color: '#F59E0B' }}>
+                🛡️ 管理後台
               </Link>
             )}
           </div>
@@ -89,9 +89,9 @@ function Navbar() {
                     to="/admin"
                     className={styles.mobileDropdownItem}
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ color: '#ff4d4f' }}
+                    style={{ color: '#F59E0B' }}
                   >
-                    管理後台
+                    🛡️ 管理後台
                   </Link>
                 )}
                 <button

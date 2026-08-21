@@ -37,25 +37,27 @@ function MovieDetail() {
     if (id) fetchMovieData();
   }, [id, navigate]);
 
+  const fetchReviews = async () => {
+    if (!id) return;
+    try {
+      setIsReviewsLoading(true);
+      const res = await api.get(`reviews/?movie=${id}&sort=${sortBy}&page=${currentPage}`);
+      setReviews(res.data.results || res.data);
+      if (res.data.count) {
+        setTotalPages(Math.ceil(res.data.count / 20)); // Assuming PAGE_SIZE is 20
+      } else {
+        setTotalPages(1);
+      }
+    } catch (error) {
+      console.error("Failed to fetch reviews:", error);
+    } finally {
+      setIsReviewsLoading(false);
+    }
+  };
+
   // Fetch reviews whenever id, page, or sort changes
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        setIsReviewsLoading(true);
-        const res = await api.get(`reviews/?movie=${id}&sort=${sortBy}&page=${currentPage}`);
-        setReviews(res.data.results || res.data);
-        if (res.data.count) {
-          setTotalPages(Math.ceil(res.data.count / 20)); // Assuming PAGE_SIZE is 20
-        } else {
-          setTotalPages(1);
-        }
-      } catch (error) {
-        console.error("Failed to fetch reviews:", error);
-      } finally {
-        setIsReviewsLoading(false);
-      }
-    };
-    if (id) fetchReviews();
+    fetchReviews();
   }, [id, sortBy, currentPage]);
 
   if (isLoading) {

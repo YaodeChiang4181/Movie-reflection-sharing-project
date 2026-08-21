@@ -58,7 +58,7 @@ function Events() {
           <h1 className={styles.title}>電影迷活動板</h1>
           <p className={styles.subtitle}>尋找志同道合的影迷，一起揪團看電影、討論劇情！</p>
         </div>
-        <button className="btn-primary" onClick={handleCreateEvent}>發起活動</button>
+        <button className="btn-outline" onClick={handleCreateEvent}>發起活動</button>
       </header>
 
       {isComposing && (
@@ -72,7 +72,7 @@ function Events() {
         {isLoading ? (
           <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
         ) : events.length === 0 ? (
-          <div className="glass" style={{ padding: '60px', textAlign: 'center', borderRadius: 'var(--radius-lg)' }}>
+          <div className="glass" style={{ padding: '60px', textAlign: 'center', borderRadius: 'var(--radius-lg)', margin: '0 auto', maxWidth: '480px' }}>
             <Ticket size={64} style={{ color: 'var(--accent-primary)', marginBottom: '20px', opacity: 0.8 }} />
             <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前還沒有任何活動</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>來發起第一場揪團，尋找一起看電影的好夥伴吧！</p>

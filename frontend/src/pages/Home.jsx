@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ThumbsUp, MessageCircle } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Film } from 'lucide-react';
 import ReviewForm from '../components/ReviewForm';
 import ReviewModal from '../components/ReviewModal';
 import api from '../api/axios';
@@ -128,12 +128,16 @@ function Home() {
               onClick={() => navigate(`/movies/${movie.id}`)}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                {movie.poster_url && (
+                {movie.poster_url ? (
                   <img 
                     src={movie.poster_url} 
                     alt={movie.title} 
-                    style={{ width: '60px', height: '90px', objectFit: 'cover', borderRadius: '4px' }}
+                    style={{ width: '60px', height: '90px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }}
                   />
+                ) : (
+                  <div style={{ width: '60px', height: '90px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+                    <Film size={24} style={{ color: 'var(--text-muted)' }} />
+                  </div>
                 )}
                 <h3 style={{ color: '#F1F5F9', fontSize: '1.4rem', margin: 0 }}>
                   {movie.title}
@@ -144,17 +148,21 @@ function Home() {
                 <span style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
                   ({movie.review_count || 0} 則評價)
                 </span>
-                <span style={{ 
+                <div style={{ 
+                  backgroundColor: 'rgba(142, 82, 245, 0.15)',
+                  padding: '6px 12px',
+                  borderRadius: '20px',
                   color: 'var(--text-primary)', 
-                  fontSize: '1.6rem', 
+                  fontSize: '1.2rem', 
                   fontWeight: 'bold',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '6px',
+                  border: '1px solid rgba(142, 82, 245, 0.3)'
                 }}>
-                  <ThumbsUp size={24} style={{ color: 'var(--accent-primary)' }} />
-                  {movie.avg_rating ? movie.avg_rating.toFixed(1) : '0.0'}
-                </span>
+                  <ThumbsUp size={18} style={{ color: 'var(--accent-primary)' }} />
+                  <span style={{ color: '#D8B4FE' }}>{movie.avg_rating ? movie.avg_rating.toFixed(1) : '0.0'}</span>
+                </div>
               </div>
             </div>
           ))}
