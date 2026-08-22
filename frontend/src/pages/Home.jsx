@@ -64,6 +64,10 @@ function Home() {
       fetchReviews(); // Re-fetch to update scores
     } catch (err) {
       console.error(err);
+      alert('評價失敗，請稍後再試。');
+    }
+  };
+
   return (
     <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
       <header style={{ marginBottom: '40px' }}>
