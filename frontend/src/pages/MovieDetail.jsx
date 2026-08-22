@@ -98,7 +98,14 @@ function MovieDetail() {
             <h1 className={styles.title} style={{ textAlign: 'center', margin: 0 }}>{movie.title}</h1>
           </div>
 
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '32px 0' }}>
+            <TmdbPoster 
+              title={movie.title} 
+              style={{ width: '220px', height: '330px', borderRadius: '16px', boxShadow: '0 12px 32px rgba(0,0,0,0.4)' }} 
+            />
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <div className={styles.ratingBox}>
               <div className={styles.stars}>
                 {[1, 2, 3, 4, 5].map(star => (
