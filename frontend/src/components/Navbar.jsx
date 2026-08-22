@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Film, User, Home, Search, CalendarDays, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,13 +8,22 @@ function Navbar() {
   const { isLoggedIn, userProfile, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
   return (
     <>
       {/* Top Navbar */}
-      <nav className={`${styles.navbar} glass`}>
+      <nav className={`${styles.navbar} ${isScrolled ? styles.navbarScrolled : 'glass'}`} style={{ transition: 'all 0.3s ease' }}>
         <div className={`container flex-between ${styles.navContainer}`}>
           <Link to="/" className={styles.brand}>
             <Film className={styles.brandIcon} />

@@ -8,6 +8,14 @@
   padding: 12px 0;
 }
 
+.navbarScrolled {
+  background: rgba(15, 10, 25, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .navContainer {
   height: 48px;
 }
@@ -54,7 +62,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: var(--bg-tertiary);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding: 8px 16px;
   border-radius: var(--radius-pill);
   font-size: 0.9rem;
