@@ -22,8 +22,19 @@ function TmdbPoster({ title, style }) {
         const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(title)}&language=zh-TW`);
         const data = await res.json();
         
-        if (data.results && data.results.length > 0 && data.results[0].poster_path) {
-          setPosterUrl(`https://image.tmdb.org/t/p/w500${data.results[0].poster_path}`);
+        if (data.results && data.results.length > 0) {
+          const lowerTitle = title.toLowerCase();
+          // 嘗試尋找名稱「完全符合」的結果（優先）
+          const exactMatch = data.results.find(
+            movie => movie.title?.toLowerCase() === lowerTitle || movie.original_title?.toLowerCase() === lowerTitle
+          );
+          
+          // 如果有完全符合的就用它，沒有就退而求其次用搜尋排名的第一筆
+          const bestMatch = exactMatch || data.results[0];
+          
+          if (bestMatch.poster_path) {
+            setPosterUrl(`https://image.tmdb.org/t/p/w500${bestMatch.poster_path}`);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch TMDB poster:", error);
