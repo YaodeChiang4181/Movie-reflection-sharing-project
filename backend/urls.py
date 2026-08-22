@@ -20,12 +20,21 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from django.http import HttpResponse
+from django.core.management import call_command
 
 def health_check(request):
     return HttpResponse("OK")
 
+def trigger_backfill(request):
+    try:
+        call_command('backfill_movies')
+        return HttpResponse("Backfill complete! 英文片名已補齊，可以關閉此網頁並回去測試搜尋了。")
+    except Exception as e:
+        return HttpResponse(f"Error: {e}")
+
 urlpatterns = [
     path('', health_check, name='health_check'),
+    path('backfill/', trigger_backfill, name='trigger_backfill'),
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
 ]
