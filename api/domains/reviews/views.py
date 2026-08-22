@@ -11,8 +11,9 @@ from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.annotate(
         avg_rating=Avg('reviews__rating', filter=Q(reviews__is_deleted=False)),
-        review_count=Count('reviews', filter=Q(reviews__is_deleted=False))
-    ).filter(review_count__gt=0).order_by('-review_count', '-id')
+        review_count=Count('reviews', filter=Q(reviews__is_deleted=False)),
+        normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & ~Q(reviews__content=""))
+    ).filter(review_count__gt=0).order_by('-normal_review_count', '-review_count', '-id')
     serializer_class = MovieSerializer
     permission_classes = (AllowAny,)
 
