@@ -66,6 +66,8 @@ class Advertisement(models.Model):
 
 class Movie(models.Model):
     title = models.CharField(max_length=200)
+    original_title = models.CharField(max_length=200, blank=True, null=True)
+    tmdb_id = models.IntegerField(blank=True, null=True)
     poster_url = models.URLField(max_length=500, blank=True, null=True)
     director = models.CharField(max_length=100)
     release_year = models.IntegerField()

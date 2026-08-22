@@ -3,6 +3,8 @@ import urllib.parse
 import json
 import random
 from django.conf import settings
+from django.utils import timezone
+from api.models import Movie
 
 GENRE_MAP = {
     28: "動作",
@@ -58,6 +60,66 @@ def fetch_movie_genres(movie_title):
         pass
         
     return []
+
+def fetch_movie_metadata(movie_title):
+    """
+    Fetch TMDB metadata (id, original_title, genres, poster) for a given movie title.
+    Returns a dict or None.
+    """
+    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    if not api_key:
+        return None
+
+    try:
+        query = urllib.parse.quote(movie_title)
+        url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&language=zh-TW&query={query}&page=1"
+        
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            
+            if data.get('results') and len(data['results']) > 0:
+                first_result = data['results'][0]
+                genre_ids = first_result.get('genre_ids', [])
+                genres = [GENRE_MAP[gid] for gid in genre_ids if gid in GENRE_MAP][:5]
+                
+                poster_path = first_result.get('poster_path')
+                poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
+                
+                return {
+                    'tmdb_id': first_result.get('id'),
+                    'original_title': first_result.get('original_title'),
+                    'genres': genres,
+                    'poster_url': poster_url,
+                }
+    except Exception as e:
+        print(f"TMDB Fetch Metadata Error: {e}")
+        pass
+        
+    return None
+
+def get_or_create_movie(movie_title):
+    """
+    Helper to get or create a Movie instance using TMDB metadata if available.
+    Returns (Movie instance, created (bool), tmdb_genres (list))
+    """
+    tmdb_meta = fetch_movie_metadata(movie_title)
+    tmdb_genres = tmdb_meta['genres'] if tmdb_meta else []
+    
+    movie_defaults = {'director': 'Unknown', 'release_year': timezone.now().year}
+    if tmdb_meta:
+        if tmdb_meta.get('original_title'):
+            movie_defaults['original_title'] = tmdb_meta['original_title']
+        if tmdb_meta.get('tmdb_id'):
+            movie_defaults['tmdb_id'] = tmdb_meta['tmdb_id']
+        if tmdb_meta.get('poster_url'):
+            movie_defaults['poster_url'] = tmdb_meta['poster_url']
+            
+    movie, created = Movie.objects.get_or_create(
+        title=movie_title,
+        defaults=movie_defaults
+    )
+    return movie, created, tmdb_genres
 
 def fetch_random_movie_by_genre(genre_id):
     """

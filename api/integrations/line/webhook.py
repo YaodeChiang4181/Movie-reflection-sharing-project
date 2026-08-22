@@ -200,7 +200,8 @@ def handle_message(event):
             rating = min(max(int(rating_match.group(1).strip()), 1), 5)
             content = content_match.group(1).strip()
             
-            movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})
+            from api.utils.tmdb import get_or_create_movie
+            movie, _, tmdb_genres = get_or_create_movie(movie_title)
             
             existing_review = Review.objects.filter(user=user, movie=movie).first()
             if existing_review:
@@ -220,7 +221,6 @@ def handle_message(event):
                 )
             
             from api.models import Tag
-            from api.utils.tmdb import fetch_movie_genres
             
             movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
             review.tags.add(movie_tag)
@@ -239,7 +239,6 @@ def handle_message(event):
                             tags.append(cleaned)
                             
             # Automatically fetch and append TMDB genres
-            tmdb_genres = fetch_movie_genres(movie_title)
             for genre in tmdb_genres:
                 if genre not in tags:
                     tags.append(genre)
@@ -382,7 +381,8 @@ def handle_message(event):
         state_record.save()
         
         # Create review with empty content
-        movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})
+        from api.utils.tmdb import get_or_create_movie
+        movie, _, tmdb_genres = get_or_create_movie(movie_title)
         
         review = Review.objects.create(
             user=user,
@@ -393,13 +393,11 @@ def handle_message(event):
         )
         
         # Add TMDB genres automatically
-        from api.utils.tmdb import fetch_movie_genres
         from api.models import Tag
         
         movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
         review.tags.add(movie_tag)
         
-        tmdb_genres = fetch_movie_genres(movie_title)
         for genre in tmdb_genres:
             if genre != movie_title:
                 tag_obj, _ = Tag.objects.get_or_create(name=genre)
@@ -584,7 +582,8 @@ def handle_message(event):
         state_record.save()
         
         # Create review
-        movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})
+        from api.utils.tmdb import get_or_create_movie
+        movie, _, tmdb_genres = get_or_create_movie(movie_title)
         
         review = Review.objects.create(
             user=user,
@@ -1000,7 +999,8 @@ def handle_postback(event):
         if not user:
             return
             
-        movie, _ = Movie.objects.get_or_create(title=movie_title, defaults={'release_year': timezone.now().year, 'director': 'Unknown'})
+        from api.utils.tmdb import get_or_create_movie
+        movie, _, tmdb_genres = get_or_create_movie(movie_title)
         
         # Check if already exists to prevent spam
         existing_review = Review.objects.filter(user=user, movie=movie).first()
@@ -1023,13 +1023,11 @@ def handle_postback(event):
         )
         
         # Add TMDB genres automatically
-        from api.utils.tmdb import fetch_movie_genres
         from api.models import Tag
         
         movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
         review.tags.add(movie_tag)
         
-        tmdb_genres = fetch_movie_genres(movie_title)
         for genre in tmdb_genres:
             if genre != movie_title:
                 tag_obj, _ = Tag.objects.get_or_create(name=genre)

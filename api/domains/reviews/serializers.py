@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.db import transaction
 from api.models import Movie, Tag, Review, Vote, Comment
 from api.domains.auth.serializers import UserSerializer
-from api.utils.tmdb import fetch_movie_genres
+from api.utils.tmdb import fetch_movie_metadata
 from api.utils.text_utils import normalize_movie_title
 
 class MovieSerializer(serializers.ModelSerializer):
@@ -57,16 +57,26 @@ class ReviewSerializer(serializers.ModelSerializer):
         movie_title = normalize_movie_title(raw_movie_title)
         tag_names = validated_data.pop('tag_names', [])
         
-        # Automatically fetch and append TMDB genres
-        tmdb_genres = fetch_movie_genres(movie_title)
+        # Automatically fetch and append TMDB genres and metadata
+        tmdb_meta = fetch_movie_metadata(movie_title)
+        tmdb_genres = tmdb_meta['genres'] if tmdb_meta else []
         for genre in tmdb_genres:
             if genre not in tag_names:
                 tag_names.append(genre)
                 
         with transaction.atomic():
+            movie_defaults = {'director': 'Unknown', 'release_year': timezone.now().year}
+            if tmdb_meta:
+                if tmdb_meta.get('original_title'):
+                    movie_defaults['original_title'] = tmdb_meta['original_title']
+                if tmdb_meta.get('tmdb_id'):
+                    movie_defaults['tmdb_id'] = tmdb_meta['tmdb_id']
+                if tmdb_meta.get('poster_url'):
+                    movie_defaults['poster_url'] = tmdb_meta['poster_url']
+
             movie, _ = Movie.objects.get_or_create(
                 title=movie_title,
-                defaults={'director': 'Unknown', 'release_year': timezone.now().year}
+                defaults=movie_defaults
             )
             validated_data['movie'] = movie
             
@@ -84,8 +94,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 
         if raw_movie_title:
             movie_title = normalize_movie_title(raw_movie_title)
+            tmdb_meta = fetch_movie_metadata(movie_title)
+            
             if tag_names is not None:
-                tmdb_genres = fetch_movie_genres(movie_title)
+                tmdb_genres = tmdb_meta['genres'] if tmdb_meta else []
                 for genre in tmdb_genres:
                     if genre not in tag_names:
                         tag_names.append(genre)
@@ -93,9 +105,18 @@ class ReviewSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             if raw_movie_title:
                 movie_title = normalize_movie_title(raw_movie_title)
+                movie_defaults = {'director': 'Unknown', 'release_year': timezone.now().year}
+                if tmdb_meta:
+                    if tmdb_meta.get('original_title'):
+                        movie_defaults['original_title'] = tmdb_meta['original_title']
+                    if tmdb_meta.get('tmdb_id'):
+                        movie_defaults['tmdb_id'] = tmdb_meta['tmdb_id']
+                    if tmdb_meta.get('poster_url'):
+                        movie_defaults['poster_url'] = tmdb_meta['poster_url']
+
                 movie, _ = Movie.objects.get_or_create(
                     title=movie_title,
-                    defaults={'director': 'Unknown', 'release_year': timezone.now().year}
+                    defaults=movie_defaults
                 )
                 instance.movie = movie
 

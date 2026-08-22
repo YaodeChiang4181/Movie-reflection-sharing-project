@@ -186,10 +186,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         query_len = len(query)
 
         results = self.get_queryset().filter(
-            Q(movie__title__icontains=query) | Q(content__icontains=query) | Q(tags__name__icontains=query)
+            Q(movie__title__icontains=query) | Q(movie__original_title__icontains=query) | Q(content__icontains=query) | Q(tags__name__icontains=query)
         ).distinct().annotate(
             match_priority=Case(
                 When(movie__title__icontains=query, then=Value(1)),
+                When(movie__original_title__icontains=query, then=Value(1)),
                 When(content__icontains=query, then=Value(2)),
                 When(tags__name__icontains=query, then=Value(3)),
                 default=Value(4),
