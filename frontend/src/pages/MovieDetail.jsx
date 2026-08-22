@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Clock, Calendar, ThumbsUp, ThumbsDown, User, MessageCircle, Send, Edit2, Trash2, MoreVertical } from 'lucide-react';
+import { Star, Clock, Calendar, ThumbsUp, ThumbsDown, User, MessageCircle, Send, Edit2, Trash2, MoreVertical, ArrowLeft } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './MovieDetail.module.css';
 import ReviewForm from '../components/ReviewForm';
+import TmdbPoster from '../components/TmdbPoster';
 
 function MovieDetail() {
   const { id } = useParams();
@@ -15,6 +16,7 @@ function MovieDetail() {
   const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [relatedMovies, setRelatedMovies] = useState([]);
 
   // Fetch movie info (only once when id changes)
   useEffect(() => {
@@ -23,6 +25,13 @@ function MovieDetail() {
         setIsLoading(true);
         const movieRes = await api.get(`movies/${id}/`);
         setMovie(movieRes.data);
+        
+        try {
+          const relatedRes = await api.get(`movies/${id}/related/`);
+          setRelatedMovies(relatedRes.data);
+        } catch (err) {
+          console.error("Failed to fetch related movies", err);
+        }
       } catch (error) {
         console.error("Failed to fetch movie details:", error);
         if (error.response?.status === 404) {
@@ -77,7 +86,17 @@ function MovieDetail() {
     <div className={`container ${styles.pageWrapper}`}>
       <div>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h1 className={styles.title} style={{ textAlign: 'center', marginBottom: '24px' }}>{movie.title}</h1>
+          <div style={{ position: 'relative', marginBottom: '24px' }}>
+            <button 
+              onClick={() => navigate(-1)} 
+              style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              className="hover-text-primary"
+            >
+              <ArrowLeft size={24} />
+              <span style={{ fontSize: '0.9rem' }}>返回</span>
+            </button>
+            <h1 className={styles.title} style={{ textAlign: 'center', margin: 0 }}>{movie.title}</h1>
+          </div>
 
           <div style={{ textAlign: 'center' }}>
             <div className={styles.ratingBox}>
@@ -181,6 +200,33 @@ function MovieDetail() {
               <p style={{ color: 'var(--text-secondary)', padding: '20px 0' }}>目前還沒有影評，來成為第一位評論的人吧！</p>
             )}
           </div>
+
+          {relatedMovies.length > 0 && (
+            <div style={{ marginTop: '48px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
+              <h3 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>✨ 根據心得標籤推薦給您...</h3>
+              <div style={{ 
+                display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px',
+                scrollbarWidth: 'thin', scrollbarColor: 'var(--border-color) transparent'
+              }}>
+                {relatedMovies.map(m => (
+                  <div 
+                    key={m.id} 
+                    className="glass hover-scale"
+                    style={{ minWidth: '140px', padding: '12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
+                    onClick={() => navigate(`/movies/${m.id}`)}
+                  >
+                    <TmdbPoster title={m.title} style={{ width: '100px', height: '150px', borderRadius: '8px' }} />
+                    <h4 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '0.95rem', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {m.title}
+                    </h4>
+                    <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Star size={14} fill="currentColor" /> {m.avg_rating?.toFixed(1) || '0.0'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <button className="btn-primary" style={{marginTop: '24px'}} onClick={() => navigate('/')}>
             回首頁看更多

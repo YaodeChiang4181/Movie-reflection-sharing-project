@@ -17,6 +17,33 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = MovieSerializer
     permission_classes = (AllowAny,)
 
+    @action(detail=True, methods=['get'])
+    def related(self, request, pk=None):
+        movie = self.get_object()
+        
+        # Get all distinct tag IDs used in the reviews of this movie
+        tag_ids = [tid for tid in movie.reviews.values_list('tags', flat=True).distinct() if tid is not None]
+        
+        if not tag_ids:
+            # If no tags, just return trending movies (fallback)
+            related_movies = self.get_queryset().exclude(id=movie.id)[:5]
+        else:
+            # Find movies sharing these tags, annotate with match count
+            related_movies = self.get_queryset().exclude(id=movie.id).filter(
+                reviews__tags__id__in=tag_ids
+            ).annotate(
+                match_count=Count('reviews__tags', distinct=True)
+            ).order_by('-match_count', '-normal_review_count', '-review_count', '-id')[:5]
+            
+            # If less than 5 movies share tags, pad with trending movies
+            if len(related_movies) < 5:
+                existing_ids = [m.id for m in related_movies]
+                padding = self.get_queryset().exclude(id__in=[movie.id] + existing_ids)[:5 - len(related_movies)]
+                related_movies = list(related_movies) + list(padding)
+                
+        serializer = self.get_serializer(related_movies, many=True)
+        return Response(serializer.data)
+
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
