@@ -353,8 +353,8 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
       {isEditing ? (
         <ReviewForm 
           initialData={review}
-          onSuccess={() => { setIsEditing(false); if(onReviewUpdated) onReviewUpdated(); }}
-          onCancel={() => setIsEditing(false)}
+          onReviewAdded={() => { setIsEditing(false); if(onReviewUpdated) onReviewUpdated(); }}
+          onClose={() => setIsEditing(false)}
         />
       ) : (
         <>
