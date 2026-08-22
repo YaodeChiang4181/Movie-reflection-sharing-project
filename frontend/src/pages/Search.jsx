@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search as SearchIcon, ThumbsUp, MessageCircle } from 'lucide-react';
 import ReviewModal from '../components/ReviewModal';
+import TmdbPoster from '../components/TmdbPoster';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -166,77 +167,85 @@ function Search() {
             <div 
               key={review.id} 
               className="glass hover-scale" 
-              style={{ padding: '24px', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all 0.3s ease' }}
+              style={{ padding: '24px', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all 0.3s ease', display: 'flex', gap: '24px' }}
               onClick={() => setSelectedReview(review)}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <h3 style={{ color: 'var(--accent-primary)', fontSize: '1.4rem' }}>
-                  {review.movie?.title}
-                </h3>
-                <span style={{ color: 'var(--text-muted)' }}>
-                  {new Date(review.created_at).toLocaleDateString('zh-TW')}
-                </span>
+              <div style={{ flexShrink: 0 }}>
+                <TmdbPoster 
+                  title={review.movie?.title} 
+                  style={{ width: '100px', height: '150px', borderRadius: '12px' }} 
+                />
               </div>
-              <p style={{ 
-                color: 'var(--text-primary)', 
-                fontSize: '1.1rem', 
-                lineHeight: '1.6', 
-                marginBottom: '20px',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}>
-                {review.content}
-              </p>
-              
-              {/* Tags */}
-              {review.tags && review.tags.length > 0 && (
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                  {review.tags.map(tag => (
-                    <span key={tag.id} style={{ 
-                      backgroundColor: 'rgba(139, 92, 246, 0.2)', 
-                      color: 'var(--accent-secondary)', 
-                      padding: '4px 12px', 
-                      borderRadius: 'var(--radius-pill)',
-                      fontSize: '0.9rem'
-                    }}>
-                      #{tag.name}
-                    </span>
-                  ))}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <h3 style={{ color: 'var(--accent-primary)', fontSize: '1.4rem', margin: 0 }}>
+                    {review.movie?.title}
+                  </h3>
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    {new Date(review.created_at).toLocaleDateString('zh-TW')}
+                  </span>
                 </div>
-              )}
-
-              <div style={{ display: 'flex', gap: '16px', color: 'var(--text-secondary)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                   推薦指數 {review.rating}/5
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <UserIcon nickname={review.user?.nickname} /> {review.user?.nickname || '未知使用者'}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '16px' }}>
-                  <MessageCircle size={16} /> {review.comments_count || 0}
-                </span>
+                <p style={{ 
+                  color: 'var(--text-primary)', 
+                  fontSize: '1.1rem', 
+                  lineHeight: '1.6', 
+                  marginBottom: '20px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {review.content}
+                </p>
                 
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleVote(review.id); }}
-                  style={{ 
-                    display: 'flex', alignItems: 'center', gap: '6px', 
-                    background: review.user_voted === 1 ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-                    border: '1px solid rgba(255,255,255,0.1)', 
-                    color: review.user_voted === 1 ? 'var(--accent-primary)' : 'var(--text-primary)',
-                    padding: '4px 12px', borderRadius: '20px',
-                    cursor: 'pointer', transition: 'all 0.2s ease', marginLeft: 'auto'
-                  }}
-                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
-                  onMouseOut={(e) => { 
-                    e.currentTarget.style.background = review.user_voted === 1 ? 'rgba(139, 92, 246, 0.2)' : 'transparent'; 
-                    e.currentTarget.style.color = review.user_voted === 1 ? 'var(--accent-primary)' : 'var(--text-primary)'; 
-                  }}
-                >
-                  <ThumbsUp size={16} /> 推薦 ({review.upvotes || 0})
-                </button>
+                {/* Tags */}
+                {review.tags && review.tags.length > 0 && (
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    {review.tags.map(tag => (
+                      <span key={tag.id} style={{ 
+                        backgroundColor: 'rgba(139, 92, 246, 0.2)', 
+                        color: 'var(--accent-secondary)', 
+                        padding: '4px 12px', 
+                        borderRadius: 'var(--radius-pill)',
+                        fontSize: '0.9rem'
+                      }}>
+                        #{tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '16px', color: 'var(--text-secondary)', marginTop: 'auto' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                     推薦指數 {review.rating}/5
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <UserIcon nickname={review.user?.nickname} /> {review.user?.nickname || '未知使用者'}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '16px' }}>
+                    <MessageCircle size={16} /> {review.comments_count || 0}
+                  </span>
+                  
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleVote(review.id); }}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '6px', 
+                      background: review.user_voted === 1 ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                      border: '1px solid rgba(255,255,255,0.1)', 
+                      color: review.user_voted === 1 ? 'var(--accent-primary)' : 'var(--text-primary)',
+                      padding: '4px 12px', borderRadius: '20px',
+                      cursor: 'pointer', transition: 'all 0.2s ease', marginLeft: 'auto'
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
+                    onMouseOut={(e) => { 
+                      e.currentTarget.style.background = review.user_voted === 1 ? 'rgba(139, 92, 246, 0.2)' : 'transparent'; 
+                      e.currentTarget.style.color = review.user_voted === 1 ? 'var(--accent-primary)' : 'var(--text-primary)'; 
+                    }}
+                  >
+                    <ThumbsUp size={16} /> 推薦 ({review.upvotes || 0})
+                  </button>
+                </div>
               </div>
             </div>
           ))}
