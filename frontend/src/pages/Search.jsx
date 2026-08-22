@@ -185,19 +185,21 @@ function Search() {
                     {new Date(review.created_at).toLocaleDateString('zh-TW')}
                   </span>
                 </div>
-                <p style={{ 
-                  color: 'var(--text-primary)', 
-                  fontSize: '1.1rem', 
-                  lineHeight: '1.6', 
-                  marginBottom: '20px',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {review.content}
-                </p>
+                {review.content && review.content !== "來自急速評星的無內文評價" && (
+                  <p style={{ 
+                    color: 'var(--text-primary)', 
+                    fontSize: '1.1rem', 
+                    lineHeight: '1.6', 
+                    marginBottom: '20px',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {review.content}
+                  </p>
+                )}
                 
                 {/* Tags */}
                 {review.tags && review.tags.length > 0 && (
