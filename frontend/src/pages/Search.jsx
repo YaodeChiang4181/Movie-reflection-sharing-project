@@ -179,7 +179,7 @@ function Search() {
             }
             acc[movieId].reviews.push(review);
             return acc;
-          }, {})).map(group => (
+          }, {})).sort((a, b) => b.reviews.length - a.reviews.length).map(group => (
             <div key={group.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Movie Header Card */}
               <div 

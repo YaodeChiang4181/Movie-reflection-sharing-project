@@ -6,13 +6,15 @@
 /* ===== 影迷卡片 ===== */
 .fanCard {
   position: relative;
-  background: linear-gradient(145deg, rgba(139, 92, 246, 0.08), rgba(30, 30, 50, 0.6));
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 0;
   margin-bottom: 40px;
   overflow: hidden;
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
 .fanCardGlow {
