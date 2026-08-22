@@ -201,10 +201,17 @@ function Search() {
                     title={group.movie.title} 
                     style={{ width: '80px', height: '120px', borderRadius: '8px', flexShrink: 0 }}
                   />
-                  <div>
-                    <h3 style={{ color: '#F1F5F9', fontSize: '1.6rem', margin: '0 0 12px 0' }}>
-                      {group.movie.title}
-                    </h3>
+                    <div>
+                      <div style={{ marginBottom: '12px' }}>
+                        <h3 style={{ color: '#F1F5F9', fontSize: '1.6rem', margin: '0' }}>
+                          {group.movie.title}
+                        </h3>
+                        {group.movie.original_title && (
+                          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1rem', marginTop: '2px' }}>
+                            {group.movie.original_title}
+                          </div>
+                        )}
+                      </div>
                     <span style={{ 
                       backgroundColor: 'rgba(139, 92, 246, 0.2)', 
                       color: 'var(--accent-secondary)', 

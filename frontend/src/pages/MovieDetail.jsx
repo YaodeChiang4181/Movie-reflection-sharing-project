@@ -86,16 +86,33 @@ function MovieDetail() {
     <div className={`container ${styles.pageWrapper}`}>
       <div>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ position: 'relative', marginBottom: '24px' }}>
-            <button 
-              onClick={() => navigate(-1)} 
-              style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-              className="hover-text-primary"
-            >
-              <ArrowLeft size={24} />
-              <span style={{ fontSize: '0.9rem' }}>返回</span>
-            </button>
-            <h1 className={styles.title} style={{ textAlign: 'center', margin: 0 }}>{movie.title}</h1>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: movie.original_title ? '4px' : '0' }}>
+              <button 
+                onClick={() => navigate('/')}
+                style={{ 
+                  position: 'absolute',
+                  left: 0,
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '4px',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer'
+                }}
+                className="hover-text-primary"
+              >
+                <ArrowLeft size={24} />
+                <span style={{ fontSize: '0.9rem' }}>返回</span>
+              </button>
+              <h1 className={styles.title} style={{ textAlign: 'center', margin: 0 }}>{movie.title}</h1>
+            </div>
+            {movie.original_title && (
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.2rem', fontStyle: 'italic', letterSpacing: '0.5px' }}>
+                {movie.original_title}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', margin: '32px 0' }}>

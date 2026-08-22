@@ -113,7 +113,13 @@ function Home() {
               <Flame style={{ color: '#F5A623' }} size={24} />
               <span style={{ color: '#F5A623', fontWeight: 'bold', letterSpacing: '1px', fontSize: '1.1rem' }}>本週社群最高分推薦</span>
             </div>
-            <h2 style={{ fontSize: '2.8rem', margin: '0 0 20px 0', color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{heroMovie.title}</h2>
+            <h2 style={{ fontSize: '2.8rem', margin: '0', color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{heroMovie.title}</h2>
+            {heroMovie.original_title && (
+              <div style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', margin: '4px 0 20px 0', fontStyle: 'italic' }}>
+                {heroMovie.original_title}
+              </div>
+            )}
+            {!heroMovie.original_title && <div style={{ marginBottom: '20px' }}></div>}
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
               <div style={{ 
                 backgroundColor: 'rgba(245, 166, 35, 0.15)',
@@ -170,6 +176,11 @@ function Home() {
                       <h3 style={{ color: '#F1F5F9', fontSize: '1.3rem', margin: 0 }}>
                         {movie.title}
                       </h3>
+                      {movie.original_title && (
+                        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginTop: '-4px' }}>
+                          {movie.original_title}
+                        </span>
+                      )}
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                         #熱門討論 #社群精選
                       </span>
