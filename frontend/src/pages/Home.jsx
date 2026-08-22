@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ThumbsUp, MessageCircle, Edit3, FastForward } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Edit3, FastForward, Star, Flame } from 'lucide-react';
 import TmdbPoster from '../components/TmdbPoster';
 import ReviewForm from '../components/ReviewForm';
 import SpeedRatingModal from '../components/SpeedRatingModal';
@@ -68,6 +68,9 @@ function Home() {
     }
   };
 
+  const heroMovie = currentPage === 1 && movies.length > 0 ? movies[0] : null;
+  const displayMovies = currentPage === 1 && movies.length > 0 ? movies.slice(1) : movies;
+
   return (
     <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
       <header style={{ marginBottom: '40px' }}>
@@ -87,6 +90,51 @@ function Home() {
         />
       )}
 
+      {/* 首頁焦點橫幅 (Hero Banner) */}
+      {!isLoading && heroMovie && (
+        <div 
+          className="glass hover-scale" 
+          style={{ 
+            marginBottom: '40px', 
+            padding: '40px', 
+            borderRadius: 'var(--radius-lg)', 
+            display: 'flex', 
+            gap: '40px', 
+            alignItems: 'center',
+            background: 'linear-gradient(135deg, rgba(245, 166, 35, 0.15) 0%, rgba(20, 20, 20, 0.6) 100%)',
+            border: '1px solid rgba(245, 166, 35, 0.3)',
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate(`/movies/${heroMovie.id}`)}
+        >
+          <TmdbPoster title={heroMovie.title} style={{ width: '160px', height: '240px', borderRadius: '12px', flexShrink: 0, boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }} />
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <Flame style={{ color: '#F5A623' }} size={24} />
+              <span style={{ color: '#F5A623', fontWeight: 'bold', letterSpacing: '1px', fontSize: '1.1rem' }}>本週社群最高分推薦</span>
+            </div>
+            <h2 style={{ fontSize: '2.8rem', margin: '0 0 20px 0', color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{heroMovie.title}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{ 
+                backgroundColor: 'rgba(245, 166, 35, 0.15)',
+                padding: '8px 20px',
+                borderRadius: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                border: '1px solid rgba(245, 166, 35, 0.4)'
+              }}>
+                <Star size={24} fill="#F5A623" style={{ color: '#F5A623' }} />
+                <span style={{ color: '#F5A623', fontSize: '1.4rem', fontWeight: 'bold' }}>{heroMovie.avg_rating ? heroMovie.avg_rating.toFixed(1) : '0.0'}</span>
+              </div>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
+                累積 {heroMovie.review_count || 0} 則深度影評
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="home-layout">
         {/* 左側 70%：電影列表 */}
         <div>
@@ -97,13 +145,13 @@ function Home() {
               <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前沒有任何電影資料</h2>
             </div>
           ) : (
-            <div style={{ display: 'grid', gap: '24px' }}>
-              {movies.map(movie => (
+            <div style={{ display: 'grid', gap: '16px' }}>
+              {displayMovies.map(movie => (
                 <div 
                   key={movie.id} 
                   className="glass hover-scale" 
                   style={{ 
-                    padding: '24px', 
+                    padding: '16px 24px', 
                     borderRadius: 'var(--radius-md)', 
                     cursor: 'pointer', 
                     transition: 'all 0.3s ease',
@@ -113,34 +161,39 @@ function Home() {
                   }}
                   onClick={() => navigate(`/movies/${movie.id}`)}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <TmdbPoster 
                       title={movie.title} 
-                      style={{ width: '60px', height: '90px', borderRadius: '8px', flexShrink: 0 }}
+                      style={{ width: '50px', height: '75px', borderRadius: '6px', flexShrink: 0 }}
                     />
-                    <h3 style={{ color: '#F1F5F9', fontSize: '1.4rem', margin: 0 }}>
-                      {movie.title}
-                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <h3 style={{ color: '#F1F5F9', fontSize: '1.3rem', margin: 0 }}>
+                        {movie.title}
+                      </h3>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                        #熱門討論 #社群精選
+                      </span>
+                    </div>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
                       ({movie.review_count || 0} 則評價)
                     </span>
                     <div style={{ 
-                      backgroundColor: 'rgba(142, 82, 245, 0.15)',
+                      backgroundColor: 'rgba(245, 166, 35, 0.1)',
                       padding: '6px 12px',
                       borderRadius: '20px',
-                      color: 'var(--text-primary)', 
+                      color: '#F5A623', 
                       fontSize: '1.2rem', 
                       fontWeight: 'bold',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
-                      border: '1px solid rgba(142, 82, 245, 0.3)'
+                      border: '1px solid rgba(245, 166, 35, 0.25)'
                     }}>
-                      <ThumbsUp size={18} style={{ color: 'var(--accent-primary)' }} />
-                      <span style={{ color: '#D8B4FE' }}>{movie.avg_rating ? movie.avg_rating.toFixed(1) : '0.0'}</span>
+                      <Star size={18} fill="#F5A623" style={{ color: '#F5A623' }} />
+                      <span>{movie.avg_rating ? movie.avg_rating.toFixed(1) : '0.0'}</span>
                     </div>
                   </div>
                 </div>
@@ -189,7 +242,7 @@ function Home() {
 
           <div 
             className="glass hover-scale" 
-            style={{ padding: '32px', borderRadius: 'var(--radius-lg)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(20, 20, 20, 0.4) 100%)', borderColor: 'rgba(34, 197, 94, 0.2)' }}
+            style={{ padding: '32px', borderRadius: 'var(--radius-lg)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(20, 20, 20, 0.6) 100%)', borderColor: 'rgba(16, 185, 129, 0.3)' }}
             onClick={() => {
               if (!isLoggedIn) {
                 alert('請先登入才能使用急速評星。');
@@ -199,7 +252,7 @@ function Home() {
               setIsSpeedRatingOpen(true);
             }}
           >
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(34, 197, 94, 0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#86efac' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(16, 185, 129, 0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#10B981', boxShadow: '0 0 20px rgba(16,185,129,0.2)' }}>
               <FastForward size={32} />
             </div>
             <div style={{ textAlign: 'center' }}>
