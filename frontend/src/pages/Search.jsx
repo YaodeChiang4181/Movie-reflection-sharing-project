@@ -110,8 +110,8 @@ function Search() {
               borderRadius: '30px 0 0 30px', color: 'white', outline: 'none'
             }}
           />
-          <button type="submit" className="btn-primary" style={{ padding: '0 32px', borderRadius: '0 30px 30px 0' }} disabled={isLoading}>
-            <SearchIcon size={20} /> 搜尋
+          <button type="submit" className="btn-primary" style={{ padding: '0 24px', borderRadius: '0 30px 30px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }} disabled={isLoading}>
+            <SearchIcon size={20} />
           </button>
         </form>
 

@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 from django.db import IntegrityError
 from django.db.models import Count, Q, Case, When, Value, IntegerField, Avg
+from django.db.models.functions import Length, Replace
 from django.core.cache import cache
 from api.models import Movie, Review, Vote, Comment
 from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
@@ -182,16 +183,24 @@ class ReviewViewSet(viewsets.ModelViewSet):
         query = request.query_params.get('q', '')
         if not query:
             return Response([])
+        query_len = len(query)
 
         results = self.get_queryset().filter(
-            Q(movie__title__icontains=query) | Q(content__icontains=query)
-        ).annotate(
+            Q(movie__title__icontains=query) | Q(content__icontains=query) | Q(tags__name__icontains=query)
+        ).distinct().annotate(
             match_priority=Case(
                 When(movie__title__icontains=query, then=Value(1)),
-                default=Value(2),
+                When(content__icontains=query, then=Value(2)),
+                When(tags__name__icontains=query, then=Value(3)),
+                default=Value(4),
+                output_field=IntegerField(),
+            ),
+            occurrences=Case(
+                When(content__icontains=query, then=(Length('content') - Length(Replace('content', Value(query), Value('')))) / query_len),
+                default=Value(0),
                 output_field=IntegerField(),
             )
-        ).order_by('match_priority', 'created_at')
+        ).order_by('match_priority', '-occurrences', '-created_at')
 
         serializer = self.get_serializer(results, many=True)
         return Response(serializer.data)
