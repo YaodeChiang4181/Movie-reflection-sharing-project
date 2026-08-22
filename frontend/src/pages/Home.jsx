@@ -96,7 +96,7 @@ function Home() {
           {movies.map(movie => (
             <div 
               key={movie.id} 
-              className="glass" 
+              className="glass hover-scale" 
               style={{ 
                 padding: '24px', 
                 borderRadius: 'var(--radius-md)', 

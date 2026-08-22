@@ -165,7 +165,7 @@ function Search() {
           {results.map(review => (
             <div 
               key={review.id} 
-              className="glass" 
+              className="glass hover-scale" 
               style={{ padding: '24px', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all 0.3s ease' }}
               onClick={() => setSelectedReview(review)}
             >
