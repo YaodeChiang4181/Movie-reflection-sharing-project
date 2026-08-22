@@ -126,9 +126,11 @@ function MovieDetail() {
               <>
                 {/* 分為三區塊: 熱門、一般、簡易分數 */}
                 {(() => {
-                  const hotReviews = reviews.filter(r => r.content && r.upvotes > 0).sort((a,b) => b.upvotes - a.upvotes);
-                  const normalReviews = reviews.filter(r => r.content && r.upvotes === 0);
-                  const speedRatings = reviews.filter(r => !r.content);
+                  const isSpeedRating = (r) => !r.content || r.content === "來自急速評星的無內文評價" || r.tags?.some(tag => tag.name === '急速評星');
+                  
+                  const hotReviews = reviews.filter(r => !isSpeedRating(r) && r.upvotes > 0).sort((a,b) => b.upvotes - a.upvotes);
+                  const normalReviews = reviews.filter(r => !isSpeedRating(r) && r.upvotes === 0);
+                  const speedRatings = reviews.filter(r => isSpeedRating(r));
                   
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
