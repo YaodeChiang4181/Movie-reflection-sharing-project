@@ -43,7 +43,7 @@
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-primary);
-  background-image: radial-gradient(ellipse 100% 100% at top center, rgba(139, 92, 246, 0.18) 0%, transparent 100%);
+  background-image: radial-gradient(ellipse 100% 100% at top center, rgba(139, 92, 246, 0.45) 0%, transparent 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.6;
@@ -143,6 +143,24 @@ button {
 @media (max-width: 768px) {
   .app-content {
     padding-bottom: 70px;
+  }
+}
+
+/* Home Layout 70/30 */
+.home-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .home-layout {
+    grid-template-columns: 1fr;
+  }
+  .home-layout > :nth-child(2) {
+    grid-row: 1; /* Move action panel to top on mobile */
+    margin-bottom: 24px;
   }
 }
 
