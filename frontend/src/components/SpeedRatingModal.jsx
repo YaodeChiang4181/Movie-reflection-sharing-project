@@ -35,8 +35,9 @@ const SpeedRatingModal = ({ onClose }) => {
       await api.post('reviews/', {
         movie_title: movie.title,
         rating: rating,
-        content: "",
-        source: "WEB_SPEED"
+        content: "來自急速評星的無內文評價", // 填補 Django 必填欄位
+        source: "web", // 必須符合 Django choices ('web' 或 'line')
+        tag_names: ["急速評星"]
       });
       
       setTimeout(() => {
