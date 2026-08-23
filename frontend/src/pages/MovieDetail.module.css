@@ -96,12 +96,12 @@
   }
   
   .posterWrapper {
-    max-width: 400px;
+    max-width: 240px;
     margin: 0 auto;
   }
   
   .title {
-    font-size: 2.5rem;
+    font-size: 2rem;
     text-align: center;
   }
   

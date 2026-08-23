@@ -235,7 +235,7 @@ function Home() {
         </div>
 
         {/* 右側 30%：功能操作面板 */}
-        <div style={{ position: 'sticky', top: '100px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="home-action-panel">
           
           <div 
             className="glass hover-scale" 

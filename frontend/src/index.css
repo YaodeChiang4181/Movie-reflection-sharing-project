@@ -154,13 +154,23 @@ button {
   align-items: start;
 }
 
+.home-action-panel {
+  position: sticky;
+  top: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 @media (max-width: 900px) {
   .home-layout {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column-reverse;
   }
-  .home-layout > :nth-child(2) {
-    grid-row: 1; /* Move action panel to top on mobile */
-    margin-bottom: 24px;
+  
+  .home-action-panel {
+    position: static;
+    margin-bottom: 8px;
   }
 }
 
