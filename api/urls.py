@@ -5,6 +5,30 @@ from api.domains.auth.views import UserMeView
 def ping(request):
     return HttpResponse("pong")
 
+def fix_tmdb(request):
+    from api.models import Movie
+    from api.utils.tmdb import fetch_movie_metadata
+    movies = Movie.objects.all()
+    updated_count = 0
+    
+    for movie in movies:
+        meta = fetch_movie_metadata(movie.title)
+        if meta:
+            needs_update = False
+            if movie.original_title != meta.get('original_title'):
+                movie.original_title = meta.get('original_title')
+                needs_update = True
+            
+            if movie.poster_url != meta.get('poster_url'):
+                movie.poster_url = meta.get('poster_url')
+                needs_update = True
+
+            if needs_update:
+                movie.save()
+                updated_count += 1
+
+    return HttpResponse(f"Fix complete! Updated {updated_count} movies.")
+
 urlpatterns = [
     # Domain: Auth / Identity
     path('auth/', include('api.domains.auth.urls')),
@@ -14,6 +38,9 @@ urlpatterns = [
     
     # 用於 Google Apps Script 等定時喚醒後台的輕量級端點
     path('ping/', ping, name='ping'),
+    
+    # 臨時端點：用來修復資料庫電影抓取錯誤
+    path('fix-tmdb/', fix_tmdb, name='fix_tmdb'),
     
     # Domain: Reviews (Movies, Reviews, Votes, Comments)
     path('', include('api.domains.reviews.urls')),
