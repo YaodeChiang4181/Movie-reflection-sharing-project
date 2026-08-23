@@ -443,7 +443,9 @@ def handle_message(event):
             if target_line_user_id:
                 try:
                     sender_nickname = user.profile.nickname if hasattr(user, 'profile') else (user.line_display_name or "匿名使用者")
-                    push_msg = TextSendMessage(text=f"💌 你的漂流瓶 ({bottle.movie_title}) 收到了回覆！\n\n來自 {sender_nickname} 的感謝：\n{reply_message}")
+                    from api.integrations.line.flex_templates import get_bottle_reply_flex
+                    flex_bubble = get_bottle_reply_flex(bottle, sender_nickname, reply_message)
+                    push_msg = FlexSendMessage(alt_text=f"💌 你的漂流瓶收到了回覆！", contents=flex_bubble)
                     line_bot_api.push_message(target_line_user_id, push_msg)
                     line_bot_api.reply_message(event.reply_token, TextSendMessage(text="✨ 感謝已成功發送給推薦人！"))
                 except Exception as e:
@@ -692,9 +694,10 @@ def handle_message(event):
         
         tag_str = " ".join([f"#{t.name.replace('#', '')}" for t in top_tags]) if top_tags else "尚無"
         
-        # 經驗值進度條（用方塊視覺化）
-        progress_blocks = int((current_exp / exp_needed) * 10) if exp_needed > 0 else 0
-        progress_bar = "▓" * progress_blocks + "░" * (10 - progress_blocks)
+        # 經驗值進度條（用平滑 Box 視覺化）
+        progress_percentage = int((current_exp / exp_needed) * 100) if exp_needed > 0 else 0
+        progress_flex = progress_percentage if progress_percentage > 0 else 1
+        remaining_flex = 100 - progress_percentage if progress_percentage < 100 else 1
         
         flex_card = {
             "type": "bubble",
@@ -749,11 +752,28 @@ def handle_message(event):
                                 ]
                             },
                             {
-                                "type": "text",
-                                "text": progress_bar,
-                                "size": "sm",
-                                "color": "#8B5CF6",
-                                "margin": "sm"
+                                "type": "box",
+                                "layout": "horizontal",
+                                "margin": "md",
+                                "cornerRadius": "8px",
+                                "contents": [
+                                    {
+                                        "type": "box",
+                                        "layout": "vertical",
+                                        "backgroundColor": "#8B5CF6",
+                                        "height": "8px",
+                                        "flex": progress_flex,
+                                        "contents": []
+                                    },
+                                    {
+                                        "type": "box",
+                                        "layout": "vertical",
+                                        "backgroundColor": "#E5E7EB",
+                                        "height": "8px",
+                                        "flex": remaining_flex,
+                                        "contents": []
+                                    }
+                                ]
                             }
                         ],
                         "margin": "lg"
@@ -803,12 +823,14 @@ def handle_message(event):
             "footer": {
                 "type": "box",
                 "layout": "vertical",
+                "backgroundColor": "#F9FAFB",
+                "paddingAll": "md",
                 "contents": [
                     {
                         "type": "text",
                         "text": "💡 發布心得 +25 EXP｜留言 +10 EXP｜被按讚 +1 EXP",
                         "size": "xxs",
-                        "color": "#aaaaaa",
+                        "color": "#9CA3AF",
                         "wrap": True,
                         "align": "center"
                     }

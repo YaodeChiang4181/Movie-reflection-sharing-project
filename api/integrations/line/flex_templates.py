@@ -123,36 +123,50 @@ def get_review_carousel_flex(reviews, frontend_url):
         bubbles.append({
             "type": "bubble",
             "size": "micro",
-            "header": {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
-                    {
-                        "type": "text",
-                        "text": f"⭐ {r.rating} / 5",
-                        "weight": "bold",
-                        "color": "#FBBF24",
-                        "size": "sm"
-                    }
-                ],
-                "backgroundColor": "#111111"
-            },
             "body": {
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
                     {
-                        "type": "text",
-                        "text": r.movie.title,
-                        "weight": "bold",
-                        "size": "md",
-                        "wrap": True
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {
+                                "type": "text",
+                                "text": r.movie.title,
+                                "weight": "bold",
+                                "size": "md",
+                                "wrap": True,
+                                "flex": 1
+                            },
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": f"★ {r.rating}",
+                                        "weight": "bold",
+                                        "color": "#111111",
+                                        "size": "xs",
+                                        "align": "center"
+                                    }
+                                ],
+                                "backgroundColor": "#FDE68A",
+                                "cornerRadius": "20px",
+                                "paddingAll": "2px",
+                                "paddingStart": "sm",
+                                "paddingEnd": "sm",
+                                "flex": 0
+                            }
+                        ],
+                        "alignItems": "center"
                     },
                     {
                         "type": "text",
-                        "text": content_str or "無內容",
+                        "text": content_str or "(該影友僅給出評分，尚無文字短評)",
                         "size": "xs",
-                        "color": "#888888",
+                        "color": "#888888" if content_str else "#cccccc",
                         "wrap": True,
                         "margin": "md",
                         "maxLines": 3
@@ -165,12 +179,12 @@ def get_review_carousel_flex(reviews, frontend_url):
                 "contents": [
                     {
                         "type": "button",
-                        "style": "primary",
+                        "style": "link",
                         "color": "#8B5CF6",
                         "height": "sm",
                         "action": {
                             "type": "uri",
-                            "label": "閱讀完整版",
+                            "label": "閱讀完整版 →",
                             "uri": f"{frontend_url}/movies/{r.movie.id}" if getattr(r, 'movie', None) else frontend_url
                         }
                     }
@@ -421,32 +435,19 @@ def get_speed_rate_genres_flex(genres_subset):
                 "contents": [
                     {
                         "type": "text",
-                        "text": f"🎬 {genre_name}",
+                        "text": f"🎬\n{genre_name}",
                         "weight": "bold",
-                        "size": "sm",
+                        "size": "md",
                         "color": "#111111",
-                        "align": "center"
+                        "align": "center",
+                        "wrap": True
                     }
                 ],
-                "paddingAll": "xl"
-            },
-            "footer": {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
-                    {
-                        "type": "button",
-                        "style": "primary",
-                        "color": "#C084FC",
-                        "height": "sm",
-                        "action": {
-                            "type": "postback",
-                            "label": "開始評分",
-                            "data": f"action=speed_rate_genre&genre_id={genre_id}"
-                        }
-                    }
-                ],
-                "paddingAll": "md"
+                "paddingAll": "xxl",
+                "action": {
+                    "type": "postback",
+                    "data": f"action=speed_rate_genre&genre_id={genre_id}"
+                }
             }
         }
         bubbles.append(bubble)
@@ -461,32 +462,19 @@ def get_speed_rate_genres_flex(genres_subset):
             "contents": [
                 {
                     "type": "text",
-                    "text": "🔥 熱門隨機抽",
+                    "text": "🔥\n熱門隨機抽",
                     "weight": "bold",
-                    "size": "sm",
+                    "size": "md",
                     "color": "#111111",
-                    "align": "center"
+                    "align": "center",
+                    "wrap": True
                 }
             ],
-            "paddingAll": "xl"
-        },
-        "footer": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "button",
-                    "style": "primary",
-                    "color": "#F43F5E",
-                    "height": "sm",
-                    "action": {
-                        "type": "postback",
-                        "label": "開始評分",
-                        "data": "action=speed_rate_genre&genre_id=popular"
-                    }
-                }
-            ],
-            "paddingAll": "md"
+            "paddingAll": "xxl",
+            "action": {
+                "type": "postback",
+                "data": "action=speed_rate_genre&genre_id=popular"
+            }
         }
     }
     bubbles.append(hot_bubble)
@@ -872,7 +860,7 @@ def get_drift_bottle_menu_flex():
         "size": "mega",
         "hero": {
             "type": "image",
-            "url": "https://raw.githubusercontent.com/YaodeChiang4181/Movie-reflection-sharing-project/main/%E6%BC%82%E6%B5%81%E7%93%B6.jpg",
+            "url": "https://raw.githubusercontent.com/YaodeChiang4181/Movie-reflection-sharing-project/main/drift_bottle_purple.png",
             "size": "full",
             "aspectRatio": "20:13",
             "aspectMode": "cover"
@@ -905,7 +893,7 @@ def get_drift_bottle_menu_flex():
                 {
                     "type": "button",
                     "style": "primary",
-                    "color": "#0984E3",
+                    "color": "#6C5CE7",
                     "action": {
                         "type": "message",
                         "label": "推薦電影",
@@ -915,6 +903,7 @@ def get_drift_bottle_menu_flex():
                 {
                     "type": "button",
                     "style": "secondary",
+                    "color": "#F3F4F6",
                     "action": {
                         "type": "message",
                         "label": "來部推薦",
@@ -929,16 +918,36 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
     return {
         "type": "bubble",
         "size": "mega",
+        "styles": {
+            "body": {
+                "backgroundColor": "#FDFBF7"
+            }
+        },
         "body": {
             "type": "box",
             "layout": "vertical",
             "contents": [
                 {
-                    "type": "text",
-                    "text": "🌊 你撈到了一個漂流瓶！",
-                    "weight": "bold",
-                    "color": "#0984E3",
-                    "size": "sm"
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "🌊 你撈到了一個漂流瓶！",
+                            "weight": "bold",
+                            "color": "#6C5CE7",
+                            "size": "sm",
+                            "flex": 1
+                        },
+                        {
+                            "type": "text",
+                            "text": "📮",
+                            "size": "md",
+                            "align": "end",
+                            "flex": 0
+                        }
+                    ],
+                    "alignItems": "center"
                 },
                 {
                     "type": "text",
@@ -957,7 +966,9 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
                 },
                 {
                     "type": "separator",
-                    "margin": "xxl"
+                    "margin": "xxl",
+                    "color": "#E5E7EB",
+                    "style": "dashed"
                 },
                 {
                     "type": "box",
@@ -986,6 +997,7 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
             "type": "box",
             "layout": "vertical",
             "spacing": "sm",
+            "backgroundColor": "#FDFBF7",
             "contents": [
                 {
                     "type": "button",
@@ -996,6 +1008,58 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
                         "label": "發送你的感謝！",
                         "text": f"回覆漂流瓶 #{bottle.id}"
                     }
+                }
+            ]
+        }
+    }
+
+def get_bottle_reply_flex(bottle, sender_nickname, reply_message):
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "paddingAll": "xl",
+            "contents": [
+                {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "💌 收到回覆！",
+                            "weight": "bold",
+                            "color": "#EC4899",
+                            "size": "sm"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": f"你的漂流瓶《{bottle.movie_title}》被 {sender_nickname} 撈到了！",
+                    "margin": "md",
+                    "size": "sm",
+                    "color": "#555555",
+                    "wrap": True
+                },
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "margin": "lg",
+                    "paddingAll": "md",
+                    "backgroundColor": "#F3F4F6",
+                    "cornerRadius": "md",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": f"“{reply_message}”",
+                            "wrap": True,
+                            "size": "md",
+                            "color": "#111111",
+                            "style": "italic"
+                        }
+                    ]
                 }
             ]
         }
