@@ -17,6 +17,17 @@ function MovieDetail() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [relatedMovies, setRelatedMovies] = useState([]);
+  const { isLoggedIn } = useAuth();
+  const [isComposing, setIsComposing] = useState(false);
+
+  const handleComposeClick = () => {
+    if (!isLoggedIn) {
+      alert('請先登入後再發布心得！');
+      navigate('/auth');
+      return;
+    }
+    setIsComposing(true);
+  };
 
   // Fetch movie info (only once when id changes)
   useEffect(() => {
@@ -142,7 +153,23 @@ function MovieDetail() {
           <div className={styles.reviewSection}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ margin: 0 }}>影評列表</h3>
+              <button 
+                onClick={handleComposeClick} 
+                className="btn-primary" 
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', fontSize: '0.9rem' }}
+              >
+                <Edit2 size={16} />
+                增加心得
+              </button>
             </div>
+
+            {isComposing && (
+              <ReviewForm 
+                onClose={() => setIsComposing(false)} 
+                onReviewAdded={fetchReviews} 
+                prefilledMovieTitle={movie.title}
+              />
+            )}
 
             {isReviewsLoading ? (
               <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '40px 0' }}>載入中...</p>

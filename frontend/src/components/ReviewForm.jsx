@@ -3,9 +3,9 @@ import { X, Send, Star } from 'lucide-react';
 import api from '../api/axios';
 import styles from './ReviewForm.module.css';
 
-function ReviewForm({ onClose, onReviewAdded, initialData = null }) {
+function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovieTitle = '' }) {
   const [content, setContent] = useState(initialData?.content || '');
-  const [movieId, setMovieId] = useState(initialData?.movie?.title || '');
+  const [movieId, setMovieId] = useState(initialData?.movie?.title || prefilledMovieTitle);
   const [tagsInput, setTagsInput] = useState(initialData?.tags?.map(t => '#' + t.name).join('; ') || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
