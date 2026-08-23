@@ -443,7 +443,8 @@ def get_speed_rate_genres_flex(genres_subset):
                         "wrap": True
                     }
                 ],
-                "paddingAll": "xxl",
+                "paddingAll": "lg",
+                "backgroundColor": "#FDFBF7",
                 "action": {
                     "type": "postback",
                     "data": f"action=speed_rate_genre&genre_id={genre_id}"
@@ -470,7 +471,8 @@ def get_speed_rate_genres_flex(genres_subset):
                     "wrap": True
                 }
             ],
-            "paddingAll": "xxl",
+            "paddingAll": "lg",
+            "backgroundColor": "#FFF5F5",
             "action": {
                 "type": "postback",
                 "data": "action=speed_rate_genre&genre_id=popular"
@@ -522,7 +524,7 @@ def get_speed_rate_movies_carousel_flex(movies_data, genre_id):
                     {
                         "type": "button",
                         "style": "primary",
-                        "color": "#1DB446",
+                        "color": "#6C5CE7",
                         "action": {
                             "type": "postback",
                             "label": "我要評分！",
