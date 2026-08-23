@@ -496,7 +496,7 @@ def get_speed_rate_movies_carousel_flex(movies_data, genre_id):
         
         bubble = {
             "type": "bubble",
-            "size": "mega",
+            "size": "kilo",
             "hero": {
                 "type": "image",
                 "url": poster,
@@ -539,7 +539,7 @@ def get_speed_rate_movies_carousel_flex(movies_data, genre_id):
     # 新增「換一換 / 結束」的卡片
     more_bubble = {
         "type": "bubble",
-        "size": "mega",
+        "size": "kilo",
         "body": {
             "type": "box",
             "layout": "vertical",
@@ -798,7 +798,7 @@ def get_speed_rate_score_flex(movie_title, genre_id):
                             "color": "#FFD700",
                             "action": {
                                 "type": "postback",
-                                "label": "1星",
+                                "label": "1",
                                 "data": f"action=speed_rate_score&score=1&title={movie_title}&genre_id={genre_id}"
                             }
                         },
@@ -808,7 +808,7 @@ def get_speed_rate_score_flex(movie_title, genre_id):
                             "color": "#FFD700",
                             "action": {
                                 "type": "postback",
-                                "label": "2星",
+                                "label": "2",
                                 "data": f"action=speed_rate_score&score=2&title={movie_title}&genre_id={genre_id}"
                             }
                         },
@@ -818,25 +818,17 @@ def get_speed_rate_score_flex(movie_title, genre_id):
                             "color": "#FFD700",
                             "action": {
                                 "type": "postback",
-                                "label": "3星",
+                                "label": "3",
                                 "data": f"action=speed_rate_score&score=3&title={movie_title}&genre_id={genre_id}"
                             }
-                        }
-                    ]
-                },
-                {
-                    "type": "box",
-                    "layout": "horizontal",
-                    "margin": "sm",
-                    "spacing": "sm",
-                    "contents": [
+                        },
                         {
                             "type": "button",
                             "style": "primary",
                             "color": "#FFD700",
                             "action": {
                                 "type": "postback",
-                                "label": "4星",
+                                "label": "4",
                                 "data": f"action=speed_rate_score&score=4&title={movie_title}&genre_id={genre_id}"
                             }
                         },
@@ -846,7 +838,7 @@ def get_speed_rate_score_flex(movie_title, genre_id):
                             "color": "#FFD700",
                             "action": {
                                 "type": "postback",
-                                "label": "5星",
+                                "label": "5",
                                 "data": f"action=speed_rate_score&score=5&title={movie_title}&genre_id={genre_id}"
                             }
                         }
