@@ -46,8 +46,13 @@ def fetch_movie_genres(movie_title):
             data = json.loads(response.read().decode('utf-8'))
             
             if data.get('results') and len(data['results']) > 0:
-                first_result = data['results'][0]
-                genre_ids = first_result.get('genre_ids', [])
+                best_match = data['results'][0]
+                for result in data['results']:
+                    if result.get('title') == movie_title or result.get('original_title') == movie_title:
+                        best_match = result
+                        break
+                        
+                genre_ids = best_match.get('genre_ids', [])
                 
                 # Map genre IDs to names
                 genres = [GENRE_MAP[gid] for gid in genre_ids if gid in GENRE_MAP]
@@ -79,16 +84,21 @@ def fetch_movie_metadata(movie_title):
             data = json.loads(response.read().decode('utf-8'))
             
             if data.get('results') and len(data['results']) > 0:
-                first_result = data['results'][0]
-                genre_ids = first_result.get('genre_ids', [])
+                best_match = data['results'][0]
+                for result in data['results']:
+                    if result.get('title') == movie_title or result.get('original_title') == movie_title:
+                        best_match = result
+                        break
+
+                genre_ids = best_match.get('genre_ids', [])
                 genres = [GENRE_MAP[gid] for gid in genre_ids if gid in GENRE_MAP][:5]
                 
-                poster_path = first_result.get('poster_path')
+                poster_path = best_match.get('poster_path')
                 poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
                 
                 return {
-                    'tmdb_id': first_result.get('id'),
-                    'original_title': first_result.get('original_title'),
+                    'tmdb_id': best_match.get('id'),
+                    'original_title': best_match.get('original_title'),
                     'genres': genres,
                     'poster_url': poster_url,
                 }
