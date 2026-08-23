@@ -308,7 +308,11 @@ def handle_message(event):
         try:
             # 把輸入的文字當作 keyword 進行查詢
             keyword = text.strip()
-            reviews = Review.objects.filter(movie__title__icontains=keyword, is_deleted=False).order_by('-created_at')[:5]
+            from django.db.models import Q
+            reviews = Review.objects.filter(
+                Q(movie__title__icontains=keyword) | Q(movie__original_title__icontains=keyword), 
+                is_deleted=False
+            ).order_by('-created_at')[:5]
             
             if not reviews:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"找不到關於「{keyword}」的心得。"))
@@ -338,7 +342,11 @@ def handle_message(event):
     if text.startswith('查 ') or text.startswith('搜尋 '):
         try:
             keyword = text.split(' ', 1)[1].strip()
-            reviews = Review.objects.filter(movie__title__icontains=keyword, is_deleted=False).order_by('-created_at')[:5]
+            from django.db.models import Q
+            reviews = Review.objects.filter(
+                Q(movie__title__icontains=keyword) | Q(movie__original_title__icontains=keyword), 
+                is_deleted=False
+            ).order_by('-created_at')[:5]
             
             if not reviews:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"找不到關於「{keyword}」的心得。"))
