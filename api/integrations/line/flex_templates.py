@@ -492,7 +492,7 @@ def get_speed_rate_movies_carousel_flex(movies_data, genre_id):
     
     for movie_data in movies_data:
         title = movie_data.get('title', '未知電影')
-        poster = movie_data.get('poster_url') or "https://via.placeholder.com/500x750?text=No+Poster"
+        poster = movie_data.get('poster_url') or "https://raw.githubusercontent.com/YaodeChiang4181/Movie-reflection-sharing-project/main/no_poster.png"
         
         bubble = {
             "type": "bubble",
@@ -513,7 +513,8 @@ def get_speed_rate_movies_carousel_flex(movies_data, genre_id):
                         "text": title,
                         "weight": "bold",
                         "size": "xl",
-                        "wrap": True
+                        "wrap": True,
+                        "maxLines": 2
                     }
                 ]
             },
