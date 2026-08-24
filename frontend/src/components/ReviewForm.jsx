@@ -23,6 +23,9 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
   const [showDropdown, setShowDropdown] = useState(false);
   const searchTimeout = useRef(null);
   const dropdownRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  const PRESET_TAGS = ['院線熱映', '二刷', '神作'];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -246,10 +249,17 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
           {/* Step 3: Textarea */}
           <div className={styles.section}>
             <textarea
+              ref={textareaRef}
               className={styles.largeTextarea}
               placeholder="分享你對這部電影最真實的感受..."
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value);
+                if (textareaRef.current) {
+                  textareaRef.current.style.height = '140px';
+                  textareaRef.current.style.height = `${Math.max(140, textareaRef.current.scrollHeight)}px`;
+                }
+              }}
               disabled={isSubmitting}
             />
             <div className={styles.wordCount}>{content.length} / 1000 字</div>
@@ -265,16 +275,25 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                     <button type="button" onClick={() => removeTag(tag)}><X size={12}/></button>
                   </span>
                 ))}
-                <input 
-                  type="text"
-                  className={styles.tagInput}
-                  placeholder="+ 新增標籤..."
-                  value={tagInputText}
-                  onChange={(e) => setTagInputText(e.target.value)}
-                  onKeyDown={handleTagInputKeyDown}
-                  onBlur={() => addTag(tagInputText)}
-                  disabled={isSubmitting}
-                />
+                <div className={styles.tagInputWrapper}>
+                  <input 
+                    type="text"
+                    className={styles.tagInput}
+                    placeholder="＋ 新增標籤"
+                    value={tagInputText}
+                    onChange={(e) => setTagInputText(e.target.value)}
+                    onKeyDown={handleTagInputKeyDown}
+                    onBlur={() => addTag(tagInputText)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+              <div className={styles.presetTagsContainer}>
+                {PRESET_TAGS.filter(t => !tags.includes(t)).map(tag => (
+                  <button type="button" key={tag} className={styles.presetTagBtn} onClick={() => addTag(tag)}>
+                    +#{tag}
+                  </button>
+                ))}
               </div>
             </div>
             
