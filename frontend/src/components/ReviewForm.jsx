@@ -1,13 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Star, Search, Loader2 } from 'lucide-react';
+import { X, Star, Search, Loader2, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import api from '../api/axios';
 import styles from './ReviewForm.module.css';
 
 function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovieTitle = '' }) {
   const [content, setContent] = useState(initialData?.content || '');
   const [movieTitle, setMovieTitle] = useState(initialData?.movie?.title || prefilledMovieTitle);
+  const [selectedMovie, setSelectedMovie] = useState(initialData?.movie || null);
   const [selectedTmdbId, setSelectedTmdbId] = useState(initialData?.movie?.tmdb_id || null);
-  const [tagsInput, setTagsInput] = useState(initialData?.tags?.map(t => '#' + t.name).join('; ') || '');
+  
+  const [tags, setTags] = useState(initialData?.tags?.map(t => t.name) || []);
+  const [tagInputText, setTagInputText] = useState('');
+  
+  const [isSpoiler, setIsSpoiler] = useState(initialData?.is_spoiler || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [rating, setRating] = useState(initialData?.rating || 5);
@@ -32,14 +37,13 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
   const handleMovieTitleChange = (e) => {
     const val = e.target.value;
     setMovieTitle(val);
-    setSelectedTmdbId(null);
     
     if (val.trim().length >= 1) {
       if (searchTimeout.current) clearTimeout(searchTimeout.current);
       searchTimeout.current = setTimeout(async () => {
         setIsSearching(true);
         try {
-          const res = await api.get(`movies/search_tmdb/?q=${encodeURIComponent(val)}`);
+          const res = await api.get(movies/search_tmdb/?q=);
           setSearchResults(res.data);
           setShowDropdown(true);
         } catch (err) {
@@ -55,38 +59,45 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
   };
 
   const handleSelectMovie = (movie) => {
+    setSelectedMovie(movie);
     setMovieTitle(movie.title);
     setSelectedTmdbId(movie.tmdb_id);
     setShowDropdown(false);
   };
 
+  const handleChangeMovie = () => {
+    setSelectedMovie(null);
+    setSelectedTmdbId(null);
+    setMovieTitle('');
+  };
 
+  const handleTagInputKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === ',') {
+      e.preventDefault();
+      addTag(tagInputText);
+    }
+  };
+
+  const addTag = (val) => {
+    let cleanTag = val.replace(/[\s;#,]/g, '');
+    if (cleanTag && !tags.includes(cleanTag)) {
+      setTags([...tags, cleanTag]);
+    }
+    setTagInputText('');
+  };
+
+  const removeTag = (tagToRemove) => {
+    setTags(tags.filter(t => t !== tagToRemove));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // å…è¨±ç„¡å…§å®¹çš„ç°¡æ˜“è©•åˆ†è²¼æ–‡
-    // if (!content.trim()) return setError('è«‹å¡«å¯«å¿ƒå¾—å…§å®¹');
-    if (!movieTitle.trim()) return setError('è«‹å¡«å¯«é›»å½±åç¨±');
+    if (!movieTitle.trim() && !selectedMovie) return setError('½Ğ¶ñ¼g©Î¿ï¾Ü¹q¼v¦WºÙ');
 
-    // è§£æ Hashtags (ç”¨ # åˆ‡å‰²ä¸¦ç§»é™¤ç©ºç™½å’Œåˆ†è™Ÿ)
-    let parsedTags = [];
-    if (tagsInput.trim()) {
-      const rawTags = tagsInput.includes('#') ? tagsInput.split('#') : [tagsInput];
-      rawTags.forEach(rawTag => {
-        const cleanedTag = rawTag.replace(/[\s;]/g, '');
-        if (cleanedTag && !parsedTags.includes(cleanedTag)) {
-          parsedTags.push(cleanedTag);
-        }
-      });
-      if (parsedTags.length === 0 && tagsInput.replace(/[\s;]/g, '').length > 0) {
-        return setError('è«‹ä½¿ç”¨ # ä¾†æ¨™è¨˜æ¨™ç±¤ (ä¾‹å¦‚: #ç¥ä½œ #å‹•ä½œç‰‡)');
-      }
-    }
-
-    // å°‡é›»å½±åç¨±è‡ªå‹•åŠ å…¥ Hashtag
-    const movieTag = movieTitle.trim();
-    if (!parsedTags.includes(movieTag)) {
-      parsedTags.push(movieTag);
+    const movieTag = (selectedMovie ? selectedMovie.title : movieTitle).trim();
+    let finalTags = [...tags];
+    if (!finalTags.includes(movieTag)) {
+      finalTags.push(movieTag);
     }
 
     setIsSubmitting(true);
@@ -94,11 +105,11 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
 
     try {
       const payload = {
-        movie_title: movieTitle.trim(),
+        movie_title: movieTag,
         content: content,
         rating: rating,
-        tag_names: parsedTags,
-        is_spoiler: false
+        tag_names: finalTags,
+        is_spoiler: isSpoiler
       };
       
       if (selectedTmdbId) {
@@ -107,12 +118,11 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
       
       let response;
       if (initialData) {
-        response = await api.patch(`reviews/${initialData.id}/`, payload);
+        response = await api.patch(eviews//, payload);
       } else {
         response = await api.post('reviews/', payload);
       }
       
-      // è‹¥ API å‘¼å«æˆåŠŸï¼Œå°±ç›´æ¥é—œé–‰è¦–çª—ï¼Œé¿å…å¾ŒçºŒ UI callback éŒ¯èª¤å°è‡´ä½¿ç”¨è€…èª¤ä»¥ç‚ºç™¼æ–‡å¤±æ•—
       try {
         if (onReviewAdded) {
           onReviewAdded(response.data, !!initialData);
@@ -125,10 +135,10 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) {
-        setError('è«‹å…ˆç™»å…¥å¾Œå†ç™¼å¸ƒå¿ƒå¾—ï¼');
+        setError('½Ğ¥ıµn¤J«á¦Aµo¥¬¤ß±o¡I');
       } else {
         const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
-        setError(`ç™¼å¸ƒå¤±æ•—ï¼Œè«‹ç¨å¾Œå†è©¦ã€‚éŒ¯èª¤è¨Šæ¯: ${errorMsg}`);
+        setError(µo¥¬¥¢±Ñ¡A½Ğµy«á¦A¸Õ¡C¿ù»~°T®§: );
       }
     } finally {
       setIsSubmitting(false);
@@ -139,104 +149,157 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
     <div className={styles.formOverlay}>
       <div className={styles.formContainer}>
         <button className={styles.closeBtn} onClick={onClose}><X size={24} /></button>
-
-        {error && <div className="errorBox">{error}</div>}
+        <h2 className={styles.modalTitle}>{initialData ? '½s¿è¹q¼v¤ß±o' : '¼¶¼g¹q¼v¤ß±o'}</h2>
+        
+        {error && <div className={styles.errorBox}>{error}</div>}
 
         <form onSubmit={handleSubmit} className={styles.formBody}>
-          <div className={styles.formGroupTop}>
-            <label className={styles.mainLabel}>{initialData ? 'ç·¨è¼¯é›»å½±å¿ƒå¾—ï¼š' : 'æ’°å¯«é›»å½±å¿ƒå¾—ï¼š'}</label>
+          {/* Step 1 & 2: Movie Selection and Rating */}
+          <div className={styles.section}>
+            {!selectedMovie ? (
+              <div className={styles.autocompleteContainer} ref={dropdownRef}>
+                <div className={styles.inputWrapper}>
+                  <Search size={18} className={styles.inputIconLeft} />
+                  <input 
+                    type="text"
+                    className={${styles.customInput} } 
+                    value={movieTitle}
+                    onChange={handleMovieTitleChange}
+                    placeholder="¿é¤J¹q¼v¦WºÙ·j´M..."
+                    disabled={isSubmitting}
+                  />
+                  {isSearching && <Loader2 className={styles.searchIcon} size={18} />}
+                </div>
+                {showDropdown && searchResults.length > 0 && (
+                  <div className={styles.dropdownMenu}>
+                    {searchResults.map((movie) => (
+                      <div key={movie.tmdb_id} className={styles.dropdownItem} onClick={() => handleSelectMovie(movie)}>
+                        {movie.poster_url ? (
+                          <img src={movie.poster_url} alt="poster" className={styles.dropdownPoster} />
+                        ) : (
+                          <div className={styles.dropdownPosterPlaceholder}><ImageIcon size={16}/></div>
+                        )}
+                        <div className={styles.dropdownInfo}>
+                          <div className={styles.dropdownTitle}>{movie.title}</div>
+                          <div className={styles.dropdownMeta}>{movie.original_title} ({movie.year})</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className={styles.moviePreviewCard}>
+                <div className={styles.previewLeft}>
+                  {selectedMovie.poster_url ? (
+                    <img src={selectedMovie.poster_url} alt="poster" className={styles.previewPoster} />
+                  ) : (
+                    <div className={styles.previewPosterPlaceholder}><ImageIcon size={24}/></div>
+                  )}
+                  <div className={styles.previewInfo}>
+                    <div className={styles.previewTitle}>
+                      {selectedMovie.title} {selectedMovie.year ? () : ''}
+                    </div>
+                    
+                    <div className={styles.starRating}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          size={24}
+                          fill={(hoverRating || rating) >= star ? '#F59E0B' : 'none'}
+                          color={(hoverRating || rating) >= star ? '#F59E0B' : 'rgba(255,255,255,0.2)'}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => setRating(star)}
+                          style={{ transition: 'all 0.2s ease', outline: 'none', cursor: 'pointer' }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <button type="button" className={styles.changeMovieBtn} onClick={handleChangeMovie}>
+                  §ó´«¹q¼v
+                </button>
+              </div>
+            )}
+            
+            {/* Show standalone rating if movie is not selected yet */}
+            {!selectedMovie && (
+              <div className={styles.starRating} style={{ marginTop: '8px', paddingLeft: '4px' }}>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginRight: '8px', display: 'flex', alignItems: 'center' }}>±ÀÂË«ü¼Æ:</span>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={24}
+                    fill={(hoverRating || rating) >= star ? '#F59E0B' : 'none'}
+                    color={(hoverRating || rating) >= star ? '#F59E0B' : 'rgba(255,255,255,0.2)'}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    onClick={() => setRating(star)}
+                    style={{ transition: 'all 0.2s ease', outline: 'none', cursor: 'pointer' }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Step 3: Textarea */}
+          <div className={styles.section}>
             <textarea
               className={styles.largeTextarea}
-              placeholder="åˆ†äº«ä½ å°é€™éƒ¨é›»å½±æœ€çœŸå¯¦çš„æ„Ÿå—..."
+              placeholder="¤À¨É§A¹ï³o³¡¹q¼v³Ì¯u¹êªº·P¨ü..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               disabled={isSubmitting}
             />
+            <div className={styles.wordCount}>{content.length} / 1000 ¦r</div>
           </div>
 
-          <div className={styles.formGroupInline}>
-            <label>é›»å½±åç¨±ï¼š</label>
-            <div className={styles.autocompleteContainer} ref={dropdownRef}>
-              <div className={styles.inputWrapper}>
+          {/* Step 4: Hashtags & Spoiler */}
+          <div className={styles.sectionFooter}>
+            <div className={styles.tagSection}>
+              <div className={styles.tagChips}>
+                {tags.map(tag => (
+                  <span key={tag} className={styles.tagChip}>
+                    #{tag}
+                    <button type="button" onClick={() => removeTag(tag)}><X size={12}/></button>
+                  </span>
+                ))}
                 <input 
                   type="text"
-                  className={styles.customInput} 
-                  value={movieTitle}
-                  onChange={handleMovieTitleChange}
-                  placeholder="è¼¸å…¥é›»å½±åç¨±æœå°‹..."
+                  className={styles.tagInput}
+                  placeholder="+ ·s¼W¼ĞÅÒ..."
+                  value={tagInputText}
+                  onChange={(e) => setTagInputText(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                  onBlur={() => addTag(tagInputText)}
                   disabled={isSubmitting}
                 />
-                {isSearching && <Loader2 className={styles.searchIcon} size={18} />}
-                {!isSearching && selectedTmdbId && <div className={styles.successBadge}>å·²ç¶å®š</div>}
               </div>
-              
-              {showDropdown && searchResults.length > 0 && (
-                <div className={styles.dropdownMenu}>
-                  {searchResults.map((movie) => (
-                    <div 
-                      key={movie.tmdb_id} 
-                      className={styles.dropdownItem}
-                      onClick={() => handleSelectMovie(movie)}
-                    >
-                      {movie.poster_url ? (
-                        <img src={movie.poster_url} alt="poster" className={styles.dropdownPoster} />
-                      ) : (
-                        <div className={styles.dropdownPosterPlaceholder}>ç„¡</div>
-                      )}
-                      <div className={styles.dropdownInfo}>
-                        <div className={styles.dropdownTitle}>{movie.title}</div>
-                        <div className={styles.dropdownMeta}>
-                          {movie.original_title} ({movie.year})
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-          </div>
-
-          <div className={styles.formGroupInline}>
-            <label>æ¨è–¦æŒ‡æ•¸ï¼š</label>
-            <div style={{ display: 'flex', gap: '8px', cursor: 'pointer', padding: '10px 0' }}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  size={24}
-                  fill={(hoverRating || rating) >= star ? 'var(--accent-primary)' : 'none'}
-                  color={(hoverRating || rating) >= star ? 'var(--accent-primary)' : 'var(--text-muted)'}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  onClick={() => setRating(star)}
-                  style={{ transition: 'all 0.2s ease', outline: 'none' }}
+            
+            <label className={styles.spoilerToggleLabel}>
+              <div className={${styles.toggleSwitch} }>
+                <input 
+                  type="checkbox" 
+                  checked={isSpoiler} 
+                  onChange={(e) => setIsSpoiler(e.target.checked)}
+                  hidden
                 />
-              ))}
-            </div>
+                <div className={styles.toggleKnob}></div>
+              </div>
+              <span className={isSpoiler ? styles.spoilerTextOn : styles.spoilerTextOff}>
+                <AlertTriangle size={16} /> ¥»¤å§t¦³¼@³z / Ãz¹p¤º®e
+              </span>
+            </label>
           </div>
 
-          <div className={styles.formGroupInline}>
-            <label>Hashtag æ¨™ç±¤ï¼š</label>
-            <input 
-              type="text"
-              className={styles.customInput} 
-              placeholder="(è«‹ä»¥ # é–‹é ­ï¼Œä¾‹å¦‚ï¼š#å‹•ä½œç‰‡ #å¥½é›·,å¿…çœ‹)"
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-              disabled={isSubmitting}
-            />
+          {/* Step 5: Submit */}
+          <div className={styles.submitSection}>
+            <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+              {isSubmitting ? (initialData ? '§ó·s¤¤...' : 'µo¥¬¤¤...') : (initialData ? 'Àx¦sÅÜ§ó' : 'µo¥¬¤ß±o')}
+            </button>
           </div>
-
-          <button 
-            type="submit" 
-            className={`btn-primary ${styles.submitBtn}`}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (initialData ? 'æ›´æ–°ä¸­...' : 'ç™¼å¸ƒä¸­...') : (
-              <>
-                <Send size={18} /> {initialData ? 'å„²å­˜è®Šæ›´' : 'ç™¼å¸ƒå¿ƒå¾—'}
-              </>
-            )}
-          </button>
         </form>
       </div>
     </div>
