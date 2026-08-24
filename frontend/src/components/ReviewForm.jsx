@@ -43,7 +43,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
       searchTimeout.current = setTimeout(async () => {
         setIsSearching(true);
         try {
-          const res = await api.get(movies/search_tmdb/?q=);
+          const res = await api.get(`movies/search_tmdb/?q=${encodeURIComponent(val)}`);
           setSearchResults(res.data);
           setShowDropdown(true);
         } catch (err) {
@@ -118,7 +118,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
       
       let response;
       if (initialData) {
-        response = await api.patch(eviews//, payload);
+        response = await api.patch(`reviews/${initialData.id}/`, payload);
       } else {
         response = await api.post('reviews/', payload);
       }
@@ -138,7 +138,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
         setError('請先登入後再發布心得！');
       } else {
         const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
-        setError(發布失敗，請稍後再試。錯誤訊息: );
+        setError(`發布失敗，請稍後再試。錯誤訊息: ${errorMsg}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -162,7 +162,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                   <Search size={18} className={styles.inputIconLeft} />
                   <input 
                     type="text"
-                    className={${styles.customInput} } 
+                    className={`${styles.customInput} ${styles.searchInput}`} 
                     value={movieTitle}
                     onChange={handleMovieTitleChange}
                     placeholder="輸入電影名稱搜尋..."
@@ -198,7 +198,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                   )}
                   <div className={styles.previewInfo}>
                     <div className={styles.previewTitle}>
-                      {selectedMovie.title} {selectedMovie.year ? () : ''}
+                      {selectedMovie.title} {selectedMovie.year ? `(${selectedMovie.year})` : ''}
                     </div>
                     
                     <div className={styles.starRating}>
@@ -279,7 +279,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
             </div>
             
             <label className={styles.spoilerToggleLabel}>
-              <div className={${styles.toggleSwitch} }>
+              <div className={`${styles.toggleSwitch} ${isSpoiler ? styles.toggleOn : ''}`}>
                 <input 
                   type="checkbox" 
                   checked={isSpoiler} 
