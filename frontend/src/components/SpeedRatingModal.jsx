@@ -26,6 +26,29 @@ const SpeedRatingModal = ({ onClose }) => {
     fetchMovies();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (isSubmitting || !movies[currentIndex]) return;
+      if (['1', '2', '3', '4', '5'].includes(e.key)) {
+        handleRate(parseInt(e.key));
+      } else if (e.key === ' ' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleSkip();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentIndex, isSubmitting, movies]);
+
+  const handleSkip = () => {
+    if (currentIndex < movies.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setHoveredStar(0);
+    } else {
+      onClose();
+    }
+  };
+
   const handleRate = async (rating) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -61,7 +84,7 @@ const SpeedRatingModal = ({ onClose }) => {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1000, backdropFilter: 'blur(10px)', padding: '20px' }}>
-      <div className="glass" style={{ position: 'relative', width: '100%', maxWidth: '400px', maxHeight: '88vh', overflowY: 'auto', padding: '28px 20px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', animation: 'scaleIn 0.3s ease' }}>
+      <div className="glass" style={{ position: 'relative', width: '100%', maxWidth: '400px', height: '85vh', maxHeight: '540px', overflow: 'hidden', padding: '24px 20px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', animation: 'scaleIn 0.3s ease' }}>
         <button onClick={onClose} style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-secondary)' }}>
           <X size={24} />
         </button>
@@ -75,13 +98,13 @@ const SpeedRatingModal = ({ onClose }) => {
           <p style={{ color: 'var(--text-secondary)', margin: '40px 0' }}>尋找熱門電影中...</p>
         ) : currentMovie ? (
           <>
-            <h3 style={{ marginBottom: '24px', fontSize: '1.5rem', minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <h3 style={{ marginBottom: '16px', fontSize: '1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {currentMovie.title}
             </h3>
             
-            <div style={{ marginBottom: '32px', position: 'relative' }}>
+            <div style={{ marginBottom: '20px', position: 'relative' }}>
               <div style={{ transition: 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease', transform: isSubmitting ? 'scale(0.8) translateY(-20px)' : 'scale(1)', opacity: isSubmitting ? 0 : 1 }}>
-                <TmdbPoster title={currentMovie.title} style={{ width: '180px', height: '270px', borderRadius: '16px', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }} />
+                <TmdbPoster title={currentMovie.title} style={{ width: '146px', height: '220px', borderRadius: '12px', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }} />
               </div>
               
               {isSubmitting && (
@@ -103,29 +126,24 @@ const SpeedRatingModal = ({ onClose }) => {
                 >
                   <Star 
                     size={36} 
-                    color={hoveredStar >= star ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)'}
+                    color={hoveredStar >= star ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.35)'}
                     fill={hoveredStar >= star ? 'var(--accent-primary)' : 'none'}
+                    style={{ filter: hoveredStar >= star ? 'drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))' : 'none', transition: 'all 0.2s' }}
                   />
                 </button>
               ))}
             </div>
-            <p style={{ marginTop: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              點擊星星即可快速送出
+            <p style={{ marginTop: '12px', marginBottom: '8px', color: '#64748B', fontSize: '12px' }}>
+              點擊星星即可快速送出（支援快捷鍵 1~5）
             </p>
             
             <button 
-              onClick={() => {
-                if (currentIndex < movies.length - 1) {
-                  setCurrentIndex(prev => prev + 1);
-                  setHoveredStar(0);
-                } else {
-                  onClose();
-                }
-              }}
-              style={{ marginTop: '24px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.95rem' }}
-              className="btn-outline"
+              onClick={handleSkip}
+              style={{ background: 'transparent', border: 'none', color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem', cursor: 'pointer', padding: '6px 12px', transition: 'color 0.2s' }}
+              onMouseEnter={(e) => e.target.style.color = '#94A3B8'}
+              onMouseLeave={(e) => e.target.style.color = '#64748B'}
             >
-              沒看過，跳過 <ChevronRight size={16} />
+              沒看過，跳過 <ChevronRight size={16} style={{ pointerEvents: 'none' }} />
             </button>
           </>
         ) : (
