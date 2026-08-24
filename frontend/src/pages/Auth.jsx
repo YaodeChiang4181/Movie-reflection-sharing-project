@@ -152,13 +152,27 @@ function Auth() {
   const handleLineLogin = async () => {
     try {
       if (window.liff && import.meta.env.VITE_LIFF_ID) {
-        if (!window.liff.isLoggedIn()) {
-          // 初始化 LIFF
+        try {
           await window.liff.init({ liffId: import.meta.env.VITE_LIFF_ID });
+        } catch (initErr) {
+          console.warn("LIFF init warning:", initErr);
+        }
+
+        if (!window.liff.isLoggedIn()) {
           // 導向至 LINE 登入頁面 (登入後會回到當前網址 /auth)
           window.liff.login({ redirectUri: window.location.href }); 
         } else {
-           alert('已經使用 LINE 登入了');
+          // 已經登入 LINE，但尚未登入系統，嘗試重新交換 Token
+          try {
+            const accessToken = window.liff.getAccessToken();
+            const res = await api.post('/auth/line-login/', { access_token: accessToken });
+            localStorage.setItem('refresh_token', res.data.refresh);
+            login(res.data.access, res.data.user);
+          } catch (apiErr) {
+            console.error('Token 交換失敗，強制重新登入 LINE', apiErr);
+            window.liff.logout();
+            window.liff.login({ redirectUri: window.location.href });
+          }
         }
       } else {
         alert('未配置 LINE 登入 (LIFF ID 缺失)');
