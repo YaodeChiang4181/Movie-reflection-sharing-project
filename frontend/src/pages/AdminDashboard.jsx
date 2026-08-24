@@ -24,6 +24,11 @@ function AdminDashboard() {
   // Stats state
   const [stats, setStats] = useState(null);
 
+  // System Tools states
+  const [ghostId, setGhostId] = useState('');
+  const [targetId, setTargetId] = useState('');
+  const [isToolRunning, setIsToolRunning] = useState(false);
+
   useEffect(() => {
     if (!isLoggedIn || !userProfile?.is_staff) {
       navigate('/');
@@ -152,6 +157,40 @@ function AdminDashboard() {
     }
   };
 
+  const handleMergeGhost = async (e) => {
+    e.preventDefault();
+    if (!ghostId || !targetId) return;
+    if (!window.confirm(`確定要將幽靈帳號 ${ghostId} 的所有資料合併到 ${targetId} 嗎？此操作無法復原！`)) return;
+    
+    setIsToolRunning(true);
+    try {
+      const res = await api.post('auth/merge-ghost/', { ghost_id: ghostId, target_id: targetId });
+      alert(`合併成功！\n轉移心得: ${res.data.merged_reviews}\n轉移留言: ${res.data.merged_comments}\n轉移揪團: ${res.data.merged_events}`);
+      setGhostId('');
+      setTargetId('');
+      fetchStats();
+    } catch (err) {
+      alert(`合併失敗: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setIsToolRunning(false);
+    }
+  };
+
+  const handleRecalculateExp = async () => {
+    if (!window.confirm('確定要重新計算全站使用者的經驗值嗎？這可能會花費一些時間。')) return;
+    
+    setIsToolRunning(true);
+    try {
+      const res = await api.post('auth/recalculate-exp/');
+      alert(`重新計算成功！共更新了 ${res.data.updated_users} 位使用者的經驗值。`);
+      fetchStats();
+    } catch (err) {
+      alert(`重新計算失敗: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setIsToolRunning(false);
+    }
+  };
+
   if (loading) return <div className={styles.container}>載入中...</div>;
 
   return (
@@ -234,6 +273,54 @@ function AdminDashboard() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className={`glass ${styles.card}`} style={{ marginBottom: '40px' }}>
+        <div className={styles.cardHeader}>
+          <ShieldAlert size={20} />
+          <h2>系統維護工具 (System Tools)</h2>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '20px' }}>
+          {/* Merge Ghost Account */}
+          <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h3 style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', margin: '0 0 15px 0' }}>合併幽靈帳號</h3>
+            <form onSubmit={handleMergeGhost} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                type="text"
+                placeholder="幽靈帳號 ID (被合併者)"
+                value={ghostId}
+                onChange={(e) => setGhostId(e.target.value)}
+                className={styles.formInput}
+                required
+                disabled={isToolRunning}
+              />
+              <input
+                type="text"
+                placeholder="目標帳號 ID (接收者)"
+                value={targetId}
+                onChange={(e) => setTargetId(e.target.value)}
+                className={styles.formInput}
+                required
+                disabled={isToolRunning}
+              />
+              <button type="submit" className={styles.submitBtn} disabled={isToolRunning} style={{ background: '#ef4444' }}>
+                {isToolRunning ? '處理中...' : '執行合併'}
+              </button>
+            </form>
+          </div>
+
+          {/* Recalculate EXP */}
+          <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <h3 style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', margin: '0 0 15px 0' }}>重新計算全站經驗值</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '15px' }}>
+              如果系統的經驗值規則有變更，或者發生資料不一致的問題，您可以點擊下方按鈕，系統會重新掃描所有文章並校正每位用戶的經驗值與等級。
+            </p>
+            <button onClick={handleRecalculateExp} className={styles.submitBtn} disabled={isToolRunning} style={{ background: '#10b981' }}>
+              {isToolRunning ? '處理中...' : <><RefreshCw size={16} style={{display:'inline', marginRight:'6px', verticalAlign:'text-bottom'}}/>一鍵重新校正</>}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className={`glass ${styles.card}`} style={{ marginBottom: '40px' }}>

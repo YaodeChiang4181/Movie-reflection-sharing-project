@@ -243,15 +243,11 @@ class GoogleLoginView(APIView):
         })
 
 class MergeGhostAccountView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = [IsAdminUser]
     
-    def get(self, request):
-        secret = request.query_params.get('secret')
-        if secret != 'movie123':
-            return Response({'error': 'Unauthorized'}, status=403)
-            
-        ghost_id = request.query_params.get('ghost_id')
-        target_id = request.query_params.get('target_id')
+    def post(self, request):
+        ghost_id = request.data.get('ghost_id')
+        target_id = request.data.get('target_id')
         
         if not ghost_id or not target_id:
             return Response({'error': 'Missing ghost_id or target_id'}, status=400)
@@ -299,13 +295,9 @@ class MergeGhostAccountView(APIView):
             return Response({'error': str(e)}, status=500)
 
 class RecalculateExpView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = [IsAdminUser]
     
-    def get(self, request):
-        secret = request.query_params.get('secret')
-        if secret != 'movie123':
-            return Response({'error': 'Unauthorized'}, status=403)
-            
+    def post(self, request):
         try:
             from api.models import User, Review, Comment, Vote, UserExperience
             from api.domains.gamification.services import add_user_experience
