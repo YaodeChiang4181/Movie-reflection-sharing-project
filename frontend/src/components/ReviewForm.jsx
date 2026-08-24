@@ -60,10 +60,16 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
         response = await api.post('reviews/', payload);
       }
       
-      if (onReviewAdded) {
-        onReviewAdded(response.data, !!initialData);
+      // 若 API 呼叫成功，就直接關閉視窗，避免後續 UI callback 錯誤導致使用者誤以為發文失敗
+      try {
+        if (onReviewAdded) {
+          onReviewAdded(response.data, !!initialData);
+        }
+      } catch (cbErr) {
+        console.error("Callback error (ignored for submission):", cbErr);
       }
       onClose();
+      
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) {
