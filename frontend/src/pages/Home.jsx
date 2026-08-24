@@ -41,7 +41,7 @@ function Home() {
 
   const handleReviewAdded = (newReview) => {
     // Refresh the list when a new review is added
-    fetchReviews();
+    fetchMovies();
   };
 
   const handleComposeClick = () => {
@@ -61,7 +61,7 @@ function Home() {
     }
     try {
       await api.post(`reviews/${reviewId}/vote/`, { vote_type: 1 });
-      fetchReviews(); // Re-fetch to update scores
+      fetchMovies(); // Re-fetch to update scores
     } catch (err) {
       console.error(err);
       alert('評價失敗，請稍後再試。');
