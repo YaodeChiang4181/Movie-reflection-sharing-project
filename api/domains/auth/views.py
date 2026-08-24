@@ -172,6 +172,76 @@ class LineLoginView(APIView):
             'user': UserMeSerializer(user).data
         })
 
+class GoogleLoginView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        access_token = request.data.get('access_token')
+        if not access_token:
+            return Response({'error': 'Missing access_token'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Verify token with Google
+        headers = {'Authorization': f'Bearer {access_token}'}
+        resp = requests.get('https://www.googleapis.com/oauth2/v3/userinfo', headers=headers)
+        if resp.status_code != 200:
+            return Response({'error': 'Invalid Google token'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        profile_data = resp.json()
+        google_user_id = profile_data.get('sub')
+        email = profile_data.get('email')
+        display_name = profile_data.get('name', 'Google User')
+        
+        if not google_user_id or not email:
+            return Response({'error': 'Could not get Google User ID or Email'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # 1. 檢查是否已經有這個 google_user_id 的帳號
+        user = User.objects.filter(google_user_id=google_user_id).first()
+        
+        if not user:
+            # 2. 如果沒有 google_user_id，檢查是否已經有這個 Email 的既有帳號
+            from api.models import UserIdentity, OutsiderIdentity
+            
+            student_identity = UserIdentity.objects.filter(school_email=email).first()
+            outsider_identity = OutsiderIdentity.objects.filter(email=email).first()
+            
+            if student_identity:
+                user = student_identity.user
+                user.google_user_id = google_user_id
+                user.save(update_fields=['google_user_id'])
+            elif outsider_identity:
+                user = outsider_identity.user
+                user.google_user_id = google_user_id
+                user.save(update_fields=['google_user_id'])
+            else:
+                # 3. 兩者都沒有，創建新的 Google 輕量帳號
+                import string
+                
+                def generate_random_campus_id():
+                    while True:
+                        cid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
+                        if not User.objects.filter(campus_id=cid).exists():
+                            return cid
+                            
+                campus_id = generate_random_campus_id()
+                user = User.objects.create(
+                    campus_id=campus_id,
+                    google_user_id=google_user_id,
+                    username=display_name
+                )
+                random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
+                from api.models import UserProfile
+                UserProfile.objects.create(user=user, nickname=random_nickname)
+                
+        # Generate JWT for the user
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserMeSerializer(user).data
+        })
+
 class MergeGhostAccountView(APIView):
     permission_classes = (AllowAny,)
     

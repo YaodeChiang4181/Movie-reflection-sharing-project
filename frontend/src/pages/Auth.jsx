@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useGoogleLogin } from '@react-oauth/google';
 import styles from './Auth.module.css';
 
 function Auth() {
@@ -168,8 +169,24 @@ function Auth() {
     }
   };
 
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const res = await api.post('/auth/google-login/', { access_token: tokenResponse.access_token });
+        localStorage.setItem('refresh_token', res.data.refresh);
+        login(res.data.access, res.data.user);
+      } catch (err) {
+        console.error('Google login error:', err);
+        setError('Gmail 登入發生錯誤或伺服器無回應');
+      }
+    },
+    onError: () => {
+      setError('Gmail 登入失敗或已取消');
+    }
+  });
+
   const handleGoogleLogin = () => {
-    alert('Google 登入功能即將推出！');
+    googleLogin();
   };
 
   return (

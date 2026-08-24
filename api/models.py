@@ -20,6 +20,9 @@ class User(AbstractUser):
     line_user_id = models.CharField(max_length=100, unique=True, null=True, blank=True, verbose_name="LINE User ID")
     line_display_name = models.CharField(max_length=100, null=True, blank=True, verbose_name="LINE 顯示名稱")
     
+    # Google 整合
+    google_user_id = models.CharField(max_length=100, unique=True, null=True, blank=True, verbose_name="Google User ID")
+    
     USERNAME_FIELD = 'campus_id'
     REQUIRED_FIELDS = []
     
