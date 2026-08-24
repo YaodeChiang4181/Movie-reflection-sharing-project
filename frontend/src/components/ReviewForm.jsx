@@ -92,7 +92,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!movieTitle.trim() && !selectedMovie) return setError('½Ğ¶ñ¼g©Î¿ï¾Ü¹q¼v¦WºÙ');
+    if (!movieTitle.trim() && !selectedMovie) return setError('è«‹å¡«å¯«æˆ–é¸æ“‡é›»å½±åç¨±');
 
     const movieTag = (selectedMovie ? selectedMovie.title : movieTitle).trim();
     let finalTags = [...tags];
@@ -135,10 +135,10 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) {
-        setError('½Ğ¥ıµn¤J«á¦Aµo¥¬¤ß±o¡I');
+        setError('è«‹å…ˆç™»å…¥å¾Œå†ç™¼å¸ƒå¿ƒå¾—ï¼');
       } else {
         const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
-        setError(µo¥¬¥¢±Ñ¡A½Ğµy«á¦A¸Õ¡C¿ù»~°T®§: );
+        setError(ç™¼å¸ƒå¤±æ•—ï¼Œè«‹ç¨å¾Œå†è©¦ã€‚éŒ¯èª¤è¨Šæ¯: );
       }
     } finally {
       setIsSubmitting(false);
@@ -149,7 +149,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
     <div className={styles.formOverlay}>
       <div className={styles.formContainer}>
         <button className={styles.closeBtn} onClick={onClose}><X size={24} /></button>
-        <h2 className={styles.modalTitle}>{initialData ? '½s¿è¹q¼v¤ß±o' : '¼¶¼g¹q¼v¤ß±o'}</h2>
+        <h2 className={styles.modalTitle}>{initialData ? 'ç·¨è¼¯é›»å½±å¿ƒå¾—' : 'æ’°å¯«é›»å½±å¿ƒå¾—'}</h2>
         
         {error && <div className={styles.errorBox}>{error}</div>}
 
@@ -165,7 +165,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                     className={${styles.customInput} } 
                     value={movieTitle}
                     onChange={handleMovieTitleChange}
-                    placeholder="¿é¤J¹q¼v¦WºÙ·j´M..."
+                    placeholder="è¼¸å…¥é›»å½±åç¨±æœå°‹..."
                     disabled={isSubmitting}
                   />
                   {isSearching && <Loader2 className={styles.searchIcon} size={18} />}
@@ -218,7 +218,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                   </div>
                 </div>
                 <button type="button" className={styles.changeMovieBtn} onClick={handleChangeMovie}>
-                  §ó´«¹q¼v
+                  æ›´æ›é›»å½±
                 </button>
               </div>
             )}
@@ -226,7 +226,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
             {/* Show standalone rating if movie is not selected yet */}
             {!selectedMovie && (
               <div className={styles.starRating} style={{ marginTop: '8px', paddingLeft: '4px' }}>
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginRight: '8px', display: 'flex', alignItems: 'center' }}>±ÀÂË«ü¼Æ:</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginRight: '8px', display: 'flex', alignItems: 'center' }}>æ¨è–¦æŒ‡æ•¸:</span>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
@@ -247,12 +247,12 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
           <div className={styles.section}>
             <textarea
               className={styles.largeTextarea}
-              placeholder="¤À¨É§A¹ï³o³¡¹q¼v³Ì¯u¹êªº·P¨ü..."
+              placeholder="åˆ†äº«ä½ å°é€™éƒ¨é›»å½±æœ€çœŸå¯¦çš„æ„Ÿå—..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               disabled={isSubmitting}
             />
-            <div className={styles.wordCount}>{content.length} / 1000 ¦r</div>
+            <div className={styles.wordCount}>{content.length} / 1000 å­—</div>
           </div>
 
           {/* Step 4: Hashtags & Spoiler */}
@@ -268,7 +268,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                 <input 
                   type="text"
                   className={styles.tagInput}
-                  placeholder="+ ·s¼W¼ĞÅÒ..."
+                  placeholder="+ æ–°å¢æ¨™ç±¤..."
                   value={tagInputText}
                   onChange={(e) => setTagInputText(e.target.value)}
                   onKeyDown={handleTagInputKeyDown}
@@ -289,7 +289,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                 <div className={styles.toggleKnob}></div>
               </div>
               <span className={isSpoiler ? styles.spoilerTextOn : styles.spoilerTextOff}>
-                <AlertTriangle size={16} /> ¥»¤å§t¦³¼@³z / Ãz¹p¤º®e
+                <AlertTriangle size={16} /> æœ¬æ–‡å«æœ‰åŠ‡é€ / çˆ†é›·å…§å®¹
               </span>
             </label>
           </div>
@@ -297,7 +297,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
           {/* Step 5: Submit */}
           <div className={styles.submitSection}>
             <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
-              {isSubmitting ? (initialData ? '§ó·s¤¤...' : 'µo¥¬¤¤...') : (initialData ? 'Àx¦sÅÜ§ó' : 'µo¥¬¤ß±o')}
+              {isSubmitting ? (initialData ? 'æ›´æ–°ä¸­...' : 'ç™¼å¸ƒä¸­...') : (initialData ? 'å„²å­˜è®Šæ›´' : 'ç™¼å¸ƒå¿ƒå¾—')}
             </button>
           </div>
         </form>
