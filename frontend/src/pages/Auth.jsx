@@ -142,6 +142,26 @@ function Auth() {
     }
   };
 
+  const handleLineLogin = async () => {
+    try {
+      if (window.liff && import.meta.env.VITE_LIFF_ID) {
+        if (!window.liff.isLoggedIn()) {
+          // 初始化 LIFF
+          await window.liff.init({ liffId: import.meta.env.VITE_LIFF_ID });
+          // 導向至 LINE 登入頁面 (登入後會回到當前網址 /auth)
+          window.liff.login({ redirectUri: window.location.href }); 
+        } else {
+           alert('已經使用 LINE 登入了');
+        }
+      } else {
+        alert('未配置 LINE 登入 (LIFF ID 缺失)');
+      }
+    } catch (err) {
+      console.error('LINE 登入錯誤:', err);
+      setError('LINE 登入發生錯誤');
+    }
+  };
+
   return (
     <div className={`container ${styles.wrapper}`}>
       <div className={`glass ${styles.authCard}`}>
@@ -320,6 +340,27 @@ function Auth() {
             {isLogin ? '登入' : '註冊'}
           </button>
         </form>
+
+        {isLogin && (
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }}></div>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>或</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }}></div>
+            </div>
+            <button
+              type="button"
+              onClick={handleLineLogin}
+              className={`btn-primary ${styles.submitBtn}`}
+              style={{ backgroundColor: '#06C755', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738S0 4.935 0 10.304c0 4.814 4.269 8.846 10.036 9.608.391.084.922.258 1.057.592.12.298.079.76.038 1.077l-.164.982c-.05.302-.236 1.152 1.011.627 1.246-.525 6.723-3.957 8.949-6.615C22.956 14.542 24 12.562 24 10.304zM6.92 13.125H4.811a.488.488 0 01-.489-.488V7.32a.488.488 0 01.489-.488h.488c.27 0 .489.219.489.488v4.83h1.621c.27 0 .489.219.489.488v.487a.488.488 0 01-.489.488zm3.567-3.901h-.489a.488.488 0 01-.488-.488V7.32a.488.488 0 01.488-.488h.489c.27 0 .488.219.488.488v1.417h1.622a.488.488 0 01.488.488v.487a.488.488 0 01-.488.488h-1.622v1.417c0 .269-.219.488-.488.488zm7.391 3.413a.488.488 0 01-.488.488h-.488a.489.489 0 01-.476-.376l-1.637-3.987v3.875a.488.488 0 01-.489.488h-.488a.488.488 0 01-.488-.488V7.32a.488.488 0 01.488-.488h.488a.489.489 0 01.476.376l1.637 3.987V7.32c0-.269.219-.488.488-.488h.489c.27 0 .488.219.488.488v5.317z" />
+              </svg>
+              LINE 登入
+            </button>
+          </div>
+        )}
 
         <p className={styles.toggleText}>
           {isLogin ? '還沒有帳號嗎？' : '已經有帳號了？'}
