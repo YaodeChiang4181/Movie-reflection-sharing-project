@@ -60,8 +60,8 @@ const SpeedRatingModal = ({ onClose }) => {
   const currentMovie = movies[currentIndex];
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1000, backdropFilter: 'blur(10px)' }}>
-      <div className="glass" style={{ position: 'relative', width: '90%', maxWidth: '400px', padding: '32px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', animation: 'scaleIn 0.3s ease' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1000, backdropFilter: 'blur(10px)', padding: '20px' }}>
+      <div className="glass" style={{ position: 'relative', width: '100%', maxWidth: '400px', maxHeight: '88vh', overflowY: 'auto', padding: '28px 20px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', animation: 'scaleIn 0.3s ease' }}>
         <button onClick={onClose} style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-secondary)' }}>
           <X size={24} />
         </button>
@@ -81,7 +81,7 @@ const SpeedRatingModal = ({ onClose }) => {
             
             <div style={{ marginBottom: '32px', position: 'relative' }}>
               <div style={{ transition: 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease', transform: isSubmitting ? 'scale(0.8) translateY(-20px)' : 'scale(1)', opacity: isSubmitting ? 0 : 1 }}>
-                <TmdbPoster title={currentMovie.title} style={{ width: '200px', height: '300px', borderRadius: '16px', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }} />
+                <TmdbPoster title={currentMovie.title} style={{ width: '180px', height: '270px', borderRadius: '16px', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }} />
               </div>
               
               {isSubmitting && (
