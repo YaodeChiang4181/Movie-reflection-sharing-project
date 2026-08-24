@@ -1,16 +1,64 @@
-import { useState } from 'react';
-import { X, Send, Star } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, Send, Star, Search, Loader2 } from 'lucide-react';
 import api from '../api/axios';
 import styles from './ReviewForm.module.css';
 
 function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovieTitle = '' }) {
   const [content, setContent] = useState(initialData?.content || '');
-  const [movieId, setMovieId] = useState(initialData?.movie?.title || prefilledMovieTitle);
+  const [movieTitle, setMovieTitle] = useState(initialData?.movie?.title || prefilledMovieTitle);
+  const [selectedTmdbId, setSelectedTmdbId] = useState(initialData?.movie?.tmdb_id || null);
   const [tagsInput, setTagsInput] = useState(initialData?.tags?.map(t => '#' + t.name).join('; ') || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [rating, setRating] = useState(initialData?.rating || 5);
   const [hoverRating, setHoverRating] = useState(0);
+
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchTimeout = useRef(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleMovieTitleChange = (e) => {
+    const val = e.target.value;
+    setMovieTitle(val);
+    setSelectedTmdbId(null);
+    
+    if (val.trim().length >= 1) {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+      searchTimeout.current = setTimeout(async () => {
+        setIsSearching(true);
+        try {
+          const res = await api.get(`movies/search_tmdb/?q=${encodeURIComponent(val)}`);
+          setSearchResults(res.data);
+          setShowDropdown(true);
+        } catch (err) {
+          console.error('Search error', err);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 500);
+    } else {
+      setSearchResults([]);
+      setShowDropdown(false);
+    }
+  };
+
+  const handleSelectMovie = (movie) => {
+    setMovieTitle(movie.title);
+    setSelectedTmdbId(movie.tmdb_id);
+    setShowDropdown(false);
+  };
 
 
 
@@ -18,7 +66,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
     e.preventDefault();
     // 允許無內容的簡易評分貼文
     // if (!content.trim()) return setError('請填寫心得內容');
-    if (!movieId.trim()) return setError('請填寫電影名稱');
+    if (!movieTitle.trim()) return setError('請填寫電影名稱');
 
     // 解析 Hashtags (用 # 切割並移除空白和分號)
     let parsedTags = [];
@@ -36,7 +84,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
     }
 
     // 將電影名稱自動加入 Hashtag
-    const movieTag = movieId.trim();
+    const movieTag = movieTitle.trim();
     if (!parsedTags.includes(movieTag)) {
       parsedTags.push(movieTag);
     }
@@ -46,12 +94,16 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
 
     try {
       const payload = {
-        movie_title: movieId.trim(),
+        movie_title: movieTitle.trim(),
         content: content,
         rating: rating,
         tag_names: parsedTags,
         is_spoiler: false
       };
+      
+      if (selectedTmdbId) {
+        payload.tmdb_id = selectedTmdbId;
+      }
       
       let response;
       if (initialData) {
@@ -104,13 +156,44 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
 
           <div className={styles.formGroupInline}>
             <label>電影名稱：</label>
-            <input 
-              type="text"
-              className={styles.customInput} 
-              value={movieId}
-              onChange={(e) => setMovieId(e.target.value)}
-              disabled={isSubmitting}
-            />
+            <div className={styles.autocompleteContainer} ref={dropdownRef}>
+              <div className={styles.inputWrapper}>
+                <input 
+                  type="text"
+                  className={styles.customInput} 
+                  value={movieTitle}
+                  onChange={handleMovieTitleChange}
+                  placeholder="輸入電影名稱搜尋..."
+                  disabled={isSubmitting}
+                />
+                {isSearching && <Loader2 className={styles.searchIcon} size={18} />}
+                {!isSearching && selectedTmdbId && <div className={styles.successBadge}>已綁定</div>}
+              </div>
+              
+              {showDropdown && searchResults.length > 0 && (
+                <div className={styles.dropdownMenu}>
+                  {searchResults.map((movie) => (
+                    <div 
+                      key={movie.tmdb_id} 
+                      className={styles.dropdownItem}
+                      onClick={() => handleSelectMovie(movie)}
+                    >
+                      {movie.poster_url ? (
+                        <img src={movie.poster_url} alt="poster" className={styles.dropdownPoster} />
+                      ) : (
+                        <div className={styles.dropdownPosterPlaceholder}>無</div>
+                      )}
+                      <div className={styles.dropdownInfo}>
+                        <div className={styles.dropdownTitle}>{movie.title}</div>
+                        <div className={styles.dropdownMeta}>
+                          {movie.original_title} ({movie.year})
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className={styles.formGroupInline}>

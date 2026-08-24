@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.db import transaction
 from api.models import Movie, Tag, Review, Vote, Comment
 from api.domains.auth.serializers import UserSerializer
-from api.utils.tmdb import fetch_movie_metadata
+from api.utils.tmdb import fetch_movie_metadata, fetch_movie_metadata_by_id
 from api.utils.text_utils import normalize_movie_title
 
 class MovieSerializer(serializers.ModelSerializer):
@@ -41,6 +41,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     tag_names = serializers.ListField(
         child=serializers.CharField(max_length=50), write_only=True, required=False
     )
+    tmdb_id = serializers.IntegerField(write_only=True, required=False)
     upvotes = serializers.IntegerField(read_only=True, required=False)
     downvotes = serializers.IntegerField(read_only=True, required=False)
     user_voted = serializers.SerializerMethodField()
@@ -48,7 +49,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Review
-        fields = ('id', 'user', 'movie', 'movie_title', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
+        fields = ('id', 'user', 'movie', 'movie_title', 'tmdb_id', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -68,9 +69,14 @@ class ReviewSerializer(serializers.ModelSerializer):
         raw_movie_title = validated_data.pop('movie_title')
         movie_title = normalize_movie_title(raw_movie_title)
         tag_names = validated_data.pop('tag_names', [])
+        tmdb_id = validated_data.pop('tmdb_id', None)
         
-        # Automatically fetch and append TMDB genres and metadata
-        tmdb_meta = fetch_movie_metadata(movie_title)
+        # Fetch metadata using tmdb_id if provided, else fallback to title search
+        if tmdb_id:
+            tmdb_meta = fetch_movie_metadata_by_id(tmdb_id)
+        else:
+            tmdb_meta = fetch_movie_metadata(movie_title)
+            
         tmdb_genres = tmdb_meta['genres'] if tmdb_meta else []
         for genre in tmdb_genres:
             if genre not in tag_names:
@@ -103,10 +109,14 @@ class ReviewSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         raw_movie_title = validated_data.pop('movie_title', None)
         tag_names = validated_data.pop('tag_names', None)
+        tmdb_id = validated_data.pop('tmdb_id', None)
 
         if raw_movie_title:
             movie_title = normalize_movie_title(raw_movie_title)
-            tmdb_meta = fetch_movie_metadata(movie_title)
+            if tmdb_id:
+                tmdb_meta = fetch_movie_metadata_by_id(tmdb_id)
+            else:
+                tmdb_meta = fetch_movie_metadata(movie_title)
             
             if tag_names is not None:
                 tmdb_genres = tmdb_meta['genres'] if tmdb_meta else []

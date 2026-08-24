@@ -8,6 +8,7 @@ from django.db.models.functions import Length, Replace
 from django.core.cache import cache
 from api.models import Movie, Review, Vote, Comment
 from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
+from api.utils.tmdb import search_tmdb_movies
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.annotate(
@@ -44,6 +45,14 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                 
         serializer = self.get_serializer(related_movies, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def search_tmdb(self, request):
+        query = request.query_params.get('q', '')
+        if not query:
+            return Response([])
+        results = search_tmdb_movies(query)
+        return Response(results)
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer

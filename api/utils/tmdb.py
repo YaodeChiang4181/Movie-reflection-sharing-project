@@ -212,3 +212,72 @@ def fetch_random_movies_by_genre(genre_id, count=3):
             pass
             
     return []
+
+def search_tmdb_movies(query):
+    """
+    Search TMDB for movies matching the query.
+    Returns a list of dicts with 'id', 'title', 'original_title', 'release_date', 'poster_url'.
+    """
+    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    if not api_key or not query.strip():
+        return []
+
+    try:
+        encoded_query = urllib.parse.quote(query.strip())
+        url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&language=zh-TW&query={encoded_query}&page=1"
+        
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            results = []
+            
+            for item in data.get('results', [])[:10]:
+                poster_path = item.get('poster_path')
+                poster_url = f"https://image.tmdb.org/t/p/w200{poster_path}" if poster_path else None
+                release_date = item.get('release_date', '')
+                year = release_date.split('-')[0] if release_date else '未知年份'
+                
+                results.append({
+                    'tmdb_id': item.get('id'),
+                    'title': item.get('title'),
+                    'original_title': item.get('original_title'),
+                    'year': year,
+                    'poster_url': poster_url,
+                })
+            return results
+    except Exception as e:
+        print(f"TMDB Search Error: {e}")
+        
+    return []
+
+def fetch_movie_metadata_by_id(tmdb_id):
+    """
+    Fetch TMDB metadata exact match by tmdb_id.
+    """
+    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    if not api_key:
+        return None
+
+    try:
+        url = f"https://api.themoviedb.org/3/movie/{tmdb_id}?api_key={api_key}&language=zh-TW"
+        
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            
+            genres = [g['name'] for g in data.get('genres', [])][:5]
+            
+            poster_path = data.get('poster_path')
+            poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
+            
+            return {
+                'tmdb_id': data.get('id'),
+                'title': data.get('title'),
+                'original_title': data.get('original_title'),
+                'genres': genres,
+                'poster_url': poster_url,
+            }
+    except Exception as e:
+        print(f"TMDB Fetch Metadata By ID Error: {e}")
+        
+    return None
