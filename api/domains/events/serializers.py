@@ -9,6 +9,12 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ('id', 'user', 'title', 'location', 'event_time', 'organizer_nickname', 'description', 'created_at')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data.get('user'):
+            data['user'] = {'campus_id': 'ghost', 'nickname': '已註銷的使用者'}
+        return data
         
     def validate_event_time(self, value):
         if value < timezone.now():

@@ -89,7 +89,7 @@ class Review(models.Model):
         ('web', 'Web'),
         ('line', 'LINE'),
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='reviews')
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='reviews')
     rating = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
@@ -122,7 +122,7 @@ class Vote(models.Model):
         return f"{self.user.username} voted {self.vote_type} on {self.review.id}"
 
 class Event(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='events')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='events')
     title = models.CharField(max_length=200)
     location = models.CharField(max_length=200)
     event_time = models.DateTimeField()
@@ -146,7 +146,7 @@ class Event(models.Model):
 
 class Comment(models.Model):
     review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='comments')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='comments')
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     

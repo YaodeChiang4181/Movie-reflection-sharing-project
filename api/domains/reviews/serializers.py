@@ -27,6 +27,12 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'review', 'user', 'content', 'created_at')
         read_only_fields = ('review',)
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data.get('user'):
+            data['user'] = {'campus_id': 'ghost', 'nickname': '已註銷的使用者'}
+        return data
+
 class ReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     movie_title = serializers.CharField(write_only=True)
@@ -43,6 +49,12 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'user', 'movie', 'movie_title', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data.get('user'):
+            data['user'] = {'campus_id': 'ghost', 'nickname': '已註銷的使用者'}
+        return data
 
     def get_user_voted(self, obj):
         request = self.context.get('request')
