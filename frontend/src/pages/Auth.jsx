@@ -162,6 +162,10 @@ function Auth() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    alert('Google 登入功能即將推出！');
+  };
+
   return (
     <div className={`container ${styles.wrapper}`}>
       <div className={`glass ${styles.authCard}`}>
@@ -348,17 +352,69 @@ function Auth() {
               <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>或</span>
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }}></div>
             </div>
-            <button
-              type="button"
-              onClick={handleLineLogin}
-              className={`btn-primary ${styles.submitBtn}`}
-              style={{ backgroundColor: '#06C755', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738S0 4.935 0 10.304c0 4.814 4.269 8.846 10.036 9.608.391.084.922.258 1.057.592.12.298.079.76.038 1.077l-.164.982c-.05.302-.236 1.152 1.011.627 1.246-.525 6.723-3.957 8.949-6.615C22.956 14.542 24 12.562 24 10.304zM6.92 13.125H4.811a.488.488 0 01-.489-.488V7.32a.488.488 0 01.489-.488h.488c.27 0 .489.219.489.488v4.83h1.621c.27 0 .489.219.489.488v.487a.488.488 0 01-.489.488zm3.567-3.901h-.489a.488.488 0 01-.488-.488V7.32a.488.488 0 01.488-.488h.489c.27 0 .488.219.488.488v1.417h1.622a.488.488 0 01.488.488v.487a.488.488 0 01-.488.488h-1.622v1.417c0 .269-.219.488-.488.488zm7.391 3.413a.488.488 0 01-.488.488h-.488a.489.489 0 01-.476-.376l-1.637-3.987v3.875a.488.488 0 01-.489.488h-.488a.488.488 0 01-.488-.488V7.32a.488.488 0 01.488-.488h.488a.489.489 0 01.476.376l1.637 3.987V7.32c0-.269.219-.488.488-.488h.489c.27 0 .488.219.488.488v5.317z" />
-              </svg>
-              LINE 登入
-            </button>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={handleLineLogin}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#06C755',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738S0 4.935 0 10.304c0 4.814 4.269 8.846 10.036 9.608.391.084.922.258 1.057.592.12.298.079.76.038 1.077l-.164.982c-.05.302-.236 1.152 1.011.627 1.246-.525 6.723-3.957 8.949-6.615C22.956 14.542 24 12.562 24 10.304zM6.92 13.125H4.811a.488.488 0 01-.489-.488V7.32a.488.488 0 01.489-.488h.488c.27 0 .489.219.489.488v4.83h1.621c.27 0 .489.219.489.488v.487a.488.488 0 01-.489.488zm3.567-3.901h-.489a.488.488 0 01-.488-.488V7.32a.488.488 0 01.488-.488h.489c.27 0 .488.219.488.488v1.417h1.622a.488.488 0 01.488.488v.487a.488.488 0 01-.488.488h-1.622v1.417c0 .269-.219.488-.488.488zm7.391 3.413a.488.488 0 01-.488.488h-.488a.489.489 0 01-.476-.376l-1.637-3.987v3.875a.488.488 0 01-.489.488h-.488a.488.488 0 01-.488-.488V7.32a.488.488 0 01.488-.488h.488a.489.489 0 01.476.376l1.637 3.987V7.32c0-.269.219-.488.488-.488h.489c.27 0 .488.219.488.488v5.317z" />
+                </svg>
+                <span>LINE 登入</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                style={{
+                  flex: 1,
+                  backgroundColor: 'white',
+                  color: '#3c4043',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <svg width="28" height="28" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                  <path fill="none" d="M0 0h48v48H0z"/>
+                </svg>
+                <span>Gmail 登入</span>
+              </button>
+            </div>
           </div>
         )}
 
