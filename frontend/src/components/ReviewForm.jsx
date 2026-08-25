@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Star, Search, Loader2, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import api from '../api/axios';
 import styles from './ReviewForm.module.css';
+import { useAuth } from '../contexts/AuthContext';
 
 function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovieTitle = '' }) {
+  const { fetchUserProfile } = useAuth();
   const [content, setContent] = useState(initialData?.content || '');
   const [movieTitle, setMovieTitle] = useState(initialData?.movie?.title || prefilledMovieTitle);
   const [selectedMovie, setSelectedMovie] = useState(initialData?.movie || null);
@@ -133,6 +135,8 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
       } catch (cbErr) {
         console.error("Callback error (ignored for submission):", cbErr);
       }
+      
+      fetchUserProfile(); // 及時更新 EXP
       onClose();
       
     } catch (err) {

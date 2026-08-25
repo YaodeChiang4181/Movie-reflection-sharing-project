@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Star, ChevronRight, FastForward } from 'lucide-react';
 import TmdbPoster from './TmdbPoster';
 import api from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const SpeedRatingModal = ({ onClose }) => {
+  const { fetchUserProfile } = useAuth();
   const [movies, setMovies] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,6 +64,8 @@ const SpeedRatingModal = ({ onClose }) => {
         source: "web", // 必須符合 Django choices ('web' 或 'line')
         tag_names: ["急速評星"]
       });
+      
+      fetchUserProfile(); // 及時更新 EXP
       
       setTimeout(() => {
         setIsSubmitting(false);

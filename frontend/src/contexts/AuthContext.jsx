@@ -77,14 +77,31 @@ export const AuthProvider = ({ children }) => {
       if (token && savedUser) {
         setIsLoggedIn(true);
         setUserProfile(JSON.parse(savedUser));
+        // 背景非同步更新最新資料
+        fetchUserProfile(token);
+      } else {
+        setIsAuthLoading(false);
       }
-      setIsAuthLoading(false);
     }
 
     return () => {
       window.removeEventListener('auth:logout', handleLogout);
     };
   }, []);
+
+  const fetchUserProfile = async (token = null) => {
+    const activeToken = token || localStorage.getItem('access_token');
+    if (!activeToken) return;
+    try {
+      const res = await api.get('/users/me/', { headers: { Authorization: `Bearer ${activeToken}` } });
+      setUserProfile(res.data);
+      localStorage.setItem('user_profile', JSON.stringify(res.data));
+    } catch (err) {
+      console.error("Failed to fetch user profile", err);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
 
   const login = (token, user) => {
     localStorage.setItem('access_token', token);
@@ -102,7 +119,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, userProfile, isAuthLoading, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, userProfile, isAuthLoading, login, logout, fetchUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
