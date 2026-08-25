@@ -182,7 +182,7 @@ function AdminDashboard() {
     setIsToolRunning(true);
     try {
       const res = await api.post('auth/admin/recalculate-exp/');
-      alert(`重新計算成功！共更新了 ${res.data.updated_users || res.data.message} 位使用者的經驗值。`);
+      alert(`重新計算成功！共更新了 ${res.data.users_updated !== undefined ? res.data.users_updated : res.data.message} 位使用者的經驗值。`);
       fetchStats();
     } catch (err) {
       alert(`重新計算失敗: ${err.response?.data?.error || err.message}`);
