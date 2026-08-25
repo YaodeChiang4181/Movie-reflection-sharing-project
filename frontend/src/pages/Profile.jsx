@@ -24,6 +24,7 @@ function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedReview, setSelectedReview] = useState(null);
   const [activeTab, setActiveTab] = useState('my'); // 'my' or 'commented'
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -58,6 +59,21 @@ function Profile() {
   const handleReviewUpdated = () => {
     api.get('reviews/me/').then(res => setReviews(res.data));
     api.get('reviews/commented_by_me/').then(res => setCommentedReviews(res.data));
+  };
+
+  const handleSyncExp = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await api.post('/auth/sync-exp/');
+      // 重抓使用者資料
+      const userRes = await api.get('users/me/');
+      setUserData(userRes.data);
+      alert(res.data.message || '經驗值同步成功！');
+    } catch (err) {
+      alert(`同步失敗: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleReviewDeleted = (id) => {
@@ -132,6 +148,14 @@ function Profile() {
               <div className={styles.expHeader}>
                 <span className={styles.expLabel}>
                   <TrendingUp size={14} /> 經驗值
+                  <button 
+                    onClick={handleSyncExp} 
+                    disabled={isSyncing}
+                    className={styles.syncBtn}
+                    title="同步歷史發表數據"
+                  >
+                    {isSyncing ? '同步中...' : '🔄 同步'}
+                  </button>
                 </span>
                 <span className={styles.expNumbers}>{exp} / {expNeeded}</span>
               </div>

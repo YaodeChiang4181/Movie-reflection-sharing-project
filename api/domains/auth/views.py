@@ -242,6 +242,38 @@ class GoogleLoginView(APIView):
             'user': UserMeSerializer(user).data
         })
 
+class SyncUserExpView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            from api.models import Review, Comment, Vote, UserExperience
+            from api.domains.gamification.services import add_user_experience
+            from django.db import transaction
+            
+            user = request.user
+            with transaction.atomic():
+                # Delete current exp
+                UserExperience.objects.filter(user=user).delete()
+                
+                total_exp = 0
+                
+                reviews_count = Review.objects.filter(user=user, is_deleted=False).count()
+                total_exp += (reviews_count * 25)
+                
+                comments_count = Comment.objects.filter(user=user).count()
+                total_exp += (comments_count * 10)
+                
+                likes_received = Vote.objects.filter(review__user=user, vote_type=1).count()
+                total_exp += (likes_received * 1)
+                
+                if total_exp > 0:
+                    add_user_experience(user, total_exp)
+                    
+            return Response({"message": "同步成功！您的歷史經驗值已更新。"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class MergeGhostAccountView(APIView):
     permission_classes = [IsAdminUser]
     
