@@ -40,6 +40,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     """管理員專用的使用者管理介面"""
     serializer_class = AdminUserSerializer
     permission_classes = [IsAdminUser]
+    pagination_class = None
 
     def get_queryset(self):
         return User.objects.filter(is_staff=False).select_related(
