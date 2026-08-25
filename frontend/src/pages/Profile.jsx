@@ -105,10 +105,6 @@ function Profile() {
       <div className={styles.fanCard}>
         <div className={styles.fanCardGlow} />
 
-        {/* 頂部 UID */}
-        <div className={styles.fanCardTopUID}>
-          UID: {userData?.id?.toString().padStart(9, '0') || '000000000'}
-        </div>
 
         <div className={styles.fanCardContent}>
           {/* 左側：頭像 + 基本資訊 */}
@@ -136,7 +132,7 @@ function Profile() {
                 {userData?.real_name} · {userData?.department}
               </p>
               <p className={styles.campusId}>
-                校園 ID: {userData?.campus_id}
+                {(!userData?.campus_id?.match(/^\d+$/) && userData?.campus_id) ? '會員 ID' : '校園 ID'}: {userData?.campus_id}
               </p>
             </div>
           </div>
@@ -147,7 +143,7 @@ function Profile() {
             <div className={styles.expSection}>
               <div className={styles.expHeader}>
                 <span className={styles.expLabel}>
-                  <TrendingUp size={14} /> 經驗值
+                  <TrendingUp size={14} /> Lv.{level} · {badge.title} 經驗值
                   <button 
                     onClick={handleSyncExp} 
                     disabled={isSyncing}
@@ -188,9 +184,12 @@ function Profile() {
         {/* 常用標籤 */}
         {userData?.common_tags?.length > 0 && (
           <div className={styles.tagsBar}>
-            {userData.common_tags.map(tag => (
-              <span key={tag} className={styles.commonTag}>#{tag}</span>
-            ))}
+            <div className={styles.tagsSubtitle}>觀影偏好</div>
+            <div className={styles.tagsList}>
+              {userData.common_tags.map(tag => (
+                <span key={tag} className={styles.commonTag}>#{tag}</span>
+              ))}
+            </div>
           </div>
         )}
       </div>
