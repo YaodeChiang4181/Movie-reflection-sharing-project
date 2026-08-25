@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp } from 'lucide-react';
+import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';
@@ -143,17 +143,19 @@ function Profile() {
             <div className={styles.expSection}>
               <div className={styles.expHeader}>
                 <span className={styles.expLabel}>
-                  <TrendingUp size={14} /> Lv.{level} · {badge.title} 經驗值
+                  <TrendingUp size={14} /> 距離 Lv.{level + 1} 還差 {Math.max(0, expNeeded - exp)} EXP
                   <button 
                     onClick={handleSyncExp} 
                     disabled={isSyncing}
                     className={styles.syncBtn}
-                    title="同步歷史發表數據"
+                    title="手動同步最新經驗值"
                   >
-                    {isSyncing ? '同步中...' : '🔄 同步'}
+                    <RefreshCw size={14} className={isSyncing ? styles.spin : ''} />
                   </button>
                 </span>
-                <span className={styles.expNumbers}>{exp} / {expNeeded}</span>
+                <span className={styles.expNumbers}>
+                  <span className={styles.expCurrent}>{exp}</span> / {expNeeded} EXP
+                </span>
               </div>
               <div className={styles.expBarOuter}>
                 <div className={styles.expBarInner} style={{ width: `${expProgress}%` }} />
