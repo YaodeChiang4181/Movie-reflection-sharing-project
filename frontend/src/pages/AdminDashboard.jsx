@@ -164,8 +164,8 @@ function AdminDashboard() {
     
     setIsToolRunning(true);
     try {
-      const res = await api.post('auth/merge-ghost/', { ghost_id: ghostId, target_id: targetId });
-      alert(`合併成功！\n轉移心得: ${res.data.merged_reviews}\n轉移留言: ${res.data.merged_comments}\n轉移揪團: ${res.data.merged_events}`);
+      const res = await api.post('auth/admin/merge-ghost/', { ghost_id: ghostId, target_id: targetId });
+      alert(`合併成功！\n轉移心得: ${res.data.merged_reviews}\n轉移留言: ${res.data.merged_comments}\n轉移活動: ${res.data.merged_events}`);
       setGhostId('');
       setTargetId('');
       fetchStats();
