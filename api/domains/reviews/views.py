@@ -9,6 +9,7 @@ from django.core.cache import cache
 from api.models import Movie, Review, Vote, Comment
 from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
 from api.utils.tmdb import search_tmdb_movies
+from api.domains.gamification.services import add_user_experience
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.annotate(
@@ -79,6 +80,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        add_user_experience(self.request.user, exp_gained=25)
         cache.delete('trending_reviews')
 
     def destroy(self, request, *args, **kwargs):
@@ -183,6 +185,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             if not content:
                 return Response({"error": "Content is required"}, status=status.HTTP_400_BAD_REQUEST)
             comment = Comment.objects.create(review=review, user=request.user, content=content)
+            add_user_experience(request.user, exp_gained=10)
             cache.delete('trending_reviews')
             serializer = CommentSerializer(comment)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
