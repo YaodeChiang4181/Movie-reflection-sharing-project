@@ -93,47 +93,28 @@ function Home() {
       {/* 首頁焦點橫幅 (Hero Banner) */}
       {!isLoading && heroMovie && (
         <div 
-          className="glass hover-scale" 
-          style={{ 
-            marginBottom: '40px', 
-            padding: '40px', 
-            borderRadius: 'var(--radius-lg)', 
-            display: 'flex', 
-            gap: '40px', 
-            alignItems: 'center',
-            background: 'linear-gradient(135deg, rgba(245, 166, 35, 0.15) 0%, rgba(20, 20, 20, 0.6) 100%)',
-            border: '1px solid rgba(245, 166, 35, 0.3)',
-            cursor: 'pointer'
-          }}
+          className="glass hover-scale hero-banner" 
           onClick={() => navigate(`/movies/${heroMovie.id}`)}
         >
-          <TmdbPoster title={heroMovie.title} style={{ width: '160px', height: '240px', borderRadius: '12px', flexShrink: 0, boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }} />
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <Flame style={{ color: '#F5A623' }} size={24} />
-              <span style={{ color: '#F5A623', fontWeight: 'bold', letterSpacing: '1px', fontSize: '1.1rem' }}>本週社群最高分推薦</span>
+          <TmdbPoster title={heroMovie.title} className="hero-poster" />
+          <div className="hero-content">
+            <div className="hero-badge">
+              <Flame size={24} />
+              <span>本週社群最高分推薦</span>
             </div>
-            <h2 style={{ fontSize: '2.8rem', margin: '0', color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{heroMovie.title}</h2>
+            <h2>{heroMovie.title}</h2>
             {heroMovie.original_title && (
-              <div style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', margin: '4px 0 20px 0', fontStyle: 'italic' }}>
+              <div className="hero-original-title">
                 {heroMovie.original_title}
               </div>
             )}
             {!heroMovie.original_title && <div style={{ marginBottom: '20px' }}></div>}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <div style={{ 
-                backgroundColor: 'rgba(245, 166, 35, 0.15)',
-                padding: '8px 20px',
-                borderRadius: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                border: '1px solid rgba(245, 166, 35, 0.4)'
-              }}>
-                <Star size={24} fill="#F5A623" style={{ color: '#F5A623' }} />
-                <span style={{ color: '#F5A623', fontSize: '1.4rem', fontWeight: 'bold' }}>{heroMovie.avg_rating ? heroMovie.avg_rating.toFixed(1) : '0.0'}</span>
+            <div className="hero-stats">
+              <div className="hero-rating">
+                <Star size={24} fill="#F5A623" />
+                <span>{heroMovie.avg_rating ? heroMovie.avg_rating.toFixed(1) : '0.0'}</span>
               </div>
-              <span style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
+              <span className="hero-review-count">
                 累積 {heroMovie.review_count || 0} 則深度影評
               </span>
             </div>
@@ -155,55 +136,33 @@ function Home() {
               {displayMovies.map(movie => (
                 <div 
                   key={movie.id} 
-                  className="glass hover-scale" 
-                  style={{ 
-                    padding: '16px 24px', 
-                    borderRadius: 'var(--radius-md)', 
-                    cursor: 'pointer', 
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
+                  className="glass hover-scale movie-list-item" 
                   onClick={() => navigate(`/movies/${movie.id}`)}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div className="movie-list-left">
                     <TmdbPoster 
                       title={movie.title} 
-                      style={{ width: '50px', height: '75px', borderRadius: '6px', flexShrink: 0 }}
+                      className="movie-list-poster"
                     />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <h3 style={{ color: '#F1F5F9', fontSize: '1.3rem', margin: 0 }}>
-                        {movie.title}
-                      </h3>
+                    <div className="movie-list-info">
+                      <h3>{movie.title}</h3>
                       {movie.original_title && (
-                        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginTop: '-4px' }}>
+                        <span className="movie-original-title">
                           {movie.original_title}
                         </span>
                       )}
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                      <span className="movie-list-tags">
                         #熱門討論 #社群精選
                       </span>
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                  <div className="movie-list-right">
+                    <span className="movie-review-count">
                       ({movie.review_count || 0} 則評價)
                     </span>
-                    <div style={{ 
-                      backgroundColor: 'rgba(245, 166, 35, 0.1)',
-                      padding: '6px 12px',
-                      borderRadius: '20px',
-                      color: '#F5A623', 
-                      fontSize: '1.2rem', 
-                      fontWeight: 'bold',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      border: '1px solid rgba(245, 166, 35, 0.25)'
-                    }}>
-                      <Star size={18} fill="#F5A623" style={{ color: '#F5A623' }} />
+                    <div className="movie-list-rating">
+                      <Star size={18} fill="#F5A623" />
                       <span>{movie.avg_rating ? movie.avg_rating.toFixed(1) : '0.0'}</span>
                     </div>
                   </div>
@@ -238,22 +197,20 @@ function Home() {
         <div className="home-action-panel">
           
           <div 
-            className="glass hover-scale" 
-            style={{ padding: '32px', borderRadius: 'var(--radius-lg)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(20, 20, 20, 0.4) 100%)' }}
+            className="glass hover-scale action-card action-card-compose"
             onClick={handleComposeClick}
           >
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(139, 92, 246, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#D8B4FE' }}>
+            <div className="action-card-icon">
               <Edit3 size={32} />
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <h2 style={{ margin: '0 0 8px 0', fontSize: '1.4rem' }}>發布心得</h2>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>撰寫完整影評，分享您的觀影感動</p>
+            <div className="action-card-text">
+              <h2>發布心得</h2>
+              <p>撰寫完整影評，分享您的觀影感動</p>
             </div>
           </div>
 
           <div 
-            className="glass hover-scale" 
-            style={{ padding: '32px', borderRadius: 'var(--radius-lg)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(20, 20, 20, 0.6) 100%)', borderColor: 'rgba(16, 185, 129, 0.3)' }}
+            className="glass hover-scale action-card action-card-speed"
             onClick={() => {
               if (!isLoggedIn) {
                 alert('請先登入才能使用急速評星。');
@@ -263,12 +220,12 @@ function Home() {
               setIsSpeedRatingOpen(true);
             }}
           >
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(16, 185, 129, 0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#10B981', boxShadow: '0 0 20px rgba(16,185,129,0.2)' }}>
+            <div className="action-card-icon">
               <FastForward size={32} />
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <h2 style={{ margin: '0 0 8px 0', fontSize: '1.4rem' }}>急速評星</h2>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>極簡輪播介面，一鍵快速給分</p>
+            <div className="action-card-text">
+              <h2>急速評星</h2>
+              <p>極簡輪播介面，一鍵快速給分</p>
             </div>
           </div>
 
