@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Film } from 'lucide-react';
 
-function TmdbPoster({ title, style }) {
+function TmdbPoster({ title, style, className }) {
   const [posterUrl, setPosterUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -52,13 +52,14 @@ function TmdbPoster({ title, style }) {
         src={posterUrl} 
         alt={title} 
         style={{ ...style, objectFit: 'cover' }}
+        className={className}
       />
     );
   }
 
   // Fallback placeholder
   return (
-    <div style={{ ...style, backgroundColor: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+    <div className={className} style={{ ...style, backgroundColor: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <Film size={24} style={{ color: 'var(--text-muted)' }} />
     </div>
   );
