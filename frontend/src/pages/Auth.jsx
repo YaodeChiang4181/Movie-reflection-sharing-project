@@ -206,7 +206,7 @@ function Auth() {
   return (
     <div className={`container ${styles.wrapper}`}>
       <div className={`glass ${styles.authCard}`}>
-        <h2 className={styles.title}>{isLogin ? '登入影像製作所' : '註冊專屬帳號'}</h2>
+        <h2 className={styles.title}>{isLogin ? '登入映後時光' : '註冊專屬帳號'}</h2>
         
         {/* 身分組選擇 */}
         <div className={styles.roleTabs}>

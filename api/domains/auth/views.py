@@ -70,8 +70,8 @@ class SendVerificationView(APIView):
         code = f"{random.randint(0, 999999):06d}"
         
         try:
-            subject = '【影像製作所】註冊驗證碼'
-            message = f'歡迎註冊影像製作所平台！\n\n您的驗證碼是：{code}\n\n此驗證碼將在 10 分鐘後失效，請勿將驗證碼外洩給他人。'
+            subject = '【映後時光】註冊驗證碼'
+            message = f'歡迎註冊映後時光！\n\n您的驗證碼是：{code}\n\n此驗證碼將在 10 分鐘後失效，請勿將驗證碼外洩給他人。'
             
             gas_url = os.environ.get('GAS_EMAIL_URL')
             

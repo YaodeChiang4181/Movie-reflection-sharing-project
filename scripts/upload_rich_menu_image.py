@@ -23,7 +23,7 @@ image_path = '使用者介面卡片.png'
 rich_menu_to_create = RichMenu(
     size=RichMenuSize(width=2500, height=1686),
     selected=True,
-    name="影像製作所 主選單",
+    name="映後時光 主選單",
     chat_bar_text="打開選單",
     areas=[
         RichMenuArea(bounds=RichMenuBounds(x=0, y=0, width=833, height=843), action=MessageAction(label='寫心得', text='寫心得')),

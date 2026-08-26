@@ -24,7 +24,7 @@ def create_and_set_rich_menu():
     rich_menu_to_create = RichMenu(
         size=RichMenuSize(width=2500, height=1686),
         selected=True,
-        name="影像製作所 主選單",
+        name="映後時光 主選單",
         chat_bar_text="打開選單",
         areas=[
             # 左上: 寫心得 (開啟 LIFF 表單)

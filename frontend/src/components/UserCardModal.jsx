@@ -7,9 +7,9 @@ import styles from './UserCardModal.module.css';
 // 影迷等級的對應邏輯 (與 Profile.jsx 共用)
 function getBadge(level) {
   if (level >= 10) return { title: '資深影評', color: '#F59E0B', glow: 'rgba(245, 158, 11, 0.5)' };
-  if (level >= 8) return { title: '黃金觀影人', color: '#8B5CF6', glow: 'rgba(139, 92, 246, 0.5)' };
-  if (level >= 5) return { title: '白銀觀影人', color: '#3B82F6', glow: 'rgba(59, 130, 246, 0.5)' };
-  if (level >= 3) return { title: '青銅觀影人', color: '#10B981', glow: 'rgba(16, 185, 129, 0.5)' };
+  if (level >= 8) return { title: '黃金觀影人', color: '#FFD700', glow: 'rgba(255, 215, 0, 0.5)' };
+  if (level >= 5) return { title: '白銀觀影人', color: '#8B5CF6', glow: 'rgba(139, 92, 246, 0.5)' };
+  if (level >= 3) return { title: '青銅觀影人', color: '#3B82F6', glow: 'rgba(59, 130, 246, 0.5)' };
   if (level >= 2) return { title: '唉呦不錯呦', color: '#10B981', glow: 'rgba(16, 185, 129, 0.5)' };
   if (level >= 1) return { title: '初出茅廬', color: '#6BCB77', glow: 'rgba(107, 203, 119, 0.5)' };
   return { title: '新手影迷', color: '#9CA3AF', glow: 'rgba(156, 163, 175, 0.5)' };

@@ -611,7 +611,7 @@ def get_rules_flex():
             "contents": [
                 {
                     "type": "text",
-                    "text": "🎬 影像製作所 Bot 指令規則",
+                    "text": "🎬 映後時光 Bot 指令規則",
                     "weight": "bold",
                     "color": "#FFFFFF",
                     "size": "xl"

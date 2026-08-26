@@ -78,7 +78,7 @@ def handle_message(event):
 
     if text in ['/', '/規則', '／', '／規則']:
         flex_card = get_rules_flex()
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="影像製作所 Bot 指令規則", contents=flex_card))
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="映後時光 Bot 指令規則", contents=flex_card))
         return
 
     if text.startswith('#綁定') or text.startswith('＃綁定'):

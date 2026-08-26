@@ -27,9 +27,9 @@ function Navbar() {
         <div className={`container flex-between ${styles.navContainer}`}>
           <Link to="/" className={styles.brand}>
             <Film className={styles.brandIcon} />
-            <span>影像製作所</span>
+            <span>映後時光</span>
           </Link>
-          
+
           <div className={styles.navLinks}>
             <Link to="/" className={styles.navLink}>
               <Home size={18} />
