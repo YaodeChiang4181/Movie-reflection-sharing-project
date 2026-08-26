@@ -4,6 +4,7 @@ import json
 import random
 from django.conf import settings
 from django.utils import timezone
+from django.core.cache import cache
 from api.models import Movie
 
 GENRE_MAP = {
@@ -281,3 +282,66 @@ def fetch_movie_metadata_by_id(tmdb_id):
         print(f"TMDB Fetch Metadata By ID Error: {e}")
         
     return None
+
+
+def fetch_tmdb_popular_pool(pool_size=10):
+    """
+    Fetch and cache a pool of popular movies from TMDB.
+    Uses Django Cache with key 'tmdb_speed_pool', TTL = 30 minutes.
+    Returns a list of dicts with 'tmdb_id', 'title' (zh-TW), 'original_title', 'poster_url'.
+    """
+    CACHE_KEY = 'tmdb_speed_pool'
+    cached = cache.get(CACHE_KEY)
+    if cached:
+        return cached
+
+    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    if not api_key:
+        return []
+
+    try:
+        # Fetch from 2 random pages to get a more diverse pool
+        all_movies = []
+        for _ in range(2):
+            page = random.randint(1, 10)
+            url = (
+                f"https://api.themoviedb.org/3/movie/popular"
+                f"?api_key={api_key}&language=zh-TW&page={page}"
+            )
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=8) as response:
+                data = json.loads(response.read().decode('utf-8'))
+                for item in data.get('results', []):
+                    tmdb_id = item.get('id')
+                    title = item.get('title')
+                    original_title = item.get('original_title')
+                    poster_path = item.get('poster_path')
+                    poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
+
+                    if tmdb_id and title:
+                        all_movies.append({
+                            'tmdb_id': tmdb_id,
+                            'title': title,
+                            'original_title': original_title or title,
+                            'poster_url': poster_url,
+                        })
+
+        # Deduplicate by tmdb_id
+        seen = set()
+        unique = []
+        for m in all_movies:
+            if m['tmdb_id'] not in seen:
+                seen.add(m['tmdb_id'])
+                unique.append(m)
+
+        # Shuffle and take pool_size
+        random.shuffle(unique)
+        pool = unique[:pool_size]
+
+        # Cache for 30 minutes
+        cache.set(CACHE_KEY, pool, timeout=1800)
+        return pool
+
+    except Exception as e:
+        print(f"TMDB Popular Pool Fetch Error: {e}")
+        return []

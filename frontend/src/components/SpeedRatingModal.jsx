@@ -15,10 +15,9 @@ const SpeedRatingModal = ({ onClose }) => {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await api.get('movies/?page=1'); 
-        const list = res.data.results || res.data;
-        const shuffled = list.sort(() => 0.5 - Math.random());
-        setMovies(shuffled);
+        const res = await api.get('movies/speed_rating_candidates/?count=10');
+        const list = res.data || [];
+        setMovies(list);
       } catch (err) {
         console.error("Failed to load movies for speed rating", err);
       } finally {
@@ -102,13 +101,22 @@ const SpeedRatingModal = ({ onClose }) => {
           <p style={{ color: 'var(--text-secondary)', margin: '40px 0' }}>尋找熱門電影中...</p>
         ) : currentMovie ? (
           <>
-            <h3 style={{ marginBottom: '16px', fontSize: '1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <h3 style={{ marginBottom: '4px', fontSize: '1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {currentMovie.title}
             </h3>
+            {currentMovie.original_title && currentMovie.original_title !== currentMovie.title && (
+              <p style={{ margin: '0 0 16px', fontSize: '0.82rem', color: '#94A3B8', fontStyle: 'italic' }}>
+                {currentMovie.original_title}
+              </p>
+            )}
             
             <div style={{ marginBottom: '20px', position: 'relative' }}>
               <div style={{ transition: 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease', transform: isSubmitting ? 'scale(0.8) translateY(-20px)' : 'scale(1)', opacity: isSubmitting ? 0 : 1 }}>
-                <TmdbPoster title={currentMovie.title} style={{ width: '146px', height: '220px', borderRadius: '12px', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }} />
+                {currentMovie.poster_url ? (
+                  <img src={currentMovie.poster_url} alt={currentMovie.title} style={{ width: '146px', height: '220px', borderRadius: '12px', boxShadow: '0 12px 32px rgba(0,0,0,0.5)', objectFit: 'cover' }} />
+                ) : (
+                  <TmdbPoster title={currentMovie.title} style={{ width: '146px', height: '220px', borderRadius: '12px', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }} />
+                )}
               </div>
               
               {isSubmitting && (

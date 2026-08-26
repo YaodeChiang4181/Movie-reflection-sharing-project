@@ -8,8 +8,9 @@ from django.db.models.functions import Length, Replace
 from django.core.cache import cache
 from api.models import Movie, Review, Vote, Comment
 from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
-from api.utils.tmdb import search_tmdb_movies
+from api.utils.tmdb import search_tmdb_movies, fetch_tmdb_popular_pool
 from api.domains.gamification.services import add_user_experience
+import random
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.annotate(
@@ -54,6 +55,79 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
             return Response([])
         results = search_tmdb_movies(query)
         return Response(results)
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def speed_rating_candidates(self, request):
+        """
+        Return a weighted mix of movies for speed rating.
+        60% from local DB, 40% from TMDB popular pool (cached).
+        """
+        count = int(request.query_params.get('count', 10))
+        count = min(count, 20)  # cap at 20
+
+        # Get local movies (all movies in DB)
+        local_movies = list(Movie.objects.all().values_list('id', flat=True))
+
+        # Get TMDB pool from cache
+        tmdb_pool = fetch_tmdb_popular_pool(pool_size=10)
+
+        selected_ids = []
+        used_tmdb_indices = set()
+
+        for _ in range(count):
+            roll = random.random()
+
+            if roll < 0.6 and local_movies:
+                # Pick from local DB
+                picked_id = random.choice(local_movies)
+                if picked_id not in selected_ids:
+                    selected_ids.append(picked_id)
+            elif tmdb_pool:
+                # Pick from TMDB pool
+                available = [i for i in range(len(tmdb_pool)) if i not in used_tmdb_indices]
+                if not available:
+                    # All TMDB pool items used, fallback to local
+                    if local_movies:
+                        picked_id = random.choice(local_movies)
+                        if picked_id not in selected_ids:
+                            selected_ids.append(picked_id)
+                    continue
+
+                idx = random.choice(available)
+                used_tmdb_indices.add(idx)
+                tmdb_item = tmdb_pool[idx]
+
+                # Get or create Movie in local DB
+                movie, created = Movie.objects.get_or_create(
+                    tmdb_id=tmdb_item['tmdb_id'],
+                    defaults={
+                        'title': tmdb_item['title'],
+                        'original_title': tmdb_item.get('original_title', ''),
+                        'poster_url': tmdb_item.get('poster_url', ''),
+                        'director': '',
+                        'release_year': 0,
+                    }
+                )
+                if movie.id not in selected_ids:
+                    selected_ids.append(movie.id)
+            elif local_movies:
+                # TMDB pool empty, fallback to local
+                picked_id = random.choice(local_movies)
+                if picked_id not in selected_ids:
+                    selected_ids.append(picked_id)
+
+        # Fetch full Movie objects with annotations
+        movies_qs = Movie.objects.filter(id__in=selected_ids).annotate(
+            avg_rating=Avg('reviews__rating', filter=Q(reviews__is_deleted=False)),
+            review_count=Count('reviews', filter=Q(reviews__is_deleted=False)),
+        )
+
+        # Preserve the selected order
+        id_to_movie = {m.id: m for m in movies_qs}
+        ordered_movies = [id_to_movie[mid] for mid in selected_ids if mid in id_to_movie]
+
+        serializer = MovieSerializer(ordered_movies, many=True)
+        return Response(serializer.data)
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
