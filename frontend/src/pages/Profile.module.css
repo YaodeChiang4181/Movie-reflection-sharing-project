@@ -260,15 +260,15 @@
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 8px;
 }
 
 .statCard {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 16px 8px;
+  gap: 4px;
+  padding: 12px 6px;
   background: rgba(248, 249, 250, 0.08);
   border-radius: 12px;
   border: 1px solid rgba(248, 249, 250, 0.15);
@@ -283,21 +283,22 @@
   color: #DDD6FE;
   background: rgba(139, 92, 246, 0.15);
   border: 1px solid rgba(167, 139, 250, 0.3);
-  padding: 8px;
+  padding: 6px;
   border-radius: 50%;
   box-sizing: content-box;
 }
 
 .statCardValue {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1;
   color: #FFFFFF;
 }
 
 .statCardLabel {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: #94A3B8;
+  white-space: nowrap;
 }
 
 /* 常用標籤列 */
