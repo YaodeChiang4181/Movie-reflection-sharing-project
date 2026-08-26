@@ -256,7 +256,7 @@ function Profile() {
                 <span className={styles.statCardLabel}>獲得推薦</span>
               </div>
               <div className={styles.statCard}>
-                <MessageSquare size={20} className={styles.statCardIcon} />
+                <MessageSquare size={18} className={styles.statCardIcon} />
                 <span className={styles.statCardValue}>{commentedReviews.length}</span>
                 <span className={styles.statCardLabel}>留言互動</span>
               </div>
