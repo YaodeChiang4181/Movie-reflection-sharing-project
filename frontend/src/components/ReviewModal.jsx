@@ -145,9 +145,9 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
           <button style={closeBtnStyle} onClick={onClose}><X size={24} /></button>
 
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
             {/* 左側：片名、評分、作者 */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: '1 1 250px', minWidth: 0 }}>
               <div style={{ marginBottom: '8px' }}>
                 <h2 style={{ color: 'var(--accent-primary)', fontSize: '1.8rem', margin: 0, wordBreak: 'break-word' }}>
                   {currentReview.movie?.title}
@@ -174,9 +174,9 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '0.95rem' }} className="hover-bg-tertiary">{currentReview.user?.nickname}</span>
-                    <span style={{ color: getBadge(currentReview.user?.level || 1).color, fontSize: '0.75rem', fontWeight: 'bold', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: `1px solid ${getBadge(currentReview.user?.level || 1).color}` }}>
+                    <span style={{ color: getBadge(currentReview.user?.level || 1).color, fontSize: '0.75rem', fontWeight: 'bold', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: `1px solid ${getBadge(currentReview.user?.level || 1).color}`, whiteSpace: 'nowrap' }}>
                       Lv.{currentReview.user?.level || 1} {getBadge(currentReview.user?.level || 1).title}
                     </span>
                   </div>
