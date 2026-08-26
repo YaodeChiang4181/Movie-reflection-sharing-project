@@ -288,7 +288,7 @@ function Search() {
                              推薦指數 {review.rating}/5
                           </span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <UserIcon nickname={review.user?.nickname} /> {review.user?.nickname || '未知使用者'}
+                            <UserIcon user={review.user} /> {review.user?.nickname || '未知使用者'}
                           </span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '16px' }}>
                             <MessageCircle size={16} /> {review.comments_count || 0}
@@ -327,15 +327,18 @@ function Search() {
 }
 
 // Simple helper component
-function UserIcon({ nickname }) {
+function UserIcon({ user }) {
+  if (user?.avatar) {
+    return <img src={user.avatar} alt="avatar" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />;
+  }
   return (
     <div style={{
       width: '24px', height: '24px', borderRadius: '50%', 
       backgroundColor: 'var(--accent-primary)', color: 'white',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: '0.8rem', fontWeight: 'bold'
+      fontSize: '0.8rem', fontWeight: 'bold', flexShrink: 0
     }}>
-      {nickname ? nickname.charAt(0).toUpperCase() : '?'}
+      {user?.nickname ? user.nickname.charAt(0).toUpperCase() : '?'}
     </div>
   );
 }

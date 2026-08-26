@@ -214,7 +214,12 @@ function MovieDetail() {
                             {speedRatings.map(review => (
                               <div key={review.id} className="glass" style={{ padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  <User size={16} style={{ color: 'var(--text-secondary)' }} /> {review.user?.nickname || '匿名'}
+                                  {review.user?.avatar ? (
+                                    <img src={review.user.avatar} alt="avatar" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
+                                  ) : (
+                                    <User size={16} style={{ color: 'var(--text-secondary)' }} />
+                                  )}
+                                  {review.user?.nickname || '匿名'}
                                 </span>
                                 <span style={{ color: 'var(--accent-primary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <Star size={16} fill="currentColor" /> {review.rating} / 5
@@ -402,8 +407,12 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
     <div className={styles.reviewCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
-          <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold' }}>
-            {review.user?.nickname ? review.user.nickname.charAt(0).toUpperCase() : '?'}
+          <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
+            {review.user?.avatar ? (
+              <img src={review.user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              review.user?.nickname ? review.user.nickname.charAt(0).toUpperCase() : '?'
+            )}
           </div>
           <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{review.user?.nickname || '未知使用者'}</span>
           <span>給了 {review.rating} 顆星</span>
