@@ -148,58 +148,74 @@ function Profile() {
 
 
         <div className={styles.fanCardContent}>
-          {/* 左側：頭像 + 基本資訊 */}
-          <div className={styles.fanCardLeft}>
-            <div className={styles.avatarContainer}>
-              <div
-                className={styles.avatar}
-                onClick={handleAvatarClick}
-                style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-              >
-                {userData?.avatar ? (
-                  <img src={userData.avatar} alt="avatar" className={styles.avatarImage} />
-                ) : (
-                  <span className={styles.avatarText}>
-                    {(userData?.nickname || 'U').charAt(0).toUpperCase()}
-                  </span>
-                )}
+          {/* 左側：頭像 + 基本資訊 + 標籤 */}
+          <div className={styles.leftColumn}>
+            <div className={styles.fanCardLeft}>
+              <div className={styles.avatarContainer}>
+                <div
+                  className={styles.avatar}
+                  onClick={handleAvatarClick}
+                  style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+                >
+                  {userData?.avatar ? (
+                    <img src={userData.avatar} alt="avatar" className={styles.avatarImage} />
+                  ) : (
+                    <span className={styles.avatarText}>
+                      {(userData?.nickname || 'U').charAt(0).toUpperCase()}
+                    </span>
+                  )}
 
-                <div className={styles.avatarHoverOverlay}>
-                  <Camera size={24} />
-                </div>
-                {isUploading && (
-                  <div className={styles.avatarUploadingOverlay}>
-                    <RefreshCw size={24} className={styles.spin} />
+                  <div className={styles.avatarHoverOverlay}>
+                    <Camera size={24} />
                   </div>
-                )}
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-                accept="image/*"
-              />
-              {/* 等級圈 */}
-              <div className={styles.levelBadge}>Lv.{level}</div>
-            </div>
-
-            <div className={styles.nameSection}>
-              <h1 className={styles.nickname}>{userData?.nickname || 'NCU User'}</h1>
-
-              {/* 身分標章 */}
-              <div className={styles.badgeTag} style={{ '--badge-color': badge.color }}>
-                <span>{badge.emoji}</span>
-                <span>{badge.title}</span>
+                  {isUploading && (
+                    <div className={styles.avatarUploadingOverlay}>
+                      <RefreshCw size={24} className={styles.spin} />
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                  accept="image/*"
+                />
+                {/* 等級圈 */}
+                <div className={styles.levelBadge}>Lv.{level}</div>
               </div>
 
-              <p className={styles.realInfo}>
-                {userData?.real_name} · {userData?.department}
-              </p>
-              <p className={styles.campusId}>
-                {(!userData?.campus_id?.match(/^\d+$/) && userData?.campus_id) ? '會員 ID' : '校園 ID'}: {userData?.campus_id}
-              </p>
+              <div className={styles.nameSection}>
+                <div className={styles.nameRow}>
+                  <h1 className={styles.nickname}>{userData?.nickname || 'NCU User'}</h1>
+
+                  {/* 身分標章 */}
+                  <div className={styles.badgeTag} style={{ '--badge-color': badge.color }}>
+                    <span>{badge.emoji}</span>
+                    <span>{badge.title}</span>
+                  </div>
+                </div>
+
+                <p className={styles.realInfo}>
+                  {userData?.real_name} · {userData?.department}
+                </p>
+                <p className={styles.campusId}>
+                  {(!userData?.campus_id?.match(/^\d+$/) && userData?.campus_id) ? '會員 ID' : '校園 ID'}: {userData?.campus_id}
+                </p>
+              </div>
             </div>
+
+            {/* 常用標籤 */}
+            {userData?.common_tags?.length > 0 && (
+              <div className={styles.tagsBar}>
+                <div className={styles.tagsSubtitle}>觀影偏好</div>
+                <div className={styles.tagsList}>
+                  {userData.common_tags.map(tag => (
+                    <span key={tag} className={styles.commonTag}>#{tag}</span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 右側：數據面板 */}
@@ -247,18 +263,6 @@ function Profile() {
             </div>
           </div>
         </div>
-
-        {/* 常用標籤 */}
-        {userData?.common_tags?.length > 0 && (
-          <div className={styles.tagsBar}>
-            <div className={styles.tagsSubtitle}>觀影偏好</div>
-            <div className={styles.tagsList}>
-              {userData.common_tags.map(tag => (
-                <span key={tag} className={styles.commonTag}>#{tag}</span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ===== Tabs 切換 ===== */}
