@@ -8,6 +8,7 @@ import styles from './Profile.module.css';
 
 // 根據等級取得身分標章
 function getBadge(level) {
+  if (level >= 8) return { title: '去金馬作評審', emoji: '', color: '#8B5CF6' };
   if (level >= 5) return { title: '青銅冒險家', emoji: '', color: '#CD7F32' };
   if (level >= 2) return { title: '唉呦不錯呦', emoji: '', color: '#FFD700' };
   if (level >= 1) return { title: '初出茅廬', emoji: '', color: '#6BCB77' };
@@ -148,9 +149,9 @@ function Profile() {
           {/* 左側：頭像 + 基本資訊 */}
           <div className={styles.fanCardLeft}>
             <div className={styles.avatarContainer}>
-              <div 
-                className={styles.avatar} 
-                onClick={handleAvatarClick} 
+              <div
+                className={styles.avatar}
+                onClick={handleAvatarClick}
                 style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
               >
                 {userData?.avatar ? (
@@ -160,7 +161,7 @@ function Profile() {
                     {(userData?.nickname || 'U').charAt(0).toUpperCase()}
                   </span>
                 )}
-                
+
                 <div className={styles.avatarHoverOverlay}>
                   <Camera size={24} />
                 </div>
@@ -170,11 +171,11 @@ function Profile() {
                   </div>
                 )}
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                style={{ display: 'none' }} 
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
                 accept="image/*"
               />
               {/* 等級圈 */}
@@ -206,8 +207,8 @@ function Profile() {
               <div className={styles.expHeader}>
                 <span className={styles.expLabel}>
                   <TrendingUp size={14} /> 距離 Lv.{level + 1} 還差 {Math.max(0, expNeeded - exp)} EXP
-                  <button 
-                    onClick={handleSyncExp} 
+                  <button
+                    onClick={handleSyncExp}
                     disabled={isSyncing}
                     className={styles.syncBtn}
                     title="手動同步最新經驗值"
@@ -279,7 +280,7 @@ function Profile() {
         {currentReviews.length === 0 ? (
           <div className="glass" style={{ padding: '48px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>
-              {activeTab === 'my' ? '📝' : '💬'}
+              {activeTab === 'my' ? '影評' : '💬'}
             </div>
             <h2 style={{ color: 'var(--text-primary)', marginBottom: '12px', fontSize: '1.2rem' }}>
               {activeTab === 'my' ? '這裡還空空如也' : '您還沒有在任何心得下方留言過'}
@@ -297,7 +298,7 @@ function Profile() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             {(() => {
               const isSpeedRating = (r) => !r.content || r.content === "來自急速評星的無內文評價" || r.tags?.some(tag => tag.name === '急速評星');
-              
+
               if (activeTab === 'commented') {
                 return (
                   <div className={styles.reviewList}>
@@ -343,7 +344,7 @@ function Profile() {
                 <>
                   {textReviews.length > 0 && (
                     <div>
-                      <h3 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem', paddingLeft: '8px', borderLeft: '4px solid var(--accent-primary)' }}>📝 我的影評貼文</h3>
+                      <h3 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem', paddingLeft: '8px', borderLeft: '4px solid var(--accent-primary)' }}>我的影評貼文</h3>
                       <div className={styles.reviewList}>
                         {textReviews.map(review => (
                           <div key={review.id} className={styles.reviewCard} onClick={() => setSelectedReview(review)}>

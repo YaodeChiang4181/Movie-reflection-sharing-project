@@ -116,6 +116,42 @@ function UserCardModal({ campusId, onClose }) {
           </div>
         </div>
 
+
+
+        {/* 底部精選足跡 (近期心得) */}
+        {profile.recent_reviews && profile.recent_reviews.length > 0 && (
+          <div className={styles.recentSection}>
+            <div className={styles.recentTitle}>
+              近期公開心得
+            </div>
+            <div className={styles.recentList}>
+              {profile.recent_reviews.map(review => (
+                <div
+                  key={review.id}
+                  className={styles.recentItem}
+                  onClick={() => {
+                    onClose();
+                    navigate(`/movies/${review.movie_id}`);
+                  }}
+                >
+                  <div className={styles.recentHeader}>
+                    <span className={styles.recentMovieTitle}>{review.movie_title}</span>
+                    <span className={styles.recentRating}>
+                      {Array.from({ length: review.rating }).map((_, i) => '★').join('')}
+                      {Array.from({ length: 5 - review.rating }).map((_, i) => '☆').join('')} {review.rating.toFixed(1)}
+                    </span>
+                  </div>
+                  <div className={styles.recentContent}>
+                    {review.content}
+                  </div>
+                  <div className={styles.recentArrow}>
+                    <ChevronRight size={20} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

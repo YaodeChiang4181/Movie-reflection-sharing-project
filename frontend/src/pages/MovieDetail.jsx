@@ -202,7 +202,7 @@ function MovieDetail() {
                       
                       {normalReviews.length > 0 && (
                         <div>
-                          <h4 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>📝 一般心得貼文</h4>
+                          <h4 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>一般心得貼文</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {normalReviews.map(review => (
                               <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} onCardClick={() => setSelectedReview(review)} onUserClick={(campusId) => setSelectedUserCampusId(campusId)} />
