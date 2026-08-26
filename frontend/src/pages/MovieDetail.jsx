@@ -7,6 +7,7 @@ import styles from './MovieDetail.module.css';
 import ReviewForm from '../components/ReviewForm';
 import TmdbPoster from '../components/TmdbPoster';
 import ReviewModal from '../components/ReviewModal';
+import UserCardModal from '../components/UserCardModal';
 
 function MovieDetail() {
   const { id } = useParams();
@@ -21,6 +22,7 @@ function MovieDetail() {
   const { isLoggedIn } = useAuth();
   const [isComposing, setIsComposing] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
+  const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
 
   const handleComposeClick = () => {
     if (!isLoggedIn) {
@@ -192,7 +194,7 @@ function MovieDetail() {
                           <h4 style={{ color: 'var(--accent-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>🔥 熱度心得貼文</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {hotReviews.map(review => (
-                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} onCardClick={() => setSelectedReview(review)} />
+                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} onCardClick={() => setSelectedReview(review)} onUserClick={(campusId) => setSelectedUserCampusId(campusId)} />
                             ))}
                           </div>
                         </div>
@@ -203,7 +205,7 @@ function MovieDetail() {
                           <h4 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>📝 一般心得貼文</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {normalReviews.map(review => (
-                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} onCardClick={() => setSelectedReview(review)} />
+                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} onCardClick={() => setSelectedReview(review)} onUserClick={(campusId) => setSelectedUserCampusId(campusId)} />
                             ))}
                           </div>
                         </div>
@@ -304,11 +306,17 @@ function MovieDetail() {
           }}
         />
       )}
+      {selectedUserCampusId && (
+        <UserCardModal
+          campusId={selectedUserCampusId}
+          onClose={() => setSelectedUserCampusId(null)}
+        />
+      )}
     </div>
   );
 }
 
-function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick }) {
+function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick, onUserClick }) {
   const { isLoggedIn, userProfile } = useAuth();
   const [upvotes, setUpvotes] = useState(review.upvotes || 0);
   const [downvotes, setDownvotes] = useState(review.downvotes || 0);
@@ -420,14 +428,24 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick }) {
     <div className={styles.reviewCard} onClick={onCardClick} style={{ cursor: onCardClick ? 'pointer' : 'default' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
-          <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
-            {review.user?.avatar ? (
-              <img src={review.user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              review.user?.nickname ? review.user.nickname.charAt(0).toUpperCase() : '?'
-            )}
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (onUserClick && review.user?.campus_id) onUserClick(review.user.campus_id); 
+            }}
+          >
+            <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
+              {review.user?.avatar ? (
+                <img src={review.user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                review.user?.nickname ? review.user.nickname.charAt(0).toUpperCase() : '?'
+              )}
+            </div>
+            <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }} className="hover-bg-tertiary">
+              {review.user?.nickname || '未知使用者'}
+            </span>
           </div>
-          <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{review.user?.nickname || '未知使用者'}</span>
           <span>給了 {review.rating} 顆星</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

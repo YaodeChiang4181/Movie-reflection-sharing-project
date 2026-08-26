@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search as SearchIcon, ThumbsUp, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import ReviewModal from '../components/ReviewModal';
 import TmdbPoster from '../components/TmdbPoster';
+import UserCardModal from '../components/UserCardModal';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,6 +12,7 @@ function Search() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
+  const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
   const [expandedMovies, setExpandedMovies] = useState({});
 
   const toggleMovie = (movieId) => {
@@ -287,8 +289,17 @@ function Search() {
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                              推薦指數 {review.rating}/5
                           </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <UserIcon user={review.user} /> {review.user?.nickname || '未知使用者'}
+                          <span 
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (review.user?.campus_id) setSelectedUserCampusId(review.user.campus_id);
+                            }}
+                          >
+                            <UserIcon user={review.user} /> 
+                            <span className="hover-bg-tertiary" style={{ padding: '2px 6px', borderRadius: '4px' }}>
+                              {review.user?.nickname || '未知使用者'}
+                            </span>
                           </span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '16px' }}>
                             <MessageCircle size={16} /> {review.comments_count || 0}
@@ -321,6 +332,13 @@ function Search() {
             </div>
           ))}
         </div>
+      )}
+      
+      {selectedUserCampusId && (
+        <UserCardModal
+          campusId={selectedUserCampusId}
+          onClose={() => setSelectedUserCampusId(null)}
+        />
       )}
     </div>
   );

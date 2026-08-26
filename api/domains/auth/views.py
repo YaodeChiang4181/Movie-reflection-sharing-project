@@ -439,3 +439,76 @@ class UserAvatarUploadView(APIView):
             'message': '大頭貼上傳成功',
             'avatar_url': profile.avatar.url
         })
+
+class PublicProfileView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def get(self, request, campus_id):
+        try:
+            from api.models import User, Review, Comment, Vote, Tag
+            from django.db.models import Count
+            
+            user = User.objects.get(campus_id=campus_id)
+            
+            # Identity logic
+            identity_label = "影迷"
+            if hasattr(user, 'identity') and user.identity:
+                identity_label = f"校內影迷 · {user.identity.department}"
+            elif hasattr(user, 'outsider_identity') and user.outsider_identity:
+                job_title = user.outsider_identity.job_title or "影迷"
+                identity_label = f"校外影迷 · {job_title}"
+                
+            # Profile & Exp
+            nickname = user.profile.nickname if hasattr(user, 'profile') else user.username
+            avatar = user.profile.avatar.url if hasattr(user, 'profile') and user.profile.avatar else None
+            level = user.experience.level if hasattr(user, 'experience') else 1
+            
+            # Stats
+            reviews_count = Review.objects.filter(user=user, is_deleted=False).count()
+            comments_count = Comment.objects.filter(user=user).count()
+            likes_received = Vote.objects.filter(review__user=user, vote_type=1).count()
+            
+            # Top tags
+            tags = Tag.objects.filter(
+                reviews__user=user, 
+                reviews__is_deleted=False
+            ).annotate(
+                use_count=Count('reviews')
+            ).order_by('-use_count')[:3]
+            top_tags = [tag.name.replace('#', '') for tag in tags]
+            
+            # Recent reviews
+            recent_reviews_qs = Review.objects.filter(user=user, is_deleted=False).select_related('movie').order_by('-created_at')[:3]
+            recent_reviews = []
+            for r in recent_reviews_qs:
+                content_snippet = r.content[:60] + '...' if len(r.content) > 60 else r.content
+                if r.is_spoiler:
+                    content_snippet = "此心得包含劇透內容。"
+                recent_reviews.append({
+                    'id': r.id,
+                    'movie_id': r.movie.id,
+                    'movie_title': r.movie.title,
+                    'rating': r.rating,
+                    'content': content_snippet,
+                    'created_at': r.created_at
+                })
+                
+            return Response({
+                'campus_id': user.campus_id,
+                'nickname': nickname,
+                'avatar': avatar,
+                'level': level,
+                'identity_label': identity_label,
+                'stats': {
+                    'reviews_count': reviews_count,
+                    'likes_received': likes_received,
+                    'comments_count': comments_count
+                },
+                'top_tags': top_tags,
+                'recent_reviews': recent_reviews
+            })
+            
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

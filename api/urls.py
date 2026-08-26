@@ -1,6 +1,6 @@
 from django.urls import path, include
 from django.http import HttpResponse
-from api.domains.auth.views import UserMeView
+from api.domains.auth.views import UserMeView, PublicProfileView
 
 def ping(request):
     return HttpResponse("pong")
@@ -35,6 +35,9 @@ urlpatterns = [
     
     # 為了不破壞原本前端的 /api/users/me/ 呼叫
     path('users/me/', UserMeView.as_view(), name='user_me'),
+    
+    # 公開使用者名片資料
+    path('users/<str:campus_id>/public_profile/', PublicProfileView.as_view(), name='user_public_profile'),
     
     # 用於 Google Apps Script 等定時喚醒後台的輕量級端點
     path('ping/', ping, name='ping'),
