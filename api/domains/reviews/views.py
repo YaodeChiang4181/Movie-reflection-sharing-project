@@ -8,7 +8,7 @@ from django.db.models.functions import Length, Replace
 from django.core.cache import cache
 from api.models import Movie, Review, Vote, Comment
 from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
-from api.utils.tmdb import search_tmdb_movies, fetch_tmdb_popular_pool
+from api.utils.tmdb import search_tmdb_movies, fetch_tmdb_popular_pool, fetch_movie_metadata
 from api.domains.gamification.services import add_user_experience
 import random
 
@@ -121,6 +121,23 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
             avg_rating=Avg('reviews__rating', filter=Q(reviews__is_deleted=False)),
             review_count=Count('reviews', filter=Q(reviews__is_deleted=False)),
         )
+
+        # Auto-backfill poster_url for movies missing it
+        for movie in movies_qs:
+            if not movie.poster_url:
+                try:
+                    meta = fetch_movie_metadata(movie.title)
+                    if meta and meta.get('poster_url'):
+                        Movie.objects.filter(id=movie.id).update(
+                            poster_url=meta['poster_url'],
+                            original_title=meta.get('original_title') or movie.original_title,
+                            tmdb_id=meta.get('tmdb_id') or movie.tmdb_id,
+                        )
+                        movie.poster_url = meta['poster_url']
+                        if meta.get('original_title'):
+                            movie.original_title = meta['original_title']
+                except Exception:
+                    pass  # Skip if TMDB lookup fails
 
         # Preserve the selected order
         id_to_movie = {m.id: m for m in movies_qs}
