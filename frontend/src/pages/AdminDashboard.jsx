@@ -13,7 +13,7 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [showTrashModal, setShowTrashModal] = useState(false);
   const [deletedReviews, setDeletedReviews] = useState([]);
-  
+  const [showEngagementModal, setShowEngagementModal] = useState(false);
   // Advertisement states
   const [advertisements, setAdvertisements] = useState([]);
   const [adTitle, setAdTitle] = useState('');
@@ -360,9 +360,7 @@ function AdminDashboard() {
             <div 
               style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'background 0.2s' }}
               className="hover-bg-tertiary"
-              onClick={() => {
-                alert(`【排除急速評星的總貼文分母作比率】\n${stats.text_engagement_ratio}% (${stats.engaged_text_posts} / ${stats.text_posts} 篇)\n\n【無篩選條件的總貼文分母比率】\n${stats.engagement_ratio}% (${stats.engaged_posts} / ${stats.total_posts} 篇)`);
-              }}
+              onClick={() => setShowEngagementModal(true)}
               title="點擊查看詳細比率"
             >
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>活用比 (互動貼文 / 總貼文)</div>
@@ -504,6 +502,48 @@ function AdminDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Engagement Stats Modal */}
+      {showEngagementModal && stats && (
+        <div style={trashOverlayStyle} onClick={() => setShowEngagementModal(false)}>
+          <div style={{...trashModalStyle, maxWidth: '500px'}} onClick={e => e.stopPropagation()}>
+            <button style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }} onClick={() => setShowEngagementModal(false)}>
+              <X size={24} />
+            </button>
+            <h2 style={{ color: 'var(--text-primary)', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={24} color="#f59e0b" /> 詳細活用比觀測
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>排除急速評星之實質活用比</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#f59e0b', marginBottom: '8px' }}>
+                  {stats.text_engagement_ratio}%
+                </div>
+                <div style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+                  {stats.engaged_text_posts} / {stats.text_posts} 篇
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                  *分母僅計算包含文字內文的心得，較能真實反映圖文心得的討論度
+                </div>
+              </div>
+
+              <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>無篩選條件之總貼文活用比</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--accent-primary)', marginBottom: '8px' }}>
+                  {stats.engagement_ratio}%
+                </div>
+                <div style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+                  {stats.engaged_posts} / {stats.total_posts} 篇
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                  *分母包含所有貼文，包含無內文的急速評星
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
