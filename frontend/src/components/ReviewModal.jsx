@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { X, ThumbsUp, ThumbsDown, MessageCircle, Edit2, Trash2, Send } from 'lucide-react';
+import { X, ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Edit2, Trash2, Send } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import ReviewForm from './ReviewForm';
+import UserCardModal from './UserCardModal';
 
 function getBadge(level) {
   if (level >= 5) return { title: '青銅冒險家', emoji: '', color: '#CD7F32' };
@@ -18,6 +19,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
   const [isEditing, setIsEditing] = useState(false);
   const [currentReview, setCurrentReview] = useState(review);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
   
   useEffect(() => {
     fetchComments();
@@ -119,6 +121,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
   }
 
   return (
+    <>
     <div style={overlayStyle} onClick={onClose}>
       <style>{`
         .modal-scroll::-webkit-scrollbar {
@@ -161,7 +164,13 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
               <span style={{ fontWeight: 'bold', marginLeft: '4px' }}>{currentReview.rating.toFixed(1)}</span>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div 
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (currentReview.user?.campus_id) setSelectedUserCampusId(currentReview.user.campus_id); 
+              }}
+            >
               <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#FFF', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
                 {currentReview.user?.avatar ? (
                   <img src={currentReview.user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -171,7 +180,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '0.95rem' }}>{currentReview.user?.nickname}</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '0.95rem' }} className="hover-bg-tertiary">{currentReview.user?.nickname}</span>
                   <span style={{ color: getBadge(currentReview.user?.level || 1).color, fontSize: '0.75rem', fontWeight: 'bold', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: `1px solid ${getBadge(currentReview.user?.level || 1).color}` }}>
                     Lv.{currentReview.user?.level || 1} {getBadge(currentReview.user?.level || 1).title}
                   </span>
@@ -302,6 +311,13 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
         </div>
       </div>
     </div>
+    {selectedUserCampusId && (
+      <UserCardModal
+        campusId={selectedUserCampusId}
+        onClose={() => setSelectedUserCampusId(null)}
+      />
+    )}
+    </>
   );
 }
 
