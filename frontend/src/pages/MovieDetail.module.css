@@ -138,6 +138,11 @@
   color: var(--text-primary);
   margin-bottom: 20px;
   line-height: 1.6;
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .voteActions {

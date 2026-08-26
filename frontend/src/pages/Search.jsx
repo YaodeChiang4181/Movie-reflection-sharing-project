@@ -258,8 +258,9 @@ function Search() {
                             fontSize: '1.1rem', 
                             lineHeight: '1.6', 
                             marginBottom: '20px',
+                            whiteSpace: 'pre-wrap',
                             display: '-webkit-box',
-                            WebkitLineClamp: 2,
+                            WebkitLineClamp: 4,
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis'

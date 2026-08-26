@@ -429,8 +429,9 @@
   margin: 0 0 12px 0;
   font-size: 0.95rem;
   line-height: 1.6;
+  white-space: pre-wrap;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
