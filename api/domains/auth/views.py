@@ -452,11 +452,10 @@ class PublicProfileView(APIView):
             
             # Identity logic
             identity_label = "影迷"
-            if hasattr(user, 'identity') and user.identity:
-                identity_label = f"校內影迷 · {user.identity.department}"
-            elif hasattr(user, 'outsider_identity') and user.outsider_identity:
-                job_title = user.outsider_identity.job_title or "影迷"
-                identity_label = f"校外影迷 · {job_title}"
+            if getattr(user, 'user_type', None) == 'student':
+                identity_label = "校內影迷"
+            elif getattr(user, 'user_type', None) == 'outsider':
+                identity_label = "校外影迷"
                 
             # Profile & Exp
             nickname = user.profile.nickname if hasattr(user, 'profile') else user.username
