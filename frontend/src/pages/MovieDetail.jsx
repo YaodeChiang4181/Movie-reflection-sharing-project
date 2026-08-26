@@ -430,6 +430,16 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick, onU
     }
   };
 
+  if (isEditing) {
+    return (
+      <ReviewForm 
+        initialData={review}
+        onReviewAdded={() => { setIsEditing(false); if(onReviewUpdated) onReviewUpdated(); }}
+        onClose={() => setIsEditing(false)}
+      />
+    );
+  }
+
   return (
     <div className={styles.reviewCard} onClick={onCardClick} style={{ cursor: onCardClick ? 'pointer' : 'default' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', position: 'relative' }}>
@@ -495,16 +505,8 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick, onU
         </div>
       </div>
 
-      {isEditing ? (
-        <ReviewForm 
-          initialData={review}
-          onReviewAdded={() => { setIsEditing(false); if(onReviewUpdated) onReviewUpdated(); }}
-          onClose={() => setIsEditing(false)}
-        />
-      ) : (
-        <>
-          <div style={{ position: 'relative' }}>
-            <p 
+      <div style={{ position: 'relative' }}>
+        <p 
           className={styles.reviewText}
           style={review.is_spoiler && !isRevealed ? { filter: 'blur(8px)', userSelect: 'none', cursor: 'pointer' } : {}}
           onClick={(e) => { if(review.is_spoiler && !isRevealed) { e.stopPropagation(); setIsRevealed(true); } }}
@@ -640,8 +642,6 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick, onU
           </div>
         </div>
       )}
-      </>
-    )}
     </div>
   );
 }
