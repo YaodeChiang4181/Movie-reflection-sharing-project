@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Film, User, Home, Search, CalendarDays, Menu, X } from 'lucide-react';
+import { Clapperboard, User, Home, Search, CalendarDays, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './Navbar.module.css';
 
@@ -26,7 +26,7 @@ function Navbar() {
       <nav className={`${styles.navbar} ${isScrolled ? styles.navbarScrolled : 'glass'}`} style={{ transition: 'all 0.3s ease' }}>
         <div className={`container flex-between ${styles.navContainer}`}>
           <Link to="/" className={styles.brand}>
-            <Film className={styles.brandIcon} />
+            <Clapperboard className={styles.brandIcon} />
             <span>映後時光</span>
           </Link>
 
