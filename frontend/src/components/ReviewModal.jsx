@@ -187,13 +187,20 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
 
             {/* 右側：狀態膠囊、操作按鈕 */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px', flexShrink: 0 }}>
-              {currentReview.is_spoiler ? (
-                <span style={{ background: '#F87171', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  ⚠️ 內含劇透
-                </span>
-              ) : (
-                <span style={{ background: '#10B981', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  🟢 無雷安心看
+              {currentReview.is_spoiler && (
+                <span style={{ 
+                  background: 'rgba(245, 158, 11, 0.15)', 
+                  color: '#F59E0B', 
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  padding: '4px 10px', 
+                  borderRadius: '20px', 
+                  fontSize: '0.85rem', 
+                  fontWeight: 'bold', 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '4px' 
+                }}>
+                  ⚠️ 含劇透內容
                 </span>
               )}
               
@@ -215,6 +222,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
             <div
               style={{
                 color: 'var(--text-primary)', fontSize: '1.1rem', lineHeight: '1.6', whiteSpace: 'pre-wrap',
+                transition: 'filter 0.3s ease',
                 ...(currentReview.is_spoiler && !isRevealed ? { filter: 'blur(8px)', userSelect: 'none', cursor: 'pointer' } : {})
               }}
               onClick={() => { if (currentReview.is_spoiler && !isRevealed) setIsRevealed(true); }}
@@ -226,13 +234,32 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
               <div
                 style={{
                   position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '8px', cursor: 'pointer',
-                  fontWeight: 'bold', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                  zIndex: 10
                 }}
                 onClick={() => setIsRevealed(true)}
               >
-                ⚠️ 包含劇透，點擊解鎖
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  padding: '12px 24px',
+                  borderRadius: '30px',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  fontSize: '0.95rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+                  transition: 'background 0.2s ease, transform 0.2s ease'
+                }} 
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  👁️ 本篇含有關鍵劇情，點擊展開閱讀
+                </div>
               </div>
             )}
           </div>
