@@ -280,8 +280,9 @@
 }
 
 .statCardIcon {
-  color: #C4B5FD;
-  background: rgba(108, 92, 231, 0.12);
+  color: #DDD6FE;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(167, 139, 250, 0.3);
   padding: 8px;
   border-radius: 50%;
   box-sizing: content-box;
