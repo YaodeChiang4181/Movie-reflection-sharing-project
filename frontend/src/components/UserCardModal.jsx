@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronRight, MessageCircle, ThumbsUp, Edit3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import api from '../api/axios';
 import styles from './UserCardModal.module.css';
 
 // 影迷等級的對應邏輯 (與 Profile.jsx 共用)
