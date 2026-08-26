@@ -397,9 +397,20 @@ class AdminStatsView(APIView):
             votes__isnull=True
         ).count()
 
+        # 排除急速評星
+        from django.db.models import Q
+        speed_rating_q = Q(content='') | Q(content__isnull=True) | Q(content='來自急速評星的無內文評價') | Q(tags__name='急速評星')
+        
+        text_posts = Review.objects.filter(is_deleted=False).exclude(speed_rating_q).distinct().count()
+        engaged_text_posts = Review.objects.filter(is_deleted=False).exclude(speed_rating_q).exclude(
+            comments__isnull=True, 
+            votes__isnull=True
+        ).distinct().count()
+
         active_ratio = (active_users / total_users) if total_users > 0 else 0
         usage_ratio = (used_users / total_users) if total_users > 0 else 0
         engagement_ratio = (engaged_posts / total_posts) if total_posts > 0 else 0
+        text_engagement_ratio = (engaged_text_posts / text_posts) if text_posts > 0 else 0
 
         return Response({
             'total_users': total_users,
@@ -409,7 +420,10 @@ class AdminStatsView(APIView):
             'usage_ratio': round(usage_ratio * 100, 2),
             'total_posts': total_posts,
             'engaged_posts': engaged_posts,
-            'engagement_ratio': round(engagement_ratio * 100, 2)
+            'engagement_ratio': round(engagement_ratio * 100, 2),
+            'text_posts': text_posts,
+            'engaged_text_posts': engaged_text_posts,
+            'text_engagement_ratio': round(text_engagement_ratio * 100, 2)
         })
 
 class UserAvatarUploadView(APIView):

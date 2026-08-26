@@ -357,7 +357,14 @@ function AdminDashboard() {
               </div>
             </div>
 
-            <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div 
+              style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'background 0.2s' }}
+              className="hover-bg-tertiary"
+              onClick={() => {
+                alert(`【排除急速評星的總貼文分母作比率】\n${stats.text_engagement_ratio}% (${stats.engaged_text_posts} / ${stats.text_posts} 篇)\n\n【無篩選條件的總貼文分母比率】\n${stats.engagement_ratio}% (${stats.engaged_posts} / ${stats.total_posts} 篇)`);
+              }}
+              title="點擊查看詳細比率"
+            >
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>活用比 (互動貼文 / 總貼文)</div>
               <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b', marginBottom: '8px' }}>
                 {stats.engagement_ratio}%
@@ -366,7 +373,7 @@ function AdminDashboard() {
                 {stats.engaged_posts} / {stats.total_posts} 篇
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                *收到評論、按讚或倒讚之貼文
+                *收到評論、按讚或倒讚之貼文 (點擊看詳細)
               </div>
             </div>
           </div>
