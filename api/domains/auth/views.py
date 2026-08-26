@@ -460,7 +460,12 @@ class PublicProfileView(APIView):
                 
             # Profile & Exp
             nickname = user.profile.nickname if hasattr(user, 'profile') else user.username
-            avatar = user.profile.avatar.url if hasattr(user, 'profile') and user.profile.avatar else None
+            avatar = None
+            if hasattr(user, 'profile') and getattr(user.profile, 'avatar', None):
+                try:
+                    avatar = user.profile.avatar.url
+                except ValueError:
+                    avatar = None
             level = user.experience.level if hasattr(user, 'experience') else 1
             
             # Stats

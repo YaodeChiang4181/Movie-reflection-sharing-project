@@ -217,13 +217,19 @@ function MovieDetail() {
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
                             {speedRatings.map(review => (
                               <div key={review.id} className="glass" style={{ padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span 
+                                  style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (review.user?.campus_id) setSelectedUserCampusId(review.user.campus_id);
+                                  }}
+                                >
                                   {review.user?.avatar ? (
                                     <img src={review.user.avatar} alt="avatar" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
                                   ) : (
                                     <User size={16} style={{ color: 'var(--text-secondary)' }} />
                                   )}
-                                  {review.user?.nickname || '匿名'}
+                                  <span className="hover-text-accent">{review.user?.nickname || '匿名'}</span>
                                 </span>
                                 <span style={{ color: 'var(--accent-primary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <Star size={16} fill="currentColor" /> {review.rating} / 5
