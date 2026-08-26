@@ -152,7 +152,7 @@ function Home() {
                         </span>
                       )}
                       <span className="movie-list-tags">
-                        #熱門討論 #社群精選
+                        {currentPage === 1 ? '#熱門討論 #社群精選' : '#新鮮討論 #冷門話題'}
                       </span>
                     </div>
                   </div>
