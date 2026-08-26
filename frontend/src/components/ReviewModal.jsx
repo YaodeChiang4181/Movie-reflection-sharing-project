@@ -4,6 +4,13 @@ import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import ReviewForm from './ReviewForm';
 
+function getBadge(level) {
+  if (level >= 5) return { title: '青銅冒險家', emoji: '', color: '#CD7F32' };
+  if (level >= 2) return { title: '唉呦不錯呦', emoji: '', color: '#FFD700' };
+  if (level >= 1) return { title: '初出茅廬', emoji: '', color: '#6BCB77' };
+  return { title: '新手影迷', emoji: '🎬', color: '#888888' };
+}
+
 function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
   const { isLoggedIn, userProfile } = useAuth();
   const [comments, setComments] = useState([]);
@@ -113,30 +120,73 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
 
   return (
     <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+      <style>{`
+        .modal-scroll::-webkit-scrollbar {
+          width: 8px;
+        }
+        .modal-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 4px;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.25);
+        }
+      `}</style>
+      <div style={modalStyle} className="modal-scroll" onClick={e => e.stopPropagation()}>
         <button style={closeBtnStyle} onClick={onClose}><X size={24} /></button>
         
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
           <div>
-            <h2 style={{ color: 'var(--accent-primary)', fontSize: '1.8rem', marginBottom: '8px' }}>
-              {currentReview.movie?.title}
-            </h2>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'flex', gap: '12px' }}>
-              <span>推薦指數 {currentReview.rating}/5</span>
-              <span>•</span>
-              <span>{new Date(currentReview.created_at).toLocaleDateString('zh-TW')}</span>
-              <span>•</span>
-              <span>作者: {currentReview.user?.nickname}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+              <h2 style={{ color: 'var(--accent-primary)', fontSize: '1.8rem', margin: 0 }}>
+                {currentReview.movie?.title}
+              </h2>
+              {currentReview.is_spoiler ? (
+                <span style={{ background: '#F87171', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  ⚠️ 內含劇透
+                </span>
+              ) : (
+                <span style={{ background: '#10B981', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  🟢 無雷安心看
+                </span>
+              )}
+            </div>
+            
+            <div style={{ color: '#F59E0B', fontSize: '1.1rem', display: 'flex', gap: '4px', alignItems: 'center', marginBottom: '16px' }}>
+              {'★'.repeat(currentReview.rating)}{'☆'.repeat(5 - currentReview.rating)} 
+              <span style={{ fontWeight: 'bold', marginLeft: '4px' }}>{currentReview.rating.toFixed(1)}</span>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#FFF', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
+                {currentReview.user?.avatar ? (
+                  <img src={currentReview.user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  (currentReview.user?.nickname || 'U').charAt(0).toUpperCase()
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '0.95rem' }}>{currentReview.user?.nickname}</span>
+                  <span style={{ color: getBadge(currentReview.user?.level || 1).color, fontSize: '0.75rem', fontWeight: 'bold', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: `1px solid ${getBadge(currentReview.user?.level || 1).color}` }}>
+                    Lv.{currentReview.user?.level || 1} {getBadge(currentReview.user?.level || 1).title}
+                  </span>
+                </div>
+                <span style={{ color: '#94A3B8', fontSize: '0.82rem' }}>{new Date(currentReview.created_at).toLocaleDateString('zh-TW')}</span>
+              </div>
             </div>
           </div>
           
           {isAuthor && (
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', alignSelf: 'flex-end' }}>
               <button style={actionBtnStyle} onClick={() => setIsEditing(true)}>
                 <Edit2 size={16} /> 編輯
               </button>
-              <button style={{...actionBtnStyle, color: '#ff4444', borderColor: '#ff4444'}} onClick={handleDelete}>
+              <button style={{...actionBtnStyle, color: '#ff4444', borderColor: 'rgba(255, 68, 68, 0.3)', background: 'rgba(255, 68, 68, 0.05)'}} onClick={handleDelete}>
                 <Trash2 size={16} /> 刪除
               </button>
             </div>
@@ -173,7 +223,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
         {/* Tags */}
         {currentReview.tags && currentReview.tags.length > 0 && (
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-            {currentReview.tags.map(tag => (
+            {currentReview.tags.filter(t => !['無雷', '有雷', '含劇透'].includes(t.name)).map(tag => (
               <span key={tag.id} style={tagStyle}>#{tag.name}</span>
             ))}
           </div>
@@ -185,8 +235,9 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
             onClick={() => handleVote(1)}
             style={{ 
               ...voteBtnStyle, 
-              background: currentReview.user_voted === 1 ? 'var(--accent-primary)' : 'transparent',
-              color: currentReview.user_voted === 1 ? '#fff' : 'var(--text-primary)'
+              borderColor: currentReview.user_voted === 1 ? '#8E52F5' : 'rgba(255, 255, 255, 0.15)',
+              background: currentReview.user_voted === 1 ? 'rgba(142, 82, 245, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              color: currentReview.user_voted === 1 ? '#8E52F5' : '#CBD5E1'
             }}
           >
             <ThumbsUp size={18} /> 
@@ -197,9 +248,9 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
             onClick={() => handleVote(-1)}
             style={{ 
               ...voteBtnStyle, 
-              borderColor: 'var(--danger)',
-              background: currentReview.user_voted === -1 ? 'var(--danger)' : 'transparent',
-              color: currentReview.user_voted === -1 ? '#fff' : 'var(--text-primary)'
+              borderColor: currentReview.user_voted === -1 ? '#F87171' : 'rgba(255, 255, 255, 0.15)',
+              background: currentReview.user_voted === -1 ? 'rgba(248, 113, 113, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              color: currentReview.user_voted === -1 ? '#F87171' : '#CBD5E1'
             }}
           >
             <ThumbsDown size={18} /> 
@@ -282,8 +333,9 @@ const closeBtnStyle = {
 };
 
 const tagStyle = {
-  backgroundColor: 'rgba(139, 92, 246, 0.2)', 
-  color: 'var(--accent-secondary)', 
+  backgroundColor: 'rgba(139, 92, 246, 0.12)', 
+  border: '1px solid rgba(139, 92, 246, 0.25)',
+  color: '#DDD6FE', 
   padding: '4px 12px', 
   borderRadius: '20px',
   fontSize: '0.9rem'
