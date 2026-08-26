@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import styles from './MovieDetail.module.css';
 import ReviewForm from '../components/ReviewForm';
 import TmdbPoster from '../components/TmdbPoster';
+import ReviewModal from '../components/ReviewModal';
 
 function MovieDetail() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ function MovieDetail() {
   const [relatedMovies, setRelatedMovies] = useState([]);
   const { isLoggedIn } = useAuth();
   const [isComposing, setIsComposing] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null);
 
   const handleComposeClick = () => {
     if (!isLoggedIn) {
@@ -190,7 +192,7 @@ function MovieDetail() {
                           <h4 style={{ color: 'var(--accent-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>🔥 熱度心得貼文</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {hotReviews.map(review => (
-                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} />
+                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} onCardClick={() => setSelectedReview(review)} />
                             ))}
                           </div>
                         </div>
@@ -201,7 +203,7 @@ function MovieDetail() {
                           <h4 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>📝 一般心得貼文</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {normalReviews.map(review => (
-                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} />
+                              <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} onCardClick={() => setSelectedReview(review)} />
                             ))}
                           </div>
                         </div>
@@ -291,11 +293,22 @@ function MovieDetail() {
           </button>
         </div>
       </div>
+      {selectedReview && (
+        <ReviewModal 
+          review={selectedReview} 
+          onClose={() => setSelectedReview(null)} 
+          onReviewUpdated={fetchReviews}
+          onReviewDeleted={() => {
+            setSelectedReview(null);
+            fetchReviews();
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
+function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick }) {
   const { isLoggedIn, userProfile } = useAuth();
   const [upvotes, setUpvotes] = useState(review.upvotes || 0);
   const [downvotes, setDownvotes] = useState(review.downvotes || 0);
@@ -404,7 +417,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
   };
 
   return (
-    <div className={styles.reviewCard}>
+    <div className={styles.reviewCard} onClick={onCardClick} style={{ cursor: onCardClick ? 'pointer' : 'default' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
           <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
@@ -424,7 +437,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
           {isAuthor && (
             <div style={{ position: 'relative' }}>
               <button 
-                onClick={() => setShowMenu(!showMenu)}
+                onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
                 style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
               >
                 <MoreVertical size={18} />
@@ -438,14 +451,14 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
                   boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                 }}>
                   <button 
-                    onClick={() => { setIsEditing(true); setShowMenu(false); }}
+                    onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
                     style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left' }}
                     className="hover-bg-tertiary"
                   >
                     <Edit2 size={16} /> 編輯
                   </button>
                   <button 
-                    onClick={() => { handleDelete(); setShowMenu(false); }}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(); setShowMenu(false); }}
                     style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', textAlign: 'left' }}
                     className="hover-bg-tertiary"
                   >
@@ -470,7 +483,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
             <p 
           className={styles.reviewText}
           style={review.is_spoiler && !isRevealed ? { filter: 'blur(8px)', userSelect: 'none', cursor: 'pointer' } : {}}
-          onClick={() => { if(review.is_spoiler && !isRevealed) setIsRevealed(true); }}
+          onClick={(e) => { if(review.is_spoiler && !isRevealed) { e.stopPropagation(); setIsRevealed(true); } }}
         >
           {review.content}
         </p>
@@ -483,7 +496,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
               backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '8px', cursor: 'pointer',
               fontWeight: 'bold', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)'
             }}
-            onClick={() => setIsRevealed(true)}
+            onClick={(e) => { e.stopPropagation(); setIsRevealed(true); }}
           >
             ⚠️ 包含劇透，點擊解鎖
           </div>
@@ -515,7 +528,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <button 
                 className={`${styles.voteBtn} ${currentVote === 1 ? styles.voteActive : ''}`}
-                onClick={() => handleVote(1)}
+                onClick={(e) => { e.stopPropagation(); handleVote(1); }}
                 disabled={isVoting}
                 aria-label="推"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: currentVote === 1 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}
@@ -530,7 +543,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
               <button 
                 className={`${styles.voteBtn} ${currentVote === -1 ? styles.voteActiveDown : ''}`}
-                onClick={() => handleVote(-1)}
+                onClick={(e) => { e.stopPropagation(); handleVote(-1); }}
                 disabled={isVoting}
                 aria-label="噓"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: currentVote === -1 ? 'var(--danger)' : 'var(--text-secondary)' }}
@@ -545,7 +558,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
         </div>
 
         <button 
-          onClick={toggleComments}
+          onClick={(e) => { e.stopPropagation(); toggleComments(); }}
           style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
         >
           <MessageCircle size={16} /> 留言 ({commentsCount})
@@ -553,7 +566,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated }) {
       </div>
 
       {showComments && (
-        <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
           {isLoggedIn ? (
             <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
               <input 
