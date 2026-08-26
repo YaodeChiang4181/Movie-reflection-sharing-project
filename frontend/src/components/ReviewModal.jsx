@@ -145,21 +145,13 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
           <button style={closeBtnStyle} onClick={onClose}><X size={24} /></button>
 
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                <h2 style={{ color: 'var(--accent-primary)', fontSize: '1.8rem', margin: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', gap: '16px' }}>
+            {/* 左側：片名、評分、作者 */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ marginBottom: '8px' }}>
+                <h2 style={{ color: 'var(--accent-primary)', fontSize: '1.8rem', margin: 0, wordBreak: 'break-word' }}>
                   {currentReview.movie?.title}
                 </h2>
-                {currentReview.is_spoiler ? (
-                  <span style={{ background: '#F87171', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    ⚠️ 內含劇透
-                  </span>
-                ) : (
-                  <span style={{ background: '#10B981', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    🟢 無雷安心看
-                  </span>
-                )}
               </div>
 
               <div style={{ color: '#F59E0B', fontSize: '1.1rem', display: 'flex', gap: '4px', alignItems: 'center', marginBottom: '16px' }}>
@@ -193,16 +185,29 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
               </div>
             </div>
 
-            {isAuthor && (
-              <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', alignSelf: 'flex-end' }}>
-                <button style={actionBtnStyle} onClick={() => setIsEditing(true)}>
-                  <Edit2 size={16} /> 編輯
-                </button>
-                <button style={{ ...actionBtnStyle, color: '#ff4444', borderColor: 'rgba(255, 68, 68, 0.3)', background: 'rgba(255, 68, 68, 0.05)' }} onClick={handleDelete}>
-                  <Trash2 size={16} /> 刪除
-                </button>
-              </div>
-            )}
+            {/* 右側：狀態膠囊、操作按鈕 */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px', flexShrink: 0 }}>
+              {currentReview.is_spoiler ? (
+                <span style={{ background: '#F87171', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  ⚠️ 內含劇透
+                </span>
+              ) : (
+                <span style={{ background: '#10B981', color: '#FFF', padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  🟢 無雷安心看
+                </span>
+              )}
+              
+              {isAuthor && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button style={actionBtnStyle} onClick={() => setIsEditing(true)}>
+                    <Edit2 size={16} /> 編輯
+                  </button>
+                  <button style={{ ...actionBtnStyle, color: '#ff4444', borderColor: 'rgba(255, 68, 68, 0.3)', background: 'rgba(255, 68, 68, 0.05)' }} onClick={handleDelete}>
+                    <Trash2 size={16} /> 刪除
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Content */}
@@ -233,13 +238,43 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
           </div>
 
           {/* Tags */}
-          {currentReview.tags && currentReview.tags.length > 0 && (
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-              {currentReview.tags.filter(t => !['無雷', '有雷', '含劇透'].includes(t.name)).map(tag => (
-                <span key={tag.id} style={tagStyle}>#{tag.name}</span>
-              ))}
-            </div>
-          )}
+          {(() => {
+            if (!currentReview.tags || currentReview.tags.length === 0) return null;
+            
+            // 1. 過濾防雷標籤
+            let validTags = currentReview.tags.filter(t => !['無雷', '有雷', '含劇透'].includes(t.name));
+            
+            // 2. 去重 (忽略大小寫與繁簡差異可由 Set 單純比對名稱，此處以 exact name 為主)
+            const uniqueNames = new Set();
+            validTags = validTags.filter(tag => {
+              const nameLower = tag.name.toLowerCase();
+              if (uniqueNames.has(nameLower)) return false;
+              uniqueNames.add(nameLower);
+              return true;
+            });
+
+            if (validTags.length === 0) return null;
+
+            // 3. 限制最多顯示 5 個
+            const displayTags = validTags.slice(0, 5);
+            const remainingCount = validTags.length - 5;
+
+            return (
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <style>{`.tags-container::-webkit-scrollbar { display: none; }`}</style>
+                <div className="tags-container" style={{ display: 'flex', gap: '8px' }}>
+                  {displayTags.map(tag => (
+                    <span key={tag.id} style={{...tagStyle, flexShrink: 0}}>#{tag.name}</span>
+                  ))}
+                  {remainingCount > 0 && (
+                    <span style={{...tagStyle, flexShrink: 0, background: 'rgba(255,255,255,0.05)', color: '#94A3B8', borderColor: 'rgba(255,255,255,0.1)'}}>
+                      +{remainingCount}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Vote Buttons */}
           <div style={{ display: 'flex', marginBottom: '32px', gap: '12px' }}>
