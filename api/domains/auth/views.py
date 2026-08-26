@@ -411,3 +411,31 @@ class AdminStatsView(APIView):
             'engaged_posts': engaged_posts,
             'engagement_ratio': round(engagement_ratio * 100, 2)
         })
+
+class UserAvatarUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        if 'avatar' not in request.FILES:
+            return Response({'error': '請選擇要上傳的圖片'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        avatar_file = request.FILES['avatar']
+        
+        # 檢查大小是否超過 5MB
+        if avatar_file.size > 5 * 1024 * 1024:
+            return Response({'error': '圖片大小不能超過 5MB'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user = request.user
+        profile = user.profile
+        
+        # 刪除舊圖片以節省空間 (可選，避免佔用)
+        if profile.avatar:
+            profile.avatar.delete(save=False)
+            
+        profile.avatar = avatar_file
+        profile.save()
+        
+        return Response({
+            'message': '大頭貼上傳成功',
+            'avatar_url': profile.avatar.url
+        })

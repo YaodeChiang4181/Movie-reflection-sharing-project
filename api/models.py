@@ -43,6 +43,7 @@ class UserProfile(models.Model):
     """公開主頁表：只存放公開的暱稱與設定"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     nickname = models.CharField(max_length=50, unique=True, verbose_name="登入者代碼")
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="大頭貼")
     
     def __str__(self):
         return self.nickname

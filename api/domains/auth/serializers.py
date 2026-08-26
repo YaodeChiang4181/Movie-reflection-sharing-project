@@ -32,15 +32,21 @@ class UserMeSerializer(serializers.ModelSerializer):
     level = serializers.SerializerMethodField()
     exp = serializers.SerializerMethodField()
     common_tags = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'is_staff')
+        fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'is_staff', 'avatar')
 
     def get_nickname(self, obj):
         if hasattr(obj, 'profile') and obj.profile:
             return obj.profile.nickname
         return obj.username or obj.campus_id or "Unknown"
+
+    def get_avatar(self, obj):
+        if hasattr(obj, 'profile') and obj.profile and obj.profile.avatar:
+            return obj.profile.avatar.url
+        return None
 
     def get_real_name(self, obj):
         if hasattr(obj, 'identity') and obj.identity:

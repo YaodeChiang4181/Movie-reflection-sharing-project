@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw } from 'lucide-react';
+import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw, Camera } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';
@@ -25,6 +25,44 @@ function Profile() {
   const [selectedReview, setSelectedReview] = useState(null);
   const [activeTab, setActiveTab] = useState('my'); // 'my' or 'commented'
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleAvatarClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("大頭貼圖片大小不能超過 5MB");
+      return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const res = await api.post('/auth/avatar/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      setUserData(prev => ({ ...prev, avatar: res.data.avatar_url }));
+      alert("大頭貼上傳成功！");
+    } catch (err) {
+      console.error("Upload avatar failed", err);
+      alert(err.response?.data?.error || "上傳失敗，請稍後再試");
+    } finally {
+      setIsUploading(false);
+      e.target.value = null;
+    }
+  };
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -110,11 +148,35 @@ function Profile() {
           {/* 左側：頭像 + 基本資訊 */}
           <div className={styles.fanCardLeft}>
             <div className={styles.avatarContainer}>
-              <div className={styles.avatar}>
-                <span className={styles.avatarText}>
-                  {(userData?.nickname || 'U').charAt(0).toUpperCase()}
-                </span>
+              <div 
+                className={styles.avatar} 
+                onClick={handleAvatarClick} 
+                style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+              >
+                {userData?.avatar ? (
+                  <img src={userData.avatar} alt="avatar" className={styles.avatarImage} />
+                ) : (
+                  <span className={styles.avatarText}>
+                    {(userData?.nickname || 'U').charAt(0).toUpperCase()}
+                  </span>
+                )}
+                
+                <div className={styles.avatarHoverOverlay}>
+                  <Camera size={24} />
+                </div>
+                {isUploading && (
+                  <div className={styles.avatarUploadingOverlay}>
+                    <RefreshCw size={24} className={styles.spin} />
+                  </div>
+                )}
               </div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                style={{ display: 'none' }} 
+                accept="image/*"
+              />
               {/* 等級圈 */}
               <div className={styles.levelBadge}>Lv.{level}</div>
             </div>
