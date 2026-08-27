@@ -65,8 +65,10 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         count = int(request.query_params.get('count', 10))
         count = min(count, 20)  # cap at 20
 
-        # Get local movies (all movies in DB)
-        local_movies = list(Movie.objects.all().values_list('id', flat=True))
+        # Get local movies (only those with at least one active review)
+        local_movies = list(Movie.objects.annotate(
+            active_review_count=Count('reviews', filter=Q(reviews__is_deleted=False))
+        ).filter(active_review_count__gt=0).values_list('id', flat=True))
 
         # Get TMDB pool from cache
         tmdb_pool = fetch_tmdb_popular_pool(pool_size=10)
