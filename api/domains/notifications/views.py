@@ -88,4 +88,16 @@ class FollowViewSet(viewsets.ModelViewSet):
         return Follow.objects.filter(follower=self.request.user)
         
     def perform_create(self, serializer):
-        serializer.save(follower=self.request.user)
+        from api.models import User
+        following_id = self.request.data.get('following_id')
+        if following_id:
+            following = User.objects.get(campus_id=following_id)
+            serializer.save(follower=self.request.user, following=following)
+            
+    @action(detail=False, methods=['delete'])
+    def unfollow(self, request):
+        following_id = request.data.get('following_id')
+        if following_id:
+            Follow.objects.filter(follower=request.user, following__campus_id=following_id).delete()
+            return Response({'status': 'unfollowed'})
+        return Response({'error': 'missing following_id'}, status=400)

@@ -496,7 +496,13 @@ class PublicProfileView(APIView):
             top_tags = [tag.name.replace('#', '') for tag in tags]
             
             # Recent reviews
-            recent_reviews_qs = Review.objects.filter(user=user, is_deleted=False).select_related('movie').order_by('-created_at')[:3]
+            recent_reviews_qs = Review.objects.filter(user=user, is_deleted=False).order_by('-created_at')[:3]
+            
+            is_following = False
+            if request.user.is_authenticated:
+                from api.models import Follow
+                is_following = Follow.objects.filter(follower=request.user, following=user).exists()
+                
             recent_reviews = []
             for r in recent_reviews_qs:
                 content_snippet = r.content[:60] + '...' if len(r.content) > 60 else r.content
@@ -523,7 +529,8 @@ class PublicProfileView(APIView):
                     'comments_count': comments_count
                 },
                 'top_tags': top_tags,
-                'recent_reviews': recent_reviews
+                'recent_reviews': recent_reviews,
+                'is_following': is_following
             })
             
         except User.DoesNotExist:

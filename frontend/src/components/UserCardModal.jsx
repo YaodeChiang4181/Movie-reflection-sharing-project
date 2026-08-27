@@ -18,6 +18,7 @@ function getBadge(level) {
 function UserCardModal({ campusId, onClose }) {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,6 +37,24 @@ function UserCardModal({ campusId, onClose }) {
       fetchProfile();
     }
   }, [campusId]);
+
+  const handleFollowToggle = async () => {
+    try {
+      setIsFollowLoading(true);
+      if (profile.is_following) {
+        await api.delete('/notifications/follows/unfollow/', { data: { following_id: profile.campus_id } });
+        setProfile(prev => ({ ...prev, is_following: false }));
+      } else {
+        await api.post('/notifications/follows/', { following_id: profile.campus_id });
+        setProfile(prev => ({ ...prev, is_following: true }));
+      }
+    } catch (err) {
+      console.error('Failed to toggle follow', err);
+      alert('操作失敗，請稍後再試');
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -95,23 +114,47 @@ function UserCardModal({ campusId, onClose }) {
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '16px' }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
             <button 
-              className="btn btn-outline" 
-              style={{ padding: '6px 16px', fontSize: '0.8rem', borderRadius: '20px', flex: 1 }}
-              onClick={() => alert('追蹤功能即將推出！')}
+              className={`btn ${profile.is_following ? 'btn-outline' : 'btn-primary'}`}
+              style={{ 
+                height: '38px', 
+                minWidth: '110px',
+                padding: '0 16px', 
+                fontSize: '0.9rem', 
+                borderRadius: '20px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                whiteSpace: 'nowrap'
+              }}
+              onClick={handleFollowToggle}
+              disabled={isFollowLoading}
             >
-              追蹤
+              {profile.is_following ? '取消追蹤' : '追蹤'}
             </button>
             <button 
               className="btn btn-primary" 
-              style={{ padding: '6px 16px', fontSize: '0.8rem', borderRadius: '20px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+              style={{ 
+                height: '38px', 
+                minWidth: '110px',
+                padding: '0 16px', 
+                fontSize: '0.9rem', 
+                borderRadius: '20px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '6px',
+                whiteSpace: 'nowrap',
+                background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                border: 'none'
+              }}
               onClick={() => {
                 onClose();
                 window.dispatchEvent(new CustomEvent('open-mailbox', { detail: profile }));
               }}
             >
-              <MessageCircle size={14} /> 傳送訊息
+              <MessageCircle size={16} /> 傳送訊息
             </button>
           </div>
         </div>

@@ -19,7 +19,8 @@ class DirectMessageSerializer(serializers.ModelSerializer):
 class FollowSerializer(serializers.ModelSerializer):
     follower = UserSerializer(read_only=True)
     following = UserSerializer(read_only=True)
+    following_id = serializers.CharField(write_only=True)
     
     class Meta:
         model = Follow
-        fields = ('id', 'follower', 'following', 'created_at')
+        fields = ('id', 'follower', 'following', 'following_id', 'created_at')
