@@ -382,8 +382,7 @@ function Auth() {
           </button>
         </form>
 
-        {isLogin && (
-          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '16px' }}>
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }}></div>
               <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>或</span>
@@ -419,7 +418,7 @@ function Auth() {
                   {/* LINE 文字 (綠色) - 使用標準 text 標籤確保 100% 不破圖 */}
                   <text x="12" y="11" fill="#06C755" fontSize="6.5" fontWeight="900" fontFamily="Arial, Helvetica, sans-serif" textAnchor="middle" dominantBaseline="central" letterSpacing="-0.3">LINE</text>
                 </svg>
-                <span>LINE 登入</span>
+                <span>{isLogin ? 'LINE 登入' : 'LINE 註冊 / 登入'}</span>
               </button>
               
               <button
@@ -452,11 +451,10 @@ function Auth() {
                   <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                   <path fill="none" d="M0 0h48v48H0z"/>
                 </svg>
-                <span>Gmail 登入</span>
+                <span>{isLogin ? 'Gmail 登入' : 'Gmail 註冊 / 登入'}</span>
               </button>
             </div>
           </div>
-        )}
 
         <p className={styles.toggleText}>
           {isLogin ? '還沒有帳號嗎？' : '已經有帳號了？'}

@@ -32,7 +32,9 @@ class EventViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        with transaction.atomic():
+            event = serializer.save(user=self.request.user)
+            EventRegistration.objects.create(event=event, user=self.request.user, status='REGISTERED')
 
     def destroy(self, request, *args, **kwargs):
         event = self.get_object()

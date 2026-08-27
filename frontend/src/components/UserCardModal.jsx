@@ -94,6 +94,26 @@ function UserCardModal({ campusId, onClose }) {
               ))}
             </div>
           )}
+
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '16px' }}>
+            <button 
+              className="btn btn-outline" 
+              style={{ padding: '6px 16px', fontSize: '0.8rem', borderRadius: '20px', flex: 1 }}
+              onClick={() => alert('追蹤功能即將推出！')}
+            >
+              追蹤
+            </button>
+            <button 
+              className="btn btn-primary" 
+              style={{ padding: '6px 16px', fontSize: '0.8rem', borderRadius: '20px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+              onClick={() => {
+                onClose();
+                window.dispatchEvent(new CustomEvent('open-mailbox', { detail: profile }));
+              }}
+            >
+              <MessageCircle size={14} /> 傳送訊息
+            </button>
+          </div>
         </div>
 
         {/* 中段品味數據 */}

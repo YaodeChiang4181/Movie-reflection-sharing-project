@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     // 監聽來自 Axios 攔截器的全局登出事件
@@ -89,6 +90,30 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  useEffect(() => {
+    let intervalId;
+    if (isLoggedIn) {
+      // 初始取得未讀通知
+      fetchUnreadCount();
+      // 30秒輪詢一次
+      intervalId = setInterval(() => {
+        fetchUnreadCount();
+      }, 30000);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isLoggedIn]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await api.get('/notifications/unread_count/');
+      setUnreadCount(res.data.count || 0);
+    } catch (error) {
+      console.error("Failed to fetch notifications count", error);
+    }
+  };
+
   const fetchUserProfile = async (token = null) => {
     const activeToken = token || localStorage.getItem('access_token');
     if (!activeToken) return;
@@ -119,7 +144,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, userProfile, isAuthLoading, login, logout, fetchUserProfile }}>
+    <AuthContext.Provider value={{ isLoggedIn, userProfile, isAuthLoading, login, logout, fetchUserProfile, unreadCount, setUnreadCount }}>
       {children}
     </AuthContext.Provider>
   );

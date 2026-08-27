@@ -530,3 +530,107 @@ class PublicProfileView(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class AdminInviteTokenView(APIView):
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        from api.models import InviteToken, Badge
+        import secrets
+        
+        role_type = request.data.get('role_type')
+        badge_title = request.data.get('badge_title')
+        expires_in_days = request.data.get('expires_in_days', 7)
+        
+        if not role_type or not badge_title:
+            return Response({'error': 'Missing role_type or badge_title'}, status=400)
+            
+        badge, _ = Badge.objects.get_or_create(
+            name=badge_title,
+            defaults={
+                'description': f'{role_type} 專屬標章',
+                'condition_type': 'magic_link'
+            }
+        )
+        
+        token_str = secrets.token_urlsafe(32)
+        expires_at = timezone.now() + timedelta(days=int(expires_in_days))
+        
+        invite = InviteToken.objects.create(
+            token=token_str,
+            role_type=role_type,
+            badge=badge,
+            expires_at=expires_at
+        )
+        
+        return Response({
+            'success': True,
+            'token': token_str,
+            'expires_at': expires_at
+        })
+
+class ClaimBadgeView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        from api.models import InviteToken, UserBadge
+        import string
+        
+        token_str = request.data.get('token')
+        if not token_str:
+            return Response({'error': 'Missing token'}, status=400)
+            
+        token_obj = InviteToken.objects.filter(token=token_str).first()
+        if not token_obj:
+            return Response({'error': '無效的邀請連結'}, status=404)
+            
+        if token_obj.is_claimed:
+            return Response({'error': '該邀請連結已被領取'}, status=400)
+            
+        if token_obj.expires_at < timezone.now():
+            return Response({'error': '該邀請連結已過期'}, status=400)
+            
+        user = request.user if request.user.is_authenticated else None
+        is_new_user = False
+        
+        if not user:
+            def generate_random_campus_id():
+                while True:
+                    cid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
+                    if not User.objects.filter(campus_id=cid).exists():
+                        return cid
+            campus_id = generate_random_campus_id()
+            user = User.objects.create(
+                campus_id=campus_id,
+                username=f"{token_obj.role_type}_{campus_id}"
+            )
+            from api.models import UserProfile
+            UserProfile.objects.create(user=user, nickname=f"{token_obj.badge.name}")
+            is_new_user = True
+            
+        UserBadge.objects.get_or_create(user=user, badge=token_obj.badge)
+        
+        token_obj.is_claimed = True
+        token_obj.claimed_by = user
+        token_obj.claimed_at = timezone.now()
+        token_obj.save()
+        
+        response_data = {
+            'success': True,
+            'message': '標章領取成功！',
+            'badge': {
+                'title': token_obj.badge.name,
+                'icon': '🎓'
+            }
+        }
+        
+        if is_new_user:
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken.for_user(user)
+            response_data['tokens'] = {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token)
+            }
+            response_data['user'] = UserMeSerializer(user).data
+            
+        return Response(response_data)

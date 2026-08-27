@@ -1,21 +1,36 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Clapperboard, User, Home, Search, CalendarDays, Menu, X } from 'lucide-react';
+import { Clapperboard, User, Home, Search, CalendarDays, Menu, X, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import CinemaMailboxDrawer from './CinemaMailboxDrawer';
 import styles from './Navbar.module.css';
 
 function Navbar() {
-  const { isLoggedIn, userProfile, logout } = useAuth();
+  const { isLoggedIn, userProfile, logout, unreadCount } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMailboxOpen, setIsMailboxOpen] = useState(false);
+  const [mailboxPartner, setMailboxPartner] = useState(null);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
+    
+    const handleOpenMailbox = (e) => {
+      setIsMailboxOpen(true);
+      if (e.detail) {
+        setMailboxPartner(e.detail);
+      }
+    };
+    
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('open-mailbox', handleOpenMailbox);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('open-mailbox', handleOpenMailbox);
+    };
   }, []);
 
   const isActive = (path) => location.pathname === path;
@@ -54,6 +69,18 @@ function Navbar() {
           <div className={styles.userActions}>
             {isLoggedIn ? (
               <>
+                <button 
+                  onClick={() => setIsMailboxOpen(true)} 
+                  className={styles.navLink} 
+                  style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span style={{ position: 'absolute', top: -2, right: -2, background: 'var(--danger-color, #ff4d4f)', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
                 <span className={styles.welcomeText}>Hi, {userProfile?.nickname}</span>
                 <Link to="/profile" className={styles.profileBtn}>
                   <User size={18} />
@@ -84,6 +111,21 @@ function Navbar() {
           <div className={`${styles.mobileDropdown} glass`}>
             {isLoggedIn ? (
               <>
+                <button
+                  className={styles.mobileDropdownItem}
+                  onClick={() => { setMobileMenuOpen(false); setIsMailboxOpen(true); }}
+                  style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none' }}
+                >
+                  <div style={{ position: 'relative', display: 'inline-block' }}>
+                    <Bell size={18} />
+                    {unreadCount > 0 && (
+                      <span style={{ position: 'absolute', top: -4, right: -8, background: 'var(--danger-color, #ff4d4f)', color: 'white', borderRadius: '50%', padding: '1px 5px', fontSize: '0.6rem', fontWeight: 'bold' }}>
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <span>信箱與通知</span>
+                </button>
                 <span className={styles.mobileWelcome}>Hi, {userProfile?.nickname}</span>
                 <Link
                   to="/profile"
@@ -149,6 +191,14 @@ function Navbar() {
           <span>建立活動</span>
         </Link>
       </nav>
+
+      {/* 影迷信箱側邊滑出抽屜 */}
+      <CinemaMailboxDrawer 
+        isOpen={isMailboxOpen} 
+        onClose={() => setIsMailboxOpen(false)} 
+        unreadCount={unreadCount} 
+        initialPartner={mailboxPartner}
+      />
     </>
   );
 }

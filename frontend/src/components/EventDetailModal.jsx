@@ -248,6 +248,29 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                   </div>
                 </div>
               )}
+
+              {isAuthor && (
+                <div className={`glass ${styles.creatorDashboard}`} style={{ marginTop: '16px', padding: '20px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <h3 style={{ color: 'var(--accent-primary)', marginBottom: '16px', fontSize: '1.1rem' }}>👑 發起人專屬數據看板</h3>
+                  <div style={{ display: 'flex', gap: '20px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 min-content', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>總報名人數</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{event.registered_count || 0} 人</div>
+                    </div>
+                    <div style={{ flex: '1 1 min-content', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>核銷簽到率</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+                        {event.registered_count > 0 ? '即將開放' : '0%'}
+                      </div>
+                    </div>
+                    <div style={{ flex: '1 1 min-content', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>心得回饋數</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{event.event_comments?.length || event.comment_count || 0} 篇</div>
+                    </div>
+                  </div>
+                  <button className="btn btn-outline" style={{ width: '100%' }}>查看完整名單與報到核銷</button>
+                </div>
+              )}
             </div>
           )}
 

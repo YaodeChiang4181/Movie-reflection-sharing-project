@@ -54,6 +54,9 @@ urlpatterns = [
     # Domain: Campaigns & Core Admin (實體活動與廣告管理)
     path('', include('api.domains.campaigns.urls')),
     
+    # Domain: Notifications & Mailbox
+    path('', include('api.domains.notifications.urls')),
+    
     # Integrations: LINE Webhook
     path('line/', include('api.integrations.line.urls')),
 ]

@@ -65,8 +65,8 @@ class EventSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"cover_image": "必須上傳活動封面圖。"})
             
         desc = data.get('description', '') if not self.instance else data.get('description', self.instance.description)
-        if not desc or len(desc.strip()) < 30:
-            raise serializers.ValidationError({"description": "活動簡介至少需要 30 個字。"})
+        if not desc or len(desc.strip()) < 15:
+            raise serializers.ValidationError({"description": "活動簡介至少需要 15 個字。"})
             
         capacity = data.get('capacity', 0) if not self.instance else data.get('capacity', self.instance.capacity)
         if capacity < 2 or capacity > 50:

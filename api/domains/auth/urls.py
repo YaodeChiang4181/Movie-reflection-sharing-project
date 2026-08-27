@@ -4,7 +4,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     RegisterView, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, 
     SendVerificationView, VerifyEmailView, LineLoginView, GoogleLoginView, MergeGhostAccountView,
-    RecalculateExpView, AdminStatsView, SyncUserExpView, UserAvatarUploadView
+    RecalculateExpView, AdminStatsView, SyncUserExpView, UserAvatarUploadView,
+    AdminInviteTokenView, ClaimBadgeView
 )
 
 router = DefaultRouter()
@@ -23,4 +24,6 @@ urlpatterns = [
     path('admin/merge-ghost/', MergeGhostAccountView.as_view(), name='admin_merge_ghost'),
     path('admin/recalculate-exp/', RecalculateExpView.as_view(), name='admin_recalculate_exp'),
     path('admin/stats/', AdminStatsView.as_view(), name='admin_stats'),
+    path('admin/invite-tokens/', AdminInviteTokenView.as_view(), name='admin_invite_token'),
+    path('claim-badge/', ClaimBadgeView.as_view(), name='claim_badge'),
 ] + router.urls

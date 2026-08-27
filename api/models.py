@@ -92,6 +92,7 @@ class Review(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='reviews')
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='reviews')
+    event = models.ForeignKey('Event', on_delete=models.SET_NULL, null=True, blank=True, related_name='reviews')
     rating = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
@@ -264,4 +265,50 @@ class DriftBottle(models.Model):
     
     def __str__(self):
         return f"{self.user.campus_id} - {self.movie_title}"
+
+class InviteToken(models.Model):
+    token = models.CharField(max_length=64, unique=True)
+    role_type = models.CharField(max_length=32)
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    assigned_email = models.EmailField(null=True, blank=True)
+    is_claimed = models.BooleanField(default=False)
+    claimed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    claimed_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Token: {self.token} - Claimed: {self.is_claimed}"
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
+    following = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'following')
+
+    def __str__(self):
+        return f"{self.follower} follows {self.following}"
+
+class DirectMessage(models.Model):
+    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
+    content = models.CharField(max_length=200)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"From {self.sender} to {self.receiver}"
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, related_name='notifications', on_delete=models.CASCADE)
+    type = models.CharField(max_length=32)
+    title = models.CharField(max_length=120)
+    target_url = models.CharField(max_length=255, blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} - {self.title}"
 
