@@ -224,11 +224,18 @@ function MovieDetail() {
                                     if (review.user?.campus_id) setSelectedUserCampusId(review.user.campus_id);
                                   }}
                                 >
-                                  {review.user?.avatar ? (
-                                    <img src={review.user.avatar} alt="avatar" className="clickable-avatar" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
-                                  ) : (
-                                    <User size={16} style={{ color: 'var(--text-secondary)' }} />
-                                  )}
+                                  <div 
+                                    className="clickable-avatar"
+                                    style={{
+                                      width: 20, height: 20, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
+                                    }}
+                                  >
+                                    {review.user?.avatar ? (
+                                      <img src={review.user.avatar} alt="avatar" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
+                                    ) : (
+                                      <User size={16} style={{ color: 'var(--text-secondary)' }} />
+                                    )}
+                                  </div>
                                   <span className="hover-text-accent">{review.user?.nickname || '匿名'}</span>
                                 </span>
                                 <span style={{ color: 'var(--accent-primary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -451,9 +458,9 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick, onU
               if (onUserClick && review.user?.campus_id) onUserClick(review.user.campus_id); 
             }}
           >
-            <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
+            <div className="clickable-avatar" style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
               {review.user?.avatar ? (
-                <img src={review.user.avatar} alt="avatar" className="clickable-avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={review.user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 review.user?.nickname ? review.user.nickname.charAt(0).toUpperCase() : '?'
               )}

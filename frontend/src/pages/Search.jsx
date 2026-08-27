@@ -351,7 +351,7 @@ function UserIcon({ user }) {
     return <img src={user.avatar} alt="avatar" className="clickable-avatar" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />;
   }
   return (
-    <div style={{
+    <div className="clickable-avatar" style={{
       width: '24px', height: '24px', borderRadius: '50%', 
       backgroundColor: 'var(--accent-primary)', color: 'white',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
