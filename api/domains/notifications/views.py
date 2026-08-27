@@ -54,7 +54,7 @@ class DirectMessageViewSet(viewsets.ModelViewSet):
         
         conversations = {}
         for msg in messages:
-            partner = msg.sender if msg.sender.id != user.id else msg.receiver
+            partner = msg.sender if msg.sender_id != user.pk else msg.receiver
             if partner.campus_id not in conversations:
                 from api.domains.auth.serializers import UserSerializer
                 conversations[partner.campus_id] = {
