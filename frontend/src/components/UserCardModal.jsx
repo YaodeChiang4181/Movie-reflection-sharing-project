@@ -42,10 +42,10 @@ function UserCardModal({ campusId, onClose }) {
     try {
       setIsFollowLoading(true);
       if (profile.is_following) {
-        await api.delete('/notifications/follows/unfollow/', { data: { following_id: profile.campus_id } });
+        await api.delete('/follows/unfollow/', { data: { following_id: profile.campus_id } });
         setProfile(prev => ({ ...prev, is_following: false }));
       } else {
-        await api.post('/notifications/follows/', { following_id: profile.campus_id });
+        await api.post('/follows/', { following_id: profile.campus_id });
         setProfile(prev => ({ ...prev, is_following: true }));
       }
     } catch (err) {

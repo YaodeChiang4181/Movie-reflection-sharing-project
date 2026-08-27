@@ -42,7 +42,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
   const fetchConversations = async () => {
     try {
       setIsLoading(true);
-      const res = await api.get('/notifications/messages/conversations/');
+      const res = await api.get('/messages/conversations/');
       setConversations(res.data);
     } catch (err) {
       console.error('Failed to fetch conversations', err);
@@ -53,7 +53,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
 
   const fetchMessages = async (partnerId) => {
     try {
-      const res = await api.get(`/notifications/messages/?partner_id=${partnerId}`);
+      const res = await api.get(`/messages/?partner_id=${partnerId}`);
       setMessages(res.data.reverse()); // order chronologically for chat
     } catch (err) {
       console.error('Failed to fetch messages', err);
@@ -62,7 +62,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
 
   const markAsRead = async (partnerId) => {
     try {
-      await api.patch('/notifications/messages/mark-read/', { partner_id: partnerId });
+      await api.patch('/messages/mark-read/', { partner_id: partnerId });
       // Update global unread count
       setUnreadCount(prev => Math.max(0, prev - (conversations.find(c => c.partner.campus_id === partnerId)?.unread_count || 0)));
       // Update local state
@@ -77,7 +77,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
   const handleSend = async () => {
     if (!content.trim() || !activePartner) return;
     try {
-      const res = await api.post('/notifications/messages/', {
+      const res = await api.post('/messages/', {
         receiver_id: activePartner.campus_id,
         content: content.trim()
       });
