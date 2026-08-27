@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, MapPin, Clock, Users, Star, MessageSquare, Send } from 'lucide-react';
+import { X, Calendar, MapPin, Clock, Users, Star, MessageSquare, Send, User } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './EventDetailModal.module.css';
 import SpeedRatingModal from './SpeedRatingModal';
+import UserCardModal from './UserCardModal';
 
 function EventDetailModal({ event, onClose, onUpdate }) {
   const { userProfile } = useAuth();
@@ -12,9 +13,18 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSpeedRating, setShowSpeedRating] = useState(false);
+  const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
 
   const isUpcoming = event.status === 'UPCOMING';
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
+  
+  const getDuration = () => {
+    if (!event.start_time || !event.end_time) return '未定';
+    const diff = (new Date(event.end_time) - new Date(event.start_time)) / 60000;
+    if (diff < 60) return `${diff} 分鐘`;
+    const hours = (diff / 60).toFixed(1).replace('.0', '');
+    return `${hours} 小時 (${diff} mins)`;
+  };
   
   // Update active tab based on status
   useEffect(() => {
@@ -95,8 +105,15 @@ function EventDetailModal({ event, onClose, onUpdate }) {
               {isUpcoming ? '即將舉辦' : '活動回顧'}
             </span>
             <h2 className={styles.title}>{event.title}</h2>
-            <div className={styles.hostInfo}>
-              <span>主辦人: {event.organizer_nickname}</span>
+            <div 
+              className={styles.hostInfo} 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (event.user?.campus_id) setSelectedUserCampusId(event.user.campus_id); 
+              }}
+            >
+              <User size={16} />
+              <span>主辦：{event.organizer_nickname}</span>
             </div>
           </div>
         </div>
@@ -119,22 +136,29 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                 <div className={styles.infoBox}>
                   <Clock size={20} className={styles.infoIcon} />
                   <div>
-                    <div className={styles.infoLabel}>時間</div>
+                    <div className={styles.infoLabel}>開始時間</div>
                     <div className={styles.infoValue}>{formatDate(event.start_time)}</div>
+                  </div>
+                </div>
+                <div className={styles.infoBox}>
+                  <Clock size={20} className={styles.infoIcon} />
+                  <div>
+                    <div className={styles.infoLabel}>預計時長</div>
+                    <div className={styles.infoValue}>{getDuration()}</div>
                   </div>
                 </div>
                 <div className={styles.infoBox}>
                   <MapPin size={20} className={styles.infoIcon} />
                   <div>
-                    <div className={styles.infoLabel}>地點</div>
+                    <div className={styles.infoLabel}>集合地點</div>
                     <div className={styles.infoValue}>{event.location}</div>
                   </div>
                 </div>
                 <div className={styles.infoBox}>
                   <Users size={20} className={styles.infoIcon} />
                   <div>
-                    <div className={styles.infoLabel}>人數</div>
-                    <div className={styles.infoValue}>{event.registered_count} / {event.capacity || '無上限'}</div>
+                    <div className={styles.infoLabel}>報名進度</div>
+                    <div className={styles.infoValue}>{event.registered_count} / {event.capacity || '無上限'} 席</div>
                   </div>
                 </div>
               </div>
@@ -146,6 +170,18 @@ function EventDetailModal({ event, onClose, onUpdate }) {
 
               {isUpcoming && (
                 <div className={styles.actionSection}>
+                  <div className={styles.progressContainer}>
+                    <span className={styles.progressText}>進度：</span>
+                    <div className={styles.progressBarWrapper}>
+                      <div 
+                        className={styles.progressBarFill} 
+                        style={{ width: `${event.capacity > 0 ? Math.min((event.registered_count / event.capacity) * 100, 100) : 0}%`, background: isFull ? 'var(--danger-color, #ff4d4f)' : 'var(--primary-color)' }}
+                      />
+                    </div>
+                    <span className={styles.progressText}>
+                      {event.capacity > 0 ? `${Math.round((event.registered_count / event.capacity) * 100)}% (剩餘 ${event.capacity - event.registered_count} 席)` : '無人數上限'}
+                    </span>
+                  </div>
                   <button 
                     className={`btn btn-primary ${styles.registerBtn}`}
                     onClick={handleRegister}
@@ -234,6 +270,12 @@ function EventDetailModal({ event, onClose, onUpdate }) {
       
       {showSpeedRating && (
         <SpeedRatingModal onClose={() => setShowSpeedRating(false)} />
+      )}
+      {selectedUserCampusId && (
+        <UserCardModal 
+          campusId={selectedUserCampusId} 
+          onClose={() => setSelectedUserCampusId(null)} 
+        />
       )}
     </div>
   );

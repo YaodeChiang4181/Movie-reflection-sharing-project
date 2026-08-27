@@ -12,7 +12,7 @@ function EventForm({ onClose, onEventAdded }) {
     title: '',
     date: '',
     time: '',
-    durationHours: '2', // default 2 hours
+    durationMins: '120', // default 2 hours
     location: '',
     capacity: '',
     organizer_nickname: userProfile?.nickname || '',
@@ -44,8 +44,23 @@ function EventForm({ onClose, onEventAdded }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.date || !formData.time || !formData.location || !formData.organizer_nickname) {
+    if (!formData.title || !formData.date || !formData.time || !formData.location || !formData.organizer_nickname || !formData.description) {
       setError('請填寫所有必填欄位');
+      return;
+    }
+    
+    if (!coverImage) {
+      setError('請上傳活動封面圖');
+      return;
+    }
+    
+    if (formData.description.trim().length < 30) {
+      setError('活動簡介至少需要 30 個字，請提供足夠的活動資訊。');
+      return;
+    }
+    
+    if (!formData.capacity || parseInt(formData.capacity, 10) < 2 || parseInt(formData.capacity, 10) > 50) {
+      setError('人數上限必須在 2 到 50 人之間');
       return;
     }
 
@@ -55,7 +70,7 @@ function EventForm({ onClose, onEventAdded }) {
       return;
     }
 
-    const endTime = new Date(startTime.getTime() + (parseFloat(formData.durationHours) * 60 * 60 * 1000));
+    const endTime = new Date(startTime.getTime() + (parseInt(formData.durationMins, 10) * 60 * 1000));
 
     setIsSubmitting(true);
     setError('');
@@ -112,7 +127,8 @@ function EventForm({ onClose, onEventAdded }) {
               {!coverImagePreview && (
                 <>
                   <ImageIcon size={32} style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>點擊上傳活動封面照 (選填)</span>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>點擊上傳活動封面照 *</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px' }}>(JPG/PNG/WebP，限制 5MB)</span>
                 </>
               )}
             </div>
@@ -149,11 +165,18 @@ function EventForm({ onClose, onEventAdded }) {
               />
             </div>
             <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時長(時)</label>
-              <input 
-                type="number" name="durationHours" value={formData.durationHours} onChange={handleChange} min="0.5" step="0.5"
-                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} required 
-              />
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時長 *</label>
+              <select 
+                name="durationMins" value={formData.durationMins} onChange={handleChange} 
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', appearance: 'none' }} required 
+              >
+                <option value="60" style={{ color: '#000' }}>1 小時 (60 mins)</option>
+                <option value="90" style={{ color: '#000' }}>1.5 小時 (90 mins)</option>
+                <option value="120" style={{ color: '#000' }}>2 小時 (120 mins)</option>
+                <option value="150" style={{ color: '#000' }}>2.5 小時 (150 mins)</option>
+                <option value="180" style={{ color: '#000' }}>3 小時 (180 mins)</option>
+                <option value="240" style={{ color: '#000' }}>4 小時 (240 mins)</option>
+              </select>
             </div>
           </div>
 
@@ -169,9 +192,9 @@ function EventForm({ onClose, onEventAdded }) {
               </div>
             </div>
             <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>人數上限</label>
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>人數上限 *</label>
               <input 
-                type="number" name="capacity" value={formData.capacity} onChange={handleChange} min="0" placeholder="無"
+                type="number" name="capacity" value={formData.capacity} onChange={handleChange} min="2" max="50" placeholder="2~50" required
                 style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} 
               />
             </div>
@@ -189,10 +212,10 @@ function EventForm({ onClose, onEventAdded }) {
           </div>
 
           <div className={styles.formGroup}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>活動簡介</label>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>活動簡介 * (至少 30 字)</label>
             <textarea 
-              name="description" value={formData.description} onChange={handleChange} 
-              style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', outline: 'none', resize: 'vertical' }} placeholder="介紹一下這次的活動吧..." rows="3"
+              name="description" value={formData.description} onChange={handleChange} required minLength="30"
+              style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', outline: 'none', resize: 'vertical' }} placeholder="引導填寫「活動流程、選片理由、費用說明（如：低消一杯飲料）」" rows="4"
             />
           </div>
 

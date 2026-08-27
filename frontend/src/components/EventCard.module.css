@@ -51,14 +51,30 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  border-radius: 6px;
   padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 600;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.statusUpcoming {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(52, 211, 153, 0.35); 
+  color: #34D399;
+}
+
+.statusAlmostFull {
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(251, 191, 36, 0.35); 
+  color: #FBBF24;
+}
+
+.statusCompleted {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25); 
+  color: #94A3B8;
 }
 
 .content {

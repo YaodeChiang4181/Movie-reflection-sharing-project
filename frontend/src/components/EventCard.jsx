@@ -16,6 +16,21 @@ function EventCard({ event, onClick }) {
     return date.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
+  let statusClass = styles.statusCompleted;
+  let statusText = '活動回顧';
+  if (isUpcoming) {
+    if (isFull) {
+      statusClass = styles.statusCompleted;
+      statusText = '已額滿';
+    } else if (event.capacity > 0 && event.capacity - event.registered_count <= 2) {
+      statusClass = styles.statusAlmostFull;
+      statusText = '即將額滿';
+    } else {
+      statusClass = styles.statusUpcoming;
+      statusText = '開放報名';
+    }
+  }
+
   return (
     <div className={`glass hover-scale ${styles.card}`} onClick={onClick}>
       <div className={styles.coverWrapper}>
@@ -26,8 +41,8 @@ function EventCard({ event, onClick }) {
             <Calendar size={32} opacity={0.5} />
           </div>
         )}
-        <div className={styles.statusBadge}>
-          {isUpcoming ? '即將舉辦' : '活動回顧'}
+        <div className={`${styles.statusBadge} ${statusClass}`}>
+          {statusText}
         </div>
       </div>
       

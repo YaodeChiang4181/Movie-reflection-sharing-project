@@ -59,6 +59,30 @@ class EventSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"end_time": "結束時間必須晚於開始時間。"})
         if 'event_time' in data and data['event_time'] < timezone.now():
             raise serializers.ValidationError({"event_time": "放映時間不能是過去的時間。"})
+            
+        # UI/UX validations
+        if not self.instance and not data.get('cover_image'):
+            raise serializers.ValidationError({"cover_image": "必須上傳活動封面圖。"})
+            
+        desc = data.get('description', '') if not self.instance else data.get('description', self.instance.description)
+        if not desc or len(desc.strip()) < 30:
+            raise serializers.ValidationError({"description": "活動簡介至少需要 30 個字。"})
+            
+        capacity = data.get('capacity', 0) if not self.instance else data.get('capacity', self.instance.capacity)
+        if capacity < 2 or capacity > 50:
+            raise serializers.ValidationError({"capacity": "活動人數限制必須在 2 到 50 人之間。"})
+            
+        # Max 3 upcoming events per user
+        if not self.instance:
+            request = self.context.get('request')
+            if request and request.user and request.user.is_authenticated:
+                upcoming_count = Event.objects.filter(
+                    user=request.user,
+                    end_time__gte=timezone.now()
+                ).count()
+                if upcoming_count >= 3:
+                    raise serializers.ValidationError("您目前已經有 3 場即將舉辦的活動，無法再發起新活動。")
+                    
         return data
 
     def validate_location(self, value):
