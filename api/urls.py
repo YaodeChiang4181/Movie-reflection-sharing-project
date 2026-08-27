@@ -29,6 +29,20 @@ def fix_tmdb(request):
 
     return HttpResponse(f"Fix complete! Updated {updated_count} movies.")
 
+def fix_events(request):
+    from api.models import Event, EventRegistration
+    events = Event.objects.all()
+    count = 0
+    for event in events:
+        if not EventRegistration.objects.filter(event=event, user=event.user).exists():
+            EventRegistration.objects.create(
+                event=event,
+                user=event.user,
+                status='REGISTERED'
+            )
+            count += 1
+    return HttpResponse(f"Fix complete! Auto-registered creators for {count} events.")
+
 urlpatterns = [
     # Domain: Auth / Identity
     path('auth/', include('api.domains.auth.urls')),
@@ -42,8 +56,9 @@ urlpatterns = [
     # 用於 Google Apps Script 等定時喚醒後台的輕量級端點
     path('ping/', ping, name='ping'),
     
-    # 臨時端點：用來修復資料庫電影抓取錯誤
+    # 臨時端點：用來修復資料庫電影抓取錯誤與活動報名紀錄
     path('fix-tmdb/', fix_tmdb, name='fix_tmdb'),
+    path('fix-events/', fix_events, name='fix_events'),
     
     # Domain: Reviews (Movies, Reviews, Votes, Comments)
     path('', include('api.domains.reviews.urls')),
