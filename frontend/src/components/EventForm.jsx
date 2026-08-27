@@ -1,26 +1,45 @@
-import { useState } from 'react';
-import { X, MapPin, User } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { X, MapPin, User, Image as ImageIcon } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
-import styles from './ReviewForm.module.css'; // Reuse ReviewForm styles
+import styles from './ReviewForm.module.css';
 
 function EventForm({ onClose, onEventAdded }) {
   const { userProfile } = useAuth();
+  const fileInputRef = useRef(null);
   
   const [formData, setFormData] = useState({
     title: '',
     date: '',
     time: '',
+    durationHours: '2', // default 2 hours
     location: '',
+    capacity: '',
     organizer_nickname: userProfile?.nickname || '',
     description: ''
   });
+  const [coverImage, setCoverImage] = useState(null);
+  const [coverImagePreview, setCoverImagePreview] = useState(null);
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('圖片大小不能超過 5MB');
+        return;
+      }
+      setCoverImage(file);
+      setCoverImagePreview(URL.createObjectURL(file));
+      setError('');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -30,25 +49,38 @@ function EventForm({ onClose, onEventAdded }) {
       return;
     }
 
-    // Combine date and time
-    const eventTime = new Date(`${formData.date}T${formData.time}`);
-    if (eventTime < new Date()) {
+    const startTime = new Date(`${formData.date}T${formData.time}`);
+    if (startTime < new Date()) {
       setError('活動時間不能是過去的時間');
       return;
     }
+
+    const endTime = new Date(startTime.getTime() + (parseFloat(formData.durationHours) * 60 * 60 * 1000));
 
     setIsSubmitting(true);
     setError('');
 
     try {
-      const payload = {
-        title: formData.title,
-        location: formData.location,
-        organizer_nickname: formData.organizer_nickname,
-        description: formData.description,
-        event_time: eventTime.toISOString()
-      };
-      const response = await api.post('events/', payload);
+      const payload = new FormData();
+      payload.append('title', formData.title);
+      payload.append('location', formData.location);
+      payload.append('organizer_nickname', formData.organizer_nickname);
+      payload.append('description', formData.description);
+      payload.append('event_time', startTime.toISOString()); // For backward compatibility
+      payload.append('start_time', startTime.toISOString());
+      payload.append('end_time', endTime.toISOString());
+      if (formData.capacity) {
+        payload.append('capacity', parseInt(formData.capacity, 10));
+      }
+      if (coverImage) {
+        payload.append('cover_image', coverImage);
+      }
+
+      const response = await api.post('events/', payload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       onEventAdded(response.data);
       onClose();
     } catch (err) {
@@ -71,6 +103,28 @@ function EventForm({ onClose, onEventAdded }) {
         {error && <div className={styles.error} style={{ color: '#ff4444', marginBottom: '16px', padding: '10px', background: 'rgba(255,68,68,0.1)', borderRadius: '8px' }}>{error}</div>}
         
         <form onSubmit={handleSubmit} className={styles.form} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          
+          <div className={styles.formGroup} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px' }}>
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              style={{ width: '100%', height: '160px', background: coverImagePreview ? `url(${coverImagePreview}) center/cover` : 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s', overflow: 'hidden' }}
+            >
+              {!coverImagePreview && (
+                <>
+                  <ImageIcon size={32} style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>點擊上傳活動封面照 (選填)</span>
+                </>
+              )}
+            </div>
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              style={{ display: 'none' }} 
+            />
+          </div>
+
           <div className={styles.formGroup}>
             <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>活動名稱 *</label>
             <input 
@@ -80,34 +134,45 @@ function EventForm({ onClose, onEventAdded }) {
           </div>
 
           <div style={{ display: 'flex', gap: '16px' }}>
-            <div className={styles.formGroup} style={{ flex: 1 }}>
+            <div className={styles.formGroup} style={{ flex: 2 }}>
               <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>活動日期 *</label>
-              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <input 
-                  type="date" name="date" value={formData.date} onChange={handleChange} 
-                  style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', padding: '12px', outline: 'none' }} required 
-                />
-              </div>
+              <input 
+                type="date" name="date" value={formData.date} onChange={handleChange} 
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} required 
+              />
             </div>
-            
             <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>活動時間 *</label>
-              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <input 
-                  type="time" name="time" value={formData.time} onChange={handleChange} 
-                  style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', padding: '12px', outline: 'none' }} required 
-                />
-              </div>
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時間 *</label>
+              <input 
+                type="time" name="time" value={formData.time} onChange={handleChange} 
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} required 
+              />
+            </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時長(時)</label>
+              <input 
+                type="number" name="durationHours" value={formData.durationHours} onChange={handleChange} min="0.5" step="0.5"
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} required 
+              />
             </div>
           </div>
 
-          <div className={styles.formGroup}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>影城地點 *</label>
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', paddingLeft: '12px' }}>
-              <MapPin size={18} style={{ color: 'var(--text-muted)' }} />
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <div className={styles.formGroup} style={{ flex: 2 }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>地點 *</label>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', paddingLeft: '12px' }}>
+                <MapPin size={18} style={{ color: 'var(--text-muted)' }} />
+                <input 
+                  type="text" name="location" value={formData.location} onChange={handleChange} 
+                  style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', padding: '12px', outline: 'none' }} placeholder="例如：信義威秀影城" required 
+                />
+              </div>
+            </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>人數上限</label>
               <input 
-                type="text" name="location" value={formData.location} onChange={handleChange} 
-                style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', padding: '12px', outline: 'none' }} placeholder="例如：信義威秀影城" required 
+                type="number" name="capacity" value={formData.capacity} onChange={handleChange} min="0" placeholder="無"
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} 
               />
             </div>
           </div>
@@ -127,7 +192,7 @@ function EventForm({ onClose, onEventAdded }) {
             <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>活動簡介</label>
             <textarea 
               name="description" value={formData.description} onChange={handleChange} 
-              style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', outline: 'none', resize: 'vertical' }} placeholder="介紹一下這次的活動吧..." rows="4"
+              style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', outline: 'none', resize: 'vertical' }} placeholder="介紹一下這次的活動吧..." rows="3"
             />
           </div>
 

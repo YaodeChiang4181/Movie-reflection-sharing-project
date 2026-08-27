@@ -126,7 +126,14 @@ class Event(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='events')
     title = models.CharField(max_length=200)
     location = models.CharField(max_length=200)
-    event_time = models.DateTimeField()
+    event_time = models.DateTimeField() # Keep for backward compatibility, or use start_time
+    start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
+    capacity = models.IntegerField(default=0)
+    cover_image = models.ImageField(upload_to='events/covers/', null=True, blank=True)
+    movie = models.ForeignKey(Movie, on_delete=models.SET_NULL, null=True, blank=True, related_name='events')
+    recap_text = models.TextField(blank=True)
+    recap_images = models.JSONField(default=list, blank=True)
     organizer_nickname = models.CharField(max_length=200, default='')
     description = models.TextField(default="")
     join_code = models.CharField(max_length=10, unique=True, blank=True)
@@ -144,6 +151,33 @@ class Event(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.join_code})"
+
+class EventRegistration(models.Model):
+    STATUS_CHOICES = (
+        ('REGISTERED', 'REGISTERED'),
+        ('ATTENDED', 'ATTENDED'),
+        ('CANCELLED', 'CANCELLED'),
+    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_registrations')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REGISTERED')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('event', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.event.title} ({self.status})"
+
+class EventComment(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='event_comments')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='user_event_comments')
+    content = models.TextField()
+    user_tag = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username if self.user else 'Unknown'} on {self.event.title}"
 
 class Comment(models.Model):
     review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='comments')

@@ -1,32 +1,39 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Clock, AlignLeft, User, Ticket } from 'lucide-react';
+import { Ticket } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import EventForm from '../components/EventForm';
+import EventFilterTabs from '../components/EventFilterTabs';
+import EventCard from '../components/EventCard';
+import EventDetailModal from '../components/EventDetailModal';
 import styles from './Events.module.css';
 
 function Events() {
   const [events, setEvents] = useState([]);
+  const [activeTab, setActiveTab] = useState('UPCOMING');
   const [isLoading, setIsLoading] = useState(true);
   const [isComposing, setIsComposing] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
+  const fetchEvents = async () => {
+    setIsLoading(true);
+    try {
+      const response = await api.get(`events/?status=${activeTab}`);
+      setEvents(response.data.results || response.data);
+    } catch (error) {
+      console.error("Failed to fetch events", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await api.get('events/');
-        // Handle paginated or direct array response
-        setEvents(response.data.results || response.data);
-      } catch (error) {
-        console.error("Failed to fetch events", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchEvents();
-  }, []);
+  }, [activeTab]);
 
   const handleCreateEvent = () => {
     if (!isLoggedIn) {
@@ -37,18 +44,12 @@ function Events() {
     setIsComposing(true);
   };
 
-  const handleEventAdded = (newEvent) => {
-    // Add new event to the list
-    setEvents([newEvent, ...events]);
+  const handleEventAdded = () => {
+    fetchEvents();
   };
 
-  const handleJoinEvent = () => {
-    if (!isLoggedIn) {
-      alert('請先登入後再報名參加活動！');
-      navigate('/auth');
-      return;
-    }
-    alert('報名功能即將推出，敬請期待！');
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
   };
 
   return (
@@ -58,8 +59,10 @@ function Events() {
           <h1 className={styles.title}>電影迷活動板</h1>
           <p className={styles.subtitle}>尋找志同道合的影迷，一起揪團看電影、討論劇情！</p>
         </div>
-        <button className="btn-outline" onClick={handleCreateEvent}>發起活動</button>
+        <button className="btn btn-primary" onClick={handleCreateEvent}>發起活動</button>
       </header>
+
+      <EventFilterTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {isComposing && (
         <EventForm 
@@ -68,45 +71,31 @@ function Events() {
         />
       )}
 
-      <div className={styles.eventList}>
+      {selectedEvent && (
+        <EventDetailModal 
+          event={selectedEvent} 
+          onClose={() => setSelectedEvent(null)}
+          onUpdate={fetchEvents}
+        />
+      )}
+
+      <div className={styles.eventGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
         {isLoading ? (
           <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
         ) : events.length === 0 ? (
-          <div className="glass" style={{ padding: '60px', textAlign: 'center', borderRadius: 'var(--radius-lg)', margin: '0 auto', maxWidth: '480px' }}>
+          <div className="glass" style={{ gridColumn: '1 / -1', padding: '60px', textAlign: 'center', borderRadius: 'var(--radius-lg)' }}>
             <Ticket size={64} style={{ color: 'var(--accent-primary)', marginBottom: '20px', opacity: 0.8 }} />
             <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前還沒有任何活動</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>來發起第一場揪團，尋找一起看電影的好夥伴吧！</p>
-            <button className="btn-primary" onClick={handleCreateEvent}>+ 發起第一場觀影活動</button>
+            <button className="btn btn-primary" onClick={handleCreateEvent}>+ 發起第一場觀影活動</button>
           </div>
         ) : (
           events.map(event => (
-            <div key={event.id} className={`glass ${styles.eventCard}`}>
-              <h2 className={styles.eventTitle}>{event.title}</h2>
-            
-            <div className={styles.eventDetails}>
-              <div className={styles.detailItem}>
-                <Clock size={16} className={styles.icon} />
-                <span>時間：{new Date(event.event_time).toLocaleString('zh-TW')}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <MapPin size={16} className={styles.icon} />
-                <span>地點：{event.location}</span>
-              </div>
-              {event.description && (
-                <div className={styles.detailItem} style={{ alignItems: 'flex-start' }}>
-                  <AlignLeft size={16} className={styles.icon} style={{ marginTop: '4px' }} />
-                  <span style={{ whiteSpace: 'pre-wrap' }}>{event.description}</span>
-                </div>
-              )}
-            </div>
-            
-            <div className={styles.cardFooter}>
-              <span className={styles.author} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <User size={16} /> 發起人: {event.organizer_nickname}
-              </span>
-              <button className={styles.joinBtn} onClick={handleJoinEvent}>報名參加</button>
-            </div>
-            </div>
+            <EventCard 
+              key={event.id} 
+              event={event} 
+              onClick={() => handleEventClick(event)} 
+            />
           ))
         )}
       </div>
