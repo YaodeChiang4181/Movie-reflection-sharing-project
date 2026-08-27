@@ -441,3 +441,14 @@ button {
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* Clickable Avatar Hover Effect */
+.clickable-avatar {
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.clickable-avatar:hover {
+  transform: scale(1.15) translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+  filter: brightness(1.1);
+}

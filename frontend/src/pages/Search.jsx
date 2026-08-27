@@ -348,7 +348,7 @@ function Search() {
 // Simple helper component
 function UserIcon({ user }) {
   if (user?.avatar) {
-    return <img src={user.avatar} alt="avatar" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />;
+    return <img src={user.avatar} alt="avatar" className="clickable-avatar" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />;
   }
   return (
     <div style={{

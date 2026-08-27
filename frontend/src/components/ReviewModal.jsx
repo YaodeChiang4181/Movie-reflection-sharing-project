@@ -168,7 +168,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
               >
                 <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#FFF', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
                   {currentReview.user?.avatar ? (
-                    <img src={currentReview.user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={currentReview.user.avatar} alt="avatar" className="clickable-avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     (currentReview.user?.nickname || 'U').charAt(0).toUpperCase()
                   )}

@@ -1,33 +1,35 @@
 .tabsContainer {
   display: flex;
-  gap: 12px;
+  gap: 4px; /* adjusted gap to match padding design closely */
   margin-bottom: 24px;
-  background: var(--glass-bg);
-  padding: 8px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
   width: fit-content;
 }
 
 .tab {
   padding: 8px 24px;
-  border-radius: var(--radius-full);
+  border-radius: 8px;
   border: none;
   background: transparent;
-  color: var(--text-muted);
+  color: #94A3B8;
   font-weight: 500;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 0.95rem;
 }
 
-.tab:hover {
-  color: var(--text-primary);
+.tab:hover:not(.active) {
+  color: #F1F5F9;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .tab.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #6C5CE7 0%, #8E52F5 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.35);
 }
