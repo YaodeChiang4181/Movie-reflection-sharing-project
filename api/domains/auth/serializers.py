@@ -14,13 +14,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('nickname',)
 
 class UserSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='campus_id', read_only=True)
     nickname = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     level = serializers.SerializerMethodField()
     
     class Meta:
         model = User
-        fields = ('campus_id', 'nickname', 'date_joined', 'avatar', 'level')
+        fields = ('id', 'campus_id', 'nickname', 'date_joined', 'avatar', 'level')
 
     def get_nickname(self, obj):
         if hasattr(obj, 'profile') and obj.profile:
@@ -38,6 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
         return 1
 
 class UserMeSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='campus_id', read_only=True)
     nickname = serializers.SerializerMethodField()
     real_name = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
@@ -48,7 +50,7 @@ class UserMeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'is_staff', 'avatar')
+        fields = ('id', 'campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'is_staff', 'avatar')
 
     def get_nickname(self, obj):
         if hasattr(obj, 'profile') and obj.profile:

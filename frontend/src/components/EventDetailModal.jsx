@@ -18,7 +18,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const isUpcoming = event.status === 'UPCOMING';
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
   
-  const isAuthor = userProfile?.campus_id === event.user?.campus_id;
+  const isAuthor = userProfile?.id === event.user?.id;
   const isAdmin = userProfile?.is_staff;
 
   const handleDeleteEvent = async () => {

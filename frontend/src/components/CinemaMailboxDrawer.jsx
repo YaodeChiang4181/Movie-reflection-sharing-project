@@ -26,8 +26,9 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
 
   useEffect(() => {
     if (activePartner) {
-      fetchMessages(activePartner.campus_id);
-      markAsRead(activePartner.campus_id);
+      setMessages([]); // Clear previous messages while loading
+      fetchMessages(activePartner.id);
+      markAsRead(activePartner.id);
     }
   }, [activePartner]);
 
@@ -64,10 +65,10 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
     try {
       await api.patch('/messages/mark-read/', { partner_id: partnerId });
       // Update global unread count
-      setUnreadCount(prev => Math.max(0, prev - (conversations.find(c => c.partner.campus_id === partnerId)?.unread_count || 0)));
+      setUnreadCount(prev => Math.max(0, prev - (conversations.find(c => c.partner.id === partnerId)?.unread_count || 0)));
       // Update local state
       setConversations(prev => prev.map(c => 
-        c.partner.campus_id === partnerId ? { ...c, unread_count: 0 } : c
+        c.partner.id === partnerId ? { ...c, unread_count: 0 } : c
       ));
     } catch (err) {
       console.error('Failed to mark read', err);
@@ -78,7 +79,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
     if (!content.trim() || !activePartner) return;
     try {
       const res = await api.post('/messages/', {
-        receiver_id: activePartner.campus_id,
+        receiver_id: activePartner.id,
         content: content.trim()
       });
       setContent('');
@@ -150,7 +151,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
             ) : (
               conversations.map(conv => (
                 <div 
-                  key={conv.partner.campus_id}
+                  key={conv.partner.id}
                   onClick={() => openConversation(conv.partner)}
                   style={{ 
                     padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.05)', 
@@ -170,8 +171,8 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
                       {new Date(conv.last_message.created_at).toLocaleDateString()}
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                    {conv.last_message.sender.campus_id === userProfile.campus_id ? '你: ' : ''}{conv.last_message.content}
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {conv.last_message.sender.id === userProfile.id ? '你: ' : ''}{conv.last_message.content}
                   </p>
                 </div>
               ))
@@ -179,8 +180,8 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
           ) : (
             // 單一對話視窗
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {messages.map(msg => {
-                const isMe = msg.sender.campus_id === userProfile.campus_id;
+              {messages.map((msg) => {
+                const isMe = msg.sender.id === userProfile.id;
                 return (
                   <div key={msg.id} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
                     <div style={{ 
