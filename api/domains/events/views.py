@@ -34,6 +34,12 @@ class EventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def destroy(self, request, *args, **kwargs):
+        event = self.get_object()
+        if event.user != request.user and not request.user.is_staff:
+            return Response({"detail": "您沒有權限刪除此活動。"}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def register(self, request, pk=None):
         user = request.user

@@ -216,7 +216,12 @@ function MovieDetail() {
                           <h4 style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '1.2rem' }}>⭐ 簡易心得版塊 (急速評星)</h4>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
                             {speedRatings.map(review => (
-                              <div key={review.id} className="glass" style={{ padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div 
+                                key={review.id} 
+                                className="glass hover-scale" 
+                                style={{ padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                                onClick={() => setSelectedReview(review)}
+                              >
                                 <span 
                                   style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
                                   onClick={(e) => {

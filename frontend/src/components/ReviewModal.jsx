@@ -108,6 +108,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
   };
 
   const isAuthor = isLoggedIn && userProfile?.campus_id === currentReview.user?.campus_id;
+  const isAdmin = isLoggedIn && userProfile?.is_staff;
 
   if (isEditing) {
     return (
@@ -204,11 +205,13 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
                 </span>
               )}
               
-              {isAuthor && (
+              {(isAuthor || isAdmin) && (
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button style={actionBtnStyle} onClick={() => setIsEditing(true)}>
-                    <Edit2 size={16} /> 編輯
-                  </button>
+                  {isAuthor && (
+                    <button style={actionBtnStyle} onClick={() => setIsEditing(true)}>
+                      <Edit2 size={16} /> 編輯
+                    </button>
+                  )}
                   <button style={{ ...actionBtnStyle, color: '#ff4444', borderColor: 'rgba(255, 68, 68, 0.3)', background: 'rgba(255, 68, 68, 0.05)' }} onClick={handleDelete}>
                     <Trash2 size={16} /> 刪除
                   </button>

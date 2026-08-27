@@ -18,7 +18,7 @@
   max-width: 720px;
   max-height: 85vh;
   overflow-y: auto;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   position: relative;
   display: flex;
   flex-direction: column;

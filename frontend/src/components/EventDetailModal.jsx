@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, MapPin, Clock, Users, Star, MessageSquare, Send, User } from 'lucide-react';
+import { X, Calendar, MapPin, Clock, Users, Star, MessageSquare, Send, User, Trash2 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './EventDetailModal.module.css';
@@ -17,6 +17,24 @@ function EventDetailModal({ event, onClose, onUpdate }) {
 
   const isUpcoming = event.status === 'UPCOMING';
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
+  
+  const isAuthor = userProfile?.campus_id === event.user?.campus_id;
+  const isAdmin = userProfile?.is_staff;
+
+  const handleDeleteEvent = async () => {
+    if (window.confirm("確定要刪除這個活動嗎？刪除後無法恢復。")) {
+      try {
+        setIsSubmitting(true);
+        await api.delete(`events/${event.id}/`);
+        onUpdate();
+        onClose();
+      } catch (error) {
+        alert("刪除失敗");
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
   
   const getDuration = () => {
     if (!event.start_time || !event.end_time) return '未定';
@@ -89,8 +107,19 @@ function EventDetailModal({ event, onClose, onUpdate }) {
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={`glass ${styles.modalContent}`} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeBtn} onClick={onClose}>
-          <X size={24} />
+          <X size={20} />
         </button>
+
+        {(isAuthor || isAdmin) && (
+          <button 
+            className={styles.closeBtn} 
+            style={{ top: '64px', background: 'rgba(220, 38, 38, 0.7)' }} 
+            onClick={handleDeleteEvent}
+            title="刪除活動"
+          >
+            <Trash2 size={20} />
+          </button>
+        )}
 
         <div className={styles.header}>
           {event.cover_image ? (
