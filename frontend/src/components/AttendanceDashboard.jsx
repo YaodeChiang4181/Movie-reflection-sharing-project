@@ -136,8 +136,6 @@ function AttendanceDashboard({ event, onClose, inline = false }) {
               </table>
             </div>
           </div>
-        </div>
-      </div>
     </div>
   );
 
