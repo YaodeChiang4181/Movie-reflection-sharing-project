@@ -11,6 +11,9 @@ function EventCard({ event, onClick }) {
     ? Math.min((event.registered_count / event.capacity) * 100, 100) 
     : 0;
   
+  // ensure progress bar is visible even for very small percentages (like RPG exp)
+  const minProgressWidth = event.registered_count > 0 ? Math.max(progress, 5) : 0;
+  
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
   
   const formatDate = (dateString) => {
@@ -73,7 +76,7 @@ function EventCard({ event, onClick }) {
               <div className={styles.progressBarBg}>
                 <div 
                   className={`${styles.progressBarFill} ${isFull ? styles.full : ''}`} 
-                  style={{ width: `${progress}%` }}
+                  style={{ width: `${minProgressWidth}%` }}
                 />
               </div>
               <button 

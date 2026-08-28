@@ -109,8 +109,19 @@ function HostQrProjectorModal({ eventId, eventTitle, onClose }) {
         
         <div className={styles.statsContainer}>
           <div className={`${styles.statsLive} ${isPulsing ? styles.pulse : ''}`}>
-            <span className={styles.liveDot}></span> 目前實到： {attendance.total_attended} / {attendance.total_capacity > 0 ? attendance.total_capacity : '無上限'} 席
-            <span className={styles.updateText}>(即時更新中)</span>
+            <div className={styles.statsLiveInner}>
+              <span className={styles.liveDot}></span> 目前實到： {attendance.total_attended} / {attendance.total_capacity > 0 ? attendance.total_capacity : '無上限'} 席
+              <span className={styles.updateText}>(即時更新中)</span>
+            </div>
+            <div className={styles.progressBarWrapper}>
+              <div 
+                className={styles.progressBarFill} 
+                style={{ 
+                  width: `${attendance.total_capacity > 0 ? Math.min((attendance.total_attended / attendance.total_capacity) * 100, 100) : 0}%`, 
+                  minWidth: attendance.total_attended > 0 ? '5%' : '0%'
+                }}
+              />
+            </div>
           </div>
         </div>
         

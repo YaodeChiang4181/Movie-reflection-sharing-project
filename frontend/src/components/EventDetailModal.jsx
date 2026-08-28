@@ -211,7 +211,11 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                     <div className={styles.progressBarWrapper}>
                       <div 
                         className={styles.progressBarFill} 
-                        style={{ width: `${event.capacity > 0 ? Math.min((event.registered_count / event.capacity) * 100, 100) : 0}%`, background: isFull ? 'var(--danger-color, #ff4d4f)' : 'var(--primary-color)' }}
+                        style={{ 
+                          width: `${event.capacity > 0 ? Math.min((event.registered_count / event.capacity) * 100, 100) : 0}%`, 
+                          minWidth: event.registered_count > 0 ? '5%' : '0%',
+                          background: isFull ? 'var(--danger-color, #ff4d4f)' : 'var(--primary-color)' 
+                        }}
                       />
                     </div>
                     <span className={styles.progressText}>
