@@ -27,8 +27,8 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
   useEffect(() => {
     if (activePartner) {
       setMessages([]); // Clear previous messages while loading
-      fetchMessages(activePartner.id);
-      markAsRead(activePartner.id);
+      fetchMessages(activePartner.campus_id);
+      markAsRead(activePartner.campus_id);
     }
   }, [activePartner]);
 
@@ -66,10 +66,10 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
     try {
       await api.patch('/messages/mark-read/', { partner_id: partnerId });
       // Update global unread count
-      setUnreadCount(prev => Math.max(0, prev - (conversations.find(c => c.partner.id === partnerId)?.unread_count || 0)));
+      setUnreadCount(prev => Math.max(0, prev - (conversations.find(c => c.partner.campus_id === partnerId)?.unread_count || 0)));
       // Update local state
       setConversations(prev => prev.map(c => 
-        c.partner.id === partnerId ? { ...c, unread_count: 0 } : c
+        c.partner.campus_id === partnerId ? { ...c, unread_count: 0 } : c
       ));
     } catch (err) {
       console.error('Failed to mark read', err);
@@ -80,7 +80,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
     if (!content.trim() || !activePartner) return;
     try {
       const res = await api.post('/messages/', {
-        receiver_id: activePartner.id,
+        receiver_id: activePartner.campus_id,
         content: content.trim()
       });
       setContent('');
