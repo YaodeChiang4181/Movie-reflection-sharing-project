@@ -4,10 +4,9 @@ import api from '../api/axios';
 import styles from './AttendanceDashboard.module.css';
 import HostQrProjectorModal from './HostQrProjectorModal';
 
-function AttendanceDashboard({ event, onClose }) {
+function AttendanceDashboard({ event, onClose, inline = false }) {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showQrProjector, setShowQrProjector] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -43,33 +42,29 @@ function AttendanceDashboard({ event, onClose }) {
   };
 
   if (isLoading || !data) {
-    return (
-      <div className={styles.overlay} onClick={onClose}>
-        <div className={`glass ${styles.modal}`} onClick={e => e.stopPropagation()}>
-          <p>載入數據中...</p>
-        </div>
+    const loader = (
+      <div className={inline ? '' : `glass ${styles.modal}`} onClick={e => e.stopPropagation()}>
+        <p>載入數據中...</p>
       </div>
     );
+    return inline ? loader : <div className={styles.overlay} onClick={onClose}>{loader}</div>;
   }
 
   const { total_capacity, total_registered, total_attended, attendance_rate, breakdown, attendee_list } = data;
   const ratePercentage = Math.round(attendance_rate * 100);
 
-  return (
-    <>
-      <div className={styles.overlay} onClick={onClose}>
-        <div className={`glass ${styles.modal}`} onClick={e => e.stopPropagation()}>
-          <div className={styles.header}>
-            <h2>📊 {event.title} - 數據看板</h2>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button className="btn btn-outline" onClick={() => setShowQrProjector(true)}>
-                投影 QR Code
-              </button>
-              <button className={styles.closeBtn} onClick={onClose}>
-                <X size={24} />
-              </button>
-            </div>
+  const content = (
+    <div className={inline ? '' : `glass ${styles.modal}`} onClick={e => e.stopPropagation()} style={inline ? { height: '100%', overflow: 'visible', padding: '0' } : {}}>
+      <div className={styles.header}>
+        <h2>📊 {event.title} - 數據看板</h2>
+        {!inline && (
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button className={styles.closeBtn} onClick={onClose}>
+              <X size={24} />
+            </button>
           </div>
+        )}
+      </div>
 
           <div className={styles.statsGrid}>
             <div className={styles.statCard}>
@@ -143,15 +138,13 @@ function AttendanceDashboard({ event, onClose }) {
           </div>
         </div>
       </div>
-      
-      {showQrProjector && (
-        <HostQrProjectorModal 
-          eventId={event.id} 
-          eventTitle={event.title} 
-          onClose={() => setShowQrProjector(false)} 
-        />
-      )}
-    </>
+    </div>
+  );
+
+  return inline ? content : (
+    <div className={styles.overlay} onClick={onClose}>
+      {content}
+    </div>
   );
 }
 

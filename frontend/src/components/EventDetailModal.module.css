@@ -157,6 +157,7 @@
 
 .body {
   padding: 24px;
+  padding-bottom: 96px; /* Added padding to prevent bottom action bar overlap */
 }
 
 .infoGrid {

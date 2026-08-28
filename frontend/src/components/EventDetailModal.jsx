@@ -15,7 +15,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSpeedRating, setShowSpeedRating] = useState(false);
   const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [showQrProjector, setShowQrProjector] = useState(false);
 
   const isUpcoming = event.status === 'UPCOMING';
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
@@ -113,24 +113,14 @@ function EventDetailModal({ event, onClose, onUpdate }) {
         </button>
 
         {(isAuthor || isAdmin) && (
-          <>
-            <button 
-              className={styles.closeBtn} 
-              style={{ top: '64px', background: 'var(--accent-primary)' }} 
-              onClick={() => setShowDashboard(true)}
-              title="管理名單與投影 QR Code"
-            >
-              <QrCode size={20} />
-            </button>
-            <button 
-              className={styles.closeBtn} 
-              style={{ top: '112px', background: 'rgba(220, 38, 38, 0.7)' }} 
-              onClick={handleDeleteEvent}
-              title="刪除活動"
-            >
-              <Trash2 size={20} />
-            </button>
-          </>
+          <button 
+            className={styles.closeBtn} 
+            style={{ top: '64px', background: 'rgba(220, 38, 38, 0.7)' }} 
+            onClick={handleDeleteEvent}
+            title="刪除活動"
+          >
+            <Trash2 size={20} />
+          </button>
         )}
 
         <div className={styles.header}>
@@ -161,11 +151,15 @@ function EventDetailModal({ event, onClose, onUpdate }) {
 
         <div className={styles.navTabs}>
           {isUpcoming ? (
-            <button className={`${styles.navTab} ${activeTab === 'DETAILS' ? styles.active : ''}`} onClick={() => setActiveTab('DETAILS')}>活動詳情</button>
+            <>
+              <button className={`${styles.navTab} ${activeTab === 'DETAILS' ? styles.active : ''}`} onClick={() => setActiveTab('DETAILS')}>活動詳情</button>
+              {isAuthor && <button className={`${styles.navTab} ${activeTab === 'DASHBOARD' ? styles.active : ''}`} onClick={() => setActiveTab('DASHBOARD')}>管理看板</button>}
+            </>
           ) : (
             <>
               <button className={`${styles.navTab} ${activeTab === 'RECAP' ? styles.active : ''}`} onClick={() => setActiveTab('RECAP')}>活動花絮</button>
               <button className={`${styles.navTab} ${activeTab === 'COMMENTS' ? styles.active : ''}`} onClick={() => setActiveTab('COMMENTS')}>交流留言 ({event.comment_count || 0})</button>
+              {isAuthor && <button className={`${styles.navTab} ${activeTab === 'DASHBOARD' ? styles.active : ''}`} onClick={() => setActiveTab('DASHBOARD')}>管理看板</button>}
             </>
           )}
         </div>
@@ -225,15 +219,22 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                   </div>
                   <button 
                     className={`btn btn-primary ${styles.registerBtn}`}
-                    onClick={handleRegister}
-                    disabled={isSubmitting || (isFull && !event.has_registered)}
+                    onClick={isAuthor ? () => setShowQrProjector(true) : handleRegister}
+                    disabled={!isAuthor && (isSubmitting || (isFull && !event.has_registered))}
+                    style={isAuthor ? { background: 'var(--accent-primary)', border: 'none' } : {}}
                   >
-                    {event.has_registered ? '您已報名' : (isFull ? '已額滿' : '立即報名')}
+                    {isAuthor ? '📱 開啟現場投影 QR Code' : (event.has_registered ? '您已報名' : (isFull ? '已額滿' : '立即報名'))}
                   </button>
                 </div>
               )}
               
 
+            </div>
+          )}
+
+          {activeTab === 'DASHBOARD' && isAuthor && (
+            <div className={styles.dashboardSection}>
+              <AttendanceDashboard event={event} inline={true} onOpenQr={() => setShowQrProjector(true)} />
             </div>
           )}
 
@@ -322,10 +323,11 @@ function EventDetailModal({ event, onClose, onUpdate }) {
           onClose={() => setSelectedUserCampusId(null)} 
         />
       )}
-      {showDashboard && (
+      {showQrProjector && (
         <AttendanceDashboard 
           event={event} 
-          onClose={() => setShowDashboard(false)} 
+          onClose={() => setShowQrProjector(false)} 
+          forceQr={true}
         />
       )}
     </div>
