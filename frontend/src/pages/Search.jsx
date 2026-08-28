@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search as SearchIcon, ThumbsUp, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ReviewModal from '../components/ReviewModal';
 import TmdbPoster from '../components/TmdbPoster';
 import UserCardModal from '../components/UserCardModal';
@@ -14,6 +15,8 @@ function Search() {
   const [selectedReview, setSelectedReview] = useState(null);
   const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
   const [expandedMovies, setExpandedMovies] = useState({});
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const toggleMovie = (movieId) => {
     setExpandedMovies(prev => ({
@@ -70,13 +73,13 @@ function Search() {
   };
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const initialQuery = params.get('q');
-    if (initialQuery) {
+    if (initialQuery && initialQuery !== query) {
       setQuery(initialQuery);
       performSearch(initialQuery);
     }
-  }, []);
+  }, [location.search]);
 
   const handleReviewUpdated = () => {
     handleSearch({ preventDefault: () => {} });
@@ -273,13 +276,22 @@ function Search() {
                         {review.tags && review.tags.length > 0 && (
                           <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
                             {review.tags.map(tag => (
-                              <span key={tag.id} style={{ 
-                                backgroundColor: 'rgba(139, 92, 246, 0.2)', 
-                                color: 'var(--accent-secondary)', 
-                                padding: '4px 12px', 
-                                borderRadius: 'var(--radius-pill)',
-                                fontSize: '0.9rem'
-                              }}>
+                              <span 
+                                key={tag.id} 
+                                style={{ 
+                                  backgroundColor: 'rgba(139, 92, 246, 0.2)', 
+                                  color: 'var(--accent-secondary)', 
+                                  padding: '4px 12px', 
+                                  borderRadius: 'var(--radius-pill)',
+                                  fontSize: '0.9rem',
+                                  cursor: 'pointer'
+                                }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  navigate(`/search?q=${encodeURIComponent(tag.name)}`);
+                                }}
+                              >
                                 #{tag.name}
                               </span>
                             ))}

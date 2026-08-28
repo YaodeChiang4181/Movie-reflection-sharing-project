@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Edit2, Trash2, Send } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import ReviewForm from './ReviewForm';
@@ -23,6 +24,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
   const [currentReview, setCurrentReview] = useState(review);
   const [isRevealed, setIsRevealed] = useState(false);
   const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchComments();
@@ -294,7 +296,16 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
                 <style>{`.tags-container::-webkit-scrollbar { display: none; }`}</style>
                 <div className="tags-container" style={{ display: 'flex', gap: '8px' }}>
                   {displayTags.map(tag => (
-                    <span key={tag.id} style={{...tagStyle, flexShrink: 0}}>#{tag.name}</span>
+                    <span 
+                      key={tag.id} 
+                      style={{...tagStyle, flexShrink: 0, cursor: 'pointer'}}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate(`/search?q=${encodeURIComponent(tag.name)}`);
+                        setTimeout(() => onClose(), 10);
+                      }}
+                    >#{tag.name}</span>
                   ))}
                   {remainingCount > 0 && (
                     <span style={{...tagStyle, flexShrink: 0, background: 'rgba(255,255,255,0.05)', color: '#94A3B8', borderColor: 'rgba(255,255,255,0.1)'}}>

@@ -211,7 +211,16 @@ function Profile() {
                 <div className={styles.tagsSubtitle}>觀影偏好</div>
                 <div className={styles.tagsList}>
                   {userData.common_tags.map(tag => (
-                    <span key={tag} className={styles.commonTag}>#{tag}</span>
+                    <span 
+                      key={tag} 
+                      className={styles.commonTag}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate(`/search?q=${encodeURIComponent(tag)}`);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >#{tag}</span>
                   ))}
                 </div>
               </div>
@@ -328,7 +337,15 @@ function Profile() {
                         {review.tags?.length > 0 && (
                           <div className={styles.tags}>
                             {review.tags.map(tag => (
-                              <span key={tag.id} className={styles.tag}>#{tag.name}</span>
+                              <span 
+                                key={tag.id} 
+                                className={styles.tag}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/search?q=${encodeURIComponent(tag.name)}`);
+                                }}
+                                style={{ cursor: 'pointer' }}
+                              >#{tag.name}</span>
                             ))}
                           </div>
                         )}
@@ -367,7 +384,16 @@ function Profile() {
                             {review.tags?.length > 0 && (
                               <div className={styles.tags}>
                                 {review.tags.map(tag => (
-                                  <span key={tag.id} className={styles.tag}>#{tag.name}</span>
+                                  <span 
+                                    key={tag.id} 
+                                    className={styles.tag}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      navigate(`/search?q=${encodeURIComponent(tag.name)}`);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                  >#{tag.name}</span>
                                 ))}
                               </div>
                             )}
@@ -400,7 +426,15 @@ function Profile() {
                             {review.tags?.length > 0 && (
                               <div className={styles.tags}>
                                 {review.tags.map(tag => (
-                                  <span key={tag.id} className={styles.tag}>#{tag.name}</span>
+                                  <span 
+                                    key={tag.id} 
+                                    className={styles.tag}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/search?q=${encodeURIComponent(tag.name)}`);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                  >#{tag.name}</span>
                                 ))}
                               </div>
                             )}

@@ -343,6 +343,7 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick, onU
   const [isRevealed, setIsRevealed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const navigate = useNavigate();
   
   const isAuthor = isLoggedIn && userProfile?.campus_id === review.user?.campus_id;
   
@@ -546,13 +547,19 @@ function ReviewCard({ review, onReviewDeleted, onReviewUpdated, onCardClick, onU
           {review.tags.map(tag => (
             <span 
               key={tag.id} 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/search?q=${encodeURIComponent(tag.name)}`);
+              }}
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 color: 'var(--accent-primary)',
                 padding: '4px 10px',
                 borderRadius: '16px',
                 fontSize: '0.85rem',
-                fontWeight: '500'
+                fontWeight: '500',
+                cursor: 'pointer'
               }}
             >
               #{tag.name}
