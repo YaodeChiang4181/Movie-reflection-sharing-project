@@ -222,9 +222,9 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                     className={`btn btn-primary ${styles.registerBtn}`}
                     onClick={isAuthor ? () => setShowQrProjector(true) : handleRegister}
                     disabled={!isAuthor && (isSubmitting || (isFull && !event.has_registered))}
-                    style={isAuthor ? { background: 'var(--accent-primary)', border: 'none' } : {}}
+                    style={isAuthor ? { background: 'var(--accent-primary)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' } : {}}
                   >
-                    {isAuthor ? '📱 開啟現場投影 QR Code' : (event.has_registered ? '您已報名' : (isFull ? '已額滿' : '立即報名'))}
+                    {isAuthor ? <><QrCode size={18} /> 開啟現場投影 QR Code</> : (event.has_registered ? '您已報名' : (isFull ? '已額滿' : '立即報名'))}
                   </button>
                 </div>
               )}

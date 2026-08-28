@@ -121,38 +121,38 @@
 
 .navTabs {
   display: flex;
-  border-bottom: 1px solid var(--glass-border);
-  background: rgba(0,0,0,0.2);
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: 16px auto 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl, 12px);
+  padding: 4px;
+  width: fit-content;
 }
 
 .navTab {
-  flex: 1;
   background: transparent;
   border: none;
-  color: var(--text-secondary);
-  padding: 16px;
-  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  padding: 6px 16px;
+  font-weight: 500;
   cursor: pointer;
-  position: relative;
-  transition: color 0.2s;
+  border-radius: var(--radius-lg, 8px);
+  transition: all 0.2s;
+  font-size: 0.95rem;
 }
 
 .navTab:hover {
-  color: var(--text-primary);
+  color: var(--text-secondary, #e2e8f0);
 }
 
 .navTab.active {
-  color: var(--primary-color);
-}
-
-.navTab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--primary-color);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .body {

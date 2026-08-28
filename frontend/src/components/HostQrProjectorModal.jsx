@@ -84,11 +84,11 @@ function HostQrProjectorModal({ eventId, eventTitle, onClose }) {
 
   return (
     <div className={styles.projectorOverlay}>
-      <button className={styles.closeBtn} onClick={onClose}>
-        <X size={32} />
-      </button>
-      
       <div className={styles.projectorCard}>
+        <button className={styles.closeBtn} onClick={onClose}>
+          <X size={24} />
+        </button>
+
         <div className={styles.cardHeader}>
           <h2>🎟️ 現場放映專場簽到</h2>
           <p>請掃描 QR Code 進行報到或現場空降！</p>
@@ -99,7 +99,7 @@ function HostQrProjectorModal({ eventId, eventTitle, onClose }) {
             <QRCodeSVG 
               id="qr-svg"
               value={checkInUrl} 
-              size={320} 
+              size={240} 
               level="H"
               includeMargin={false}
               className={styles.qrCode}
@@ -109,16 +109,16 @@ function HostQrProjectorModal({ eventId, eventTitle, onClose }) {
         
         <div className={styles.statsContainer}>
           <div className={`${styles.statsLive} ${isPulsing ? styles.pulse : ''}`}>
-            <span className={styles.liveDot}>●</span> 目前實到： {attendance.total_attended} / {attendance.total_capacity > 0 ? attendance.total_capacity : '無上限'} 席
+            <span className={styles.liveDot}></span> 目前實到： {attendance.total_attended} / {attendance.total_capacity > 0 ? attendance.total_capacity : '無上限'} 席
             <span className={styles.updateText}>(即時更新中)</span>
           </div>
         </div>
         
         <div className={styles.actionButtons}>
-          <button className="btn btn-outline" onClick={toggleFullscreen}>
+          <button className={styles.btnGhost} onClick={toggleFullscreen}>
             🖥️ {isFullscreen ? '退出全螢幕投影' : '切換全螢幕投影'}
           </button>
-          <button className="btn btn-primary" onClick={downloadQR}>
+          <button className={styles.btnPrimary} onClick={downloadQR}>
             📥 下載 QR 圖片
           </button>
         </div>
