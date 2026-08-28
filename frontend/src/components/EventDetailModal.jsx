@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, MapPin, Clock, Users, Star, MessageSquare, Send, User, Trash2 } from 'lucide-react';
+import { X, Calendar, MapPin, Clock, Users, Star, MessageSquare, Send, User, Trash2, QrCode } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './EventDetailModal.module.css';
 import SpeedRatingModal from './SpeedRatingModal';
 import UserCardModal from './UserCardModal';
+import AttendanceDashboard from './AttendanceDashboard';
 
 function EventDetailModal({ event, onClose, onUpdate }) {
   const { userProfile } = useAuth();
@@ -14,6 +15,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSpeedRating, setShowSpeedRating] = useState(false);
   const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   const isUpcoming = event.status === 'UPCOMING';
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
@@ -111,14 +113,24 @@ function EventDetailModal({ event, onClose, onUpdate }) {
         </button>
 
         {(isAuthor || isAdmin) && (
-          <button 
-            className={styles.closeBtn} 
-            style={{ top: '64px', background: 'rgba(220, 38, 38, 0.7)' }} 
-            onClick={handleDeleteEvent}
-            title="刪除活動"
-          >
-            <Trash2 size={20} />
-          </button>
+          <>
+            <button 
+              className={styles.closeBtn} 
+              style={{ top: '64px', background: 'var(--accent-primary)' }} 
+              onClick={() => setShowDashboard(true)}
+              title="管理名單與投影 QR Code"
+            >
+              <QrCode size={20} />
+            </button>
+            <button 
+              className={styles.closeBtn} 
+              style={{ top: '112px', background: 'rgba(220, 38, 38, 0.7)' }} 
+              onClick={handleDeleteEvent}
+              title="刪除活動"
+            >
+              <Trash2 size={20} />
+            </button>
+          </>
         )}
 
         <div className={styles.header}>
@@ -220,6 +232,8 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                   </button>
                 </div>
               )}
+              
+
             </div>
           )}
 
@@ -249,28 +263,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                 </div>
               )}
 
-              {isAuthor && (
-                <div className={`glass ${styles.creatorDashboard}`} style={{ marginTop: '16px', padding: '20px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <h3 style={{ color: 'var(--accent-primary)', marginBottom: '16px', fontSize: '1.1rem' }}>👑 發起人專屬數據看板</h3>
-                  <div style={{ display: 'flex', gap: '20px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 min-content', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>總報名人數</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{event.registered_count || 0} 人</div>
-                    </div>
-                    <div style={{ flex: '1 1 min-content', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>核銷簽到率</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
-                        {event.registered_count > 0 ? '即將開放' : '0%'}
-                      </div>
-                    </div>
-                    <div style={{ flex: '1 1 min-content', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>心得回饋數</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{event.event_comments?.length || event.comment_count || 0} 篇</div>
-                    </div>
-                  </div>
-                  <button className="btn btn-outline" style={{ width: '100%' }}>查看完整名單與報到核銷</button>
-                </div>
-              )}
+
             </div>
           )}
 
@@ -327,6 +320,12 @@ function EventDetailModal({ event, onClose, onUpdate }) {
         <UserCardModal 
           campusId={selectedUserCampusId} 
           onClose={() => setSelectedUserCampusId(null)} 
+        />
+      )}
+      {showDashboard && (
+        <AttendanceDashboard 
+          event={event} 
+          onClose={() => setShowDashboard(false)} 
         />
       )}
     </div>

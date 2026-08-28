@@ -212,9 +212,9 @@ function EventForm({ onClose, onEventAdded }) {
           </div>
 
           <div className={styles.formGroup}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>活動簡介 * (至少 30 字)</label>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>活動簡介 * (至少 15 字)</label>
             <textarea
-              name="description" value={formData.description} onChange={handleChange} required minLength="30"
+              name="description" value={formData.description} onChange={handleChange} required minLength="15"
               style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', outline: 'none', resize: 'vertical' }} placeholder="引導填寫「活動流程、選片理由、費用說明（如：低消一杯飲料）」" rows="4"
             />
           </div>
