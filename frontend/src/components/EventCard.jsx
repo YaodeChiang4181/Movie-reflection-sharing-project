@@ -1,8 +1,11 @@
 import React from 'react';
 import { Calendar, MapPin, Clock, Users, MessageCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import styles from './EventCard.module.css';
 
 function EventCard({ event, onClick }) {
+  const { userProfile } = useAuth();
+  const isAuthor = userProfile?.id === event.user?.id;
   const isUpcoming = event.status === 'UPCOMING';
   const progress = event.capacity > 0 
     ? Math.min((event.registered_count / event.capacity) * 100, 100) 
@@ -75,9 +78,9 @@ function EventCard({ event, onClick }) {
               </div>
               <button 
                 className={`btn btn-primary ${styles.actionBtn}`} 
-                disabled={isFull && !event.has_registered}
+                disabled={!isAuthor && isFull && !event.has_registered}
               >
-                {event.has_registered ? '您已報名' : (isFull ? '已額滿' : '立即報名')}
+                {isAuthor ? '管理您的活動' : (event.has_registered ? '您已報名' : (isFull ? '已額滿' : '立即報名'))}
               </button>
             </div>
           ) : (

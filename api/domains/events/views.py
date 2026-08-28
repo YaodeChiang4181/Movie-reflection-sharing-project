@@ -201,7 +201,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 department = reg.user.outsider_identity.occupation
                 
             attendee_list.append({
-                "user_id": reg.user.campus_id,
+                "user_id": getattr(reg.user, 'campus_id', '') or '',
                 "name": name,
                 "department": department,
                 "type": reg.registration_type,
@@ -252,7 +252,7 @@ class EventViewSet(viewsets.ModelViewSet):
             status_str = "已簽到" if reg.status == "CHECKED_IN" else ("未報到" if reg.status in ["REGISTERED", "NO_SHOW"] else reg.status)
             
             writer.writerow([
-                reg.user.campus_id,
+                getattr(reg.user, 'campus_id', '') or '',
                 name,
                 department,
                 type_str,

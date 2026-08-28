@@ -6,6 +6,7 @@ import styles from './EventDetailModal.module.css';
 import SpeedRatingModal from './SpeedRatingModal';
 import UserCardModal from './UserCardModal';
 import AttendanceDashboard from './AttendanceDashboard';
+import HostQrProjectorModal from './HostQrProjectorModal';
 
 function EventDetailModal({ event, onClose, onUpdate }) {
   const { userProfile } = useAuth();
@@ -324,10 +325,10 @@ function EventDetailModal({ event, onClose, onUpdate }) {
         />
       )}
       {showQrProjector && (
-        <AttendanceDashboard 
-          event={event} 
+        <HostQrProjectorModal 
+          eventId={event.id} 
+          eventTitle={event.title}
           onClose={() => setShowQrProjector(false)} 
-          forceQr={true}
         />
       )}
     </div>
