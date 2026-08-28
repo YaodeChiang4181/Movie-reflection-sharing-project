@@ -55,7 +55,8 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
   const fetchMessages = async (partnerId) => {
     try {
       const res = await api.get(`/messages/?partner_id=${partnerId}`);
-      setMessages(res.data.reverse()); // order chronologically for chat
+      const dataList = Array.isArray(res.data) ? res.data : (res.data.results || []);
+      setMessages([...dataList].reverse()); // order chronologically for chat
     } catch (err) {
       console.error('Failed to fetch messages', err);
     }

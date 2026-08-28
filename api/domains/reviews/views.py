@@ -65,13 +65,34 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         count = int(request.query_params.get('count', 10))
         count = min(count, 20)  # cap at 20
 
-        # Get local movies (only those with at least one active review)
-        local_movies = list(Movie.objects.annotate(
+        # Base query for local movies
+        local_movies_qs = Movie.objects.annotate(
             active_review_count=Count('reviews', filter=Q(reviews__is_deleted=False))
-        ).filter(active_review_count__gt=0).values_list('id', flat=True))
+        ).filter(active_review_count__gt=0)
+        
+        user_reviewed_movie_ids = set()
+        user_reviewed_tmdb_ids = set()
+        
+        if request.user.is_authenticated:
+            # Gather IDs of movies already RAPID reviewed by this user
+            user_reviewed_movie_ids = set(Review.objects.filter(user=request.user, tags__name="急速評星").values_list('movie_id', flat=True))
+            local_movies_qs = local_movies_qs.exclude(id__in=user_reviewed_movie_ids)
+            
+            # Gather their tmdb_ids to also filter from the TMDB pool
+            user_reviewed_tmdb_ids = set(
+                Movie.objects.filter(id__in=user_reviewed_movie_ids)
+                .exclude(tmdb_id__isnull=True)
+                .values_list('tmdb_id', flat=True)
+            )
+
+        local_movies = list(local_movies_qs.values_list('id', flat=True))
 
         # Get TMDB pool from cache
         tmdb_pool = fetch_tmdb_popular_pool(pool_size=10)
+        
+        # Filter out TMDB movies already reviewed by user
+        if request.user.is_authenticated and tmdb_pool:
+            tmdb_pool = [m for m in tmdb_pool if m.get('tmdb_id') not in user_reviewed_tmdb_ids]
 
         selected_ids = []
         used_tmdb_indices = set()
@@ -110,7 +131,13 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                         'release_year': 0,
                     }
                 )
-                if movie.id not in selected_ids:
+                
+                # Double check that we don't accidentally select a locally mapped movie the user already reviewed 
+                # (in case it wasn't filtered by tmdb_id because tmdb_id was null before)
+                if request.user.is_authenticated and movie.id in user_reviewed_movie_ids:
+                    # If this happens, we just skip adding it to selected_ids, it will be skipped
+                    pass
+                elif movie.id not in selected_ids:
                     selected_ids.append(movie.id)
             elif local_movies:
                 # TMDB pool empty, fallback to local

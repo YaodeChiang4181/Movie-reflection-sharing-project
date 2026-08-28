@@ -26,6 +26,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
 class DirectMessageViewSet(viewsets.ModelViewSet):
     serializer_class = DirectMessageSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
     
     def get_queryset(self):
         qs = DirectMessage.objects.filter(
