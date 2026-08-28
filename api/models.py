@@ -156,12 +156,15 @@ class Event(models.Model):
 class EventRegistration(models.Model):
     STATUS_CHOICES = (
         ('REGISTERED', 'REGISTERED'),
-        ('ATTENDED', 'ATTENDED'),
+        ('CHECKED_IN', 'CHECKED_IN'),
+        ('NO_SHOW', 'NO_SHOW'),
         ('CANCELLED', 'CANCELLED'),
     )
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_registrations')
+    registration_type = models.CharField(max_length=16, default='ONLINE') # 'ONLINE' or 'WALK_IN'
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REGISTERED')
+    checked_in_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

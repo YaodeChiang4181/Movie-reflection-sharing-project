@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -29,11 +29,15 @@ function Auth() {
   const navigate = useNavigate();
   const { login, isLoggedIn } = useAuth();
 
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get('redirect') || location.state?.from?.pathname || '/';
+
   useEffect(() => {
     if (isLoggedIn) {
-      navigate('/');
+      navigate(redirectPath, { replace: true });
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, redirectPath]);
 
   useEffect(() => {
     let timer;
@@ -103,7 +107,7 @@ function Auth() {
         login(response.data.access, response.data.user);
         localStorage.setItem('refresh_token', response.data.refresh);
         
-        navigate('/'); // 登入後回到首頁，或由路由守衛決定跳轉
+        navigate(redirectPath, { replace: true }); // 登入後回到上一頁或首頁
       } else {
         // 註冊流程
         if (!isEmailVerified) {
