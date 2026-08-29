@@ -33,7 +33,7 @@ class Command(BaseCommand):
             # Get new events from followed users
             followed_users = Follow.objects.filter(follower=user).values_list('following', flat=True)
             new_events = Event.objects.filter(
-                creator__in=followed_users,
+                user__in=followed_users,
                 created_at__gte=yesterday
             )
             
