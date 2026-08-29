@@ -38,6 +38,22 @@ class EventViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             event = serializer.save(user=self.request.user)
             EventRegistration.objects.create(event=event, user=self.request.user, status='REGISTERED')
+            
+            # 建立通知給追蹤者
+            from api.models import Follow, Notification
+            followers = Follow.objects.filter(following=self.request.user).select_related('follower')
+            notifications = []
+            for follow in followers:
+                notifications.append(
+                    Notification(
+                        user=follow.follower,
+                        type='new_event',
+                        title=f"{self.request.user.username or self.request.user.campus_id} 發起了新活動: {event.title}",
+                        target_url=f"/events/{event.id}"
+                    )
+                )
+            if notifications:
+                Notification.objects.bulk_create(notifications)
 
     def destroy(self, request, *args, **kwargs):
         event = self.get_object()

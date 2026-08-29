@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     RegisterView, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, 
-    SendVerificationView, VerifyEmailView, LineLoginView, GoogleLoginView, MergeGhostAccountView,
+    SendVerificationView, VerifyEmailView, BindEmailView, LineLoginView, GoogleLoginView, MergeGhostAccountView,
     RecalculateExpView, AdminStatsView, SyncUserExpView, UserAvatarUploadView,
     AdminInviteTokenView, ClaimBadgeView
 )
@@ -19,6 +19,7 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('send-verification/', SendVerificationView.as_view(), name='send_verification'),
     path('verify-email/', VerifyEmailView.as_view(), name='verify_email'),
+    path('bind-email/', BindEmailView.as_view(), name='bind_email'),
     path('sync-exp/', SyncUserExpView.as_view(), name='sync_exp'),
     path('avatar/', UserAvatarUploadView.as_view(), name='user_avatar_upload'),
     path('admin/merge-ghost/', MergeGhostAccountView.as_view(), name='admin_merge_ghost'),

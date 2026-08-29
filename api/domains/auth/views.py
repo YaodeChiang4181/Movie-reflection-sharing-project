@@ -125,6 +125,42 @@ class VerifyEmailView(APIView):
 
         return Response({'message': '信箱驗證成功'})
 
+class BindEmailView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
+
+        if not email or not code:
+            return Response({'error': '請提供信箱與驗證碼'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            verification = EmailVerification.objects.get(email=email, code=code)
+            
+            if verification.is_verified:
+                return Response({'error': '此信箱已經驗證過了'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            verification.is_verified = True
+            verification.save()
+            
+            user = request.user
+            user.email = email
+            user.email_verified = True
+            user.save(update_fields=['email', 'email_verified'])
+            
+            # 給予 20 EXP 獎勵
+            from api.services.gamification_service import GamificationService
+            level_up_info = GamificationService.add_exp(user, 20, reason="信箱綁定獎勵")
+            
+            return Response({
+                'message': '信箱綁定成功！', 
+                'level_up_info': level_up_info
+            })
+            
+        except EmailVerification.DoesNotExist:
+            return Response({'error': '驗證碼錯誤或已過期'}, status=status.HTTP_400_BAD_REQUEST)
+
 class LineLoginView(APIView):
     permission_classes = (AllowAny,)
     

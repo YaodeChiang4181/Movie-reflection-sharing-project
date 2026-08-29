@@ -1,5 +1,6 @@
 import random
 import string
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
@@ -22,6 +23,10 @@ class User(AbstractUser):
     
     # Google 整合
     google_user_id = models.CharField(max_length=100, unique=True, null=True, blank=True, verbose_name="Google User ID")
+    
+    # 漸進式綁定與電子報
+    email_verified = models.BooleanField(default=False, verbose_name="信箱是否已驗證")
+    daily_digest_enabled = models.BooleanField(default=True, verbose_name="是否接收每日影迷日報")
     
     USERNAME_FIELD = 'campus_id'
     REQUIRED_FIELDS = []
@@ -314,4 +319,37 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.title}"
+
+class DailyDigestLog(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_digest_logs')
+    digest_date = models.DateField(auto_now_add=True)
+    unread_messages_count = models.IntegerField(default=0)
+    new_events_count = models.IntegerField(default=0)
+    
+    DELIVERY_CHANNELS = (
+        ('EMAIL', 'Email'),
+        ('LINE', 'LINE'),
+        ('IN_APP_ONLY', 'In App Only'),
+        ('SKIPPED', 'Skipped'),
+    )
+    delivery_channel = models.CharField(max_length=16, choices=DELIVERY_CHANNELS)
+    
+    DELIVERY_STATUS = (
+        ('SUCCESS', 'Success'),
+        ('FAILED', 'Failed'),
+        ('RATE_LIMITED', 'Rate Limited'),
+    )
+    delivery_status = models.CharField(max_length=16, choices=DELIVERY_STATUS)
+    error_message = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'digest_date')
+        indexes = [
+            models.Index(fields=['user', 'digest_date']),
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.digest_date} - {self.delivery_status}"
 

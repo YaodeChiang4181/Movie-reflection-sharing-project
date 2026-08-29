@@ -213,8 +213,8 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-# Email Configuration (OTP Verification)
-if os.environ.get('RENDER'):
+# Email Configuration (OTP Verification & Daily Digest)
+if os.environ.get('USE_SMTP') == 'True' or os.environ.get('RENDER'):
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = 587

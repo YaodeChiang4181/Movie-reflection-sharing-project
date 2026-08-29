@@ -199,9 +199,25 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return qs
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        review = serializer.save(user=self.request.user)
         add_user_experience(self.request.user, exp_gained=25)
         cache.delete('trending_reviews')
+        
+        # 建立通知給追蹤者
+        from api.models import Follow, Notification
+        followers = Follow.objects.filter(following=self.request.user).select_related('follower')
+        notifications = []
+        for follow in followers:
+            notifications.append(
+                Notification(
+                    user=follow.follower,
+                    type='new_review',
+                    title=f"{self.request.user.username or self.request.user.campus_id} 發布了新心得: {review.movie.title}",
+                    target_url=f"/movies/{review.movie.id}"
+                )
+            )
+        if notifications:
+            Notification.objects.bulk_create(notifications)
 
     def destroy(self, request, *args, **kwargs):
         review = self.get_object()
@@ -315,11 +331,42 @@ class ReviewViewSet(viewsets.ModelViewSet):
         query = request.query_params.get('q', '')
         if not query:
             return Response([])
-        query_len = len(query)
-
-        results = self.get_queryset().filter(
-            Q(movie__title__icontains=query) | Q(movie__original_title__icontains=query) | Q(content__icontains=query) | Q(tags__name__icontains=query) | Q(user__profile__nickname__icontains=query)
-        ).distinct().annotate(
+            
+        # 處理系統動態附加的 hashtag (不存於實體 DB)
+        dynamic_tags_hot = ['熱門討論', '社群精選']
+        dynamic_tags_cold = ['新鮮討論', '冷門話題']
+        
+        if query in dynamic_tags_hot or query in dynamic_tags_cold:
+            cache_key = 'top_20_movie_ids'
+            top_20_ids = cache.get(cache_key)
+            if top_20_ids is None:
+                top_movies = Movie.objects.annotate(
+                    review_count=Count('reviews', filter=Q(reviews__is_deleted=False)),
+                    normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & ~Q(reviews__content=""))
+                ).order_by('-normal_review_count', '-review_count', '-id')[:20]
+                top_20_ids = list(top_movies.values_list('id', flat=True))
+                cache.set(cache_key, top_20_ids, 60 * 10)
+                
+            if query in dynamic_tags_hot:
+                results = self.get_queryset().filter(movie_id__in=top_20_ids).distinct()
+            else:
+                results = self.get_queryset().exclude(movie_id__in=top_20_ids).distinct()
+                
+            # 加上同樣的 annotate 確保 order_by 不出錯
+            results = results.annotate(
+                match_priority=Value(1, output_field=IntegerField()),
+                occurrences=Value(1, output_field=IntegerField())
+            ).order_by('-created_at')
+            
+        else:
+            query_len = len(query)
+            results = self.get_queryset().filter(
+                Q(movie__title__icontains=query) | 
+                Q(movie__original_title__icontains=query) | 
+                Q(content__icontains=query) | 
+                Q(tags__name__icontains=query) | 
+                Q(user__profile__nickname__icontains=query)
+            ).distinct().annotate(
             match_priority=Case(
                 When(movie__title__icontains=query, then=Value(1)),
                 When(movie__original_title__icontains=query, then=Value(1)),
