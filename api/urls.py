@@ -5,6 +5,23 @@ from api.domains.auth.views import UserMeView, PublicProfileView
 def ping(request):
     return HttpResponse("pong")
 
+def trigger_daily_digest(request):
+    import os
+    from django.core.management import call_command
+    from django.http import JsonResponse
+    
+    auth_header = request.headers.get('Authorization')
+    expected_secret = os.environ.get('CRON_SECRET', 'dev_secret_key')
+    
+    if auth_header != f"Bearer {expected_secret}":
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+        
+    try:
+        call_command('send_daily_digest')
+        return JsonResponse({'success': True, 'message': 'Daily digest triggered successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 def fix_tmdb(request):
     from api.models import Movie
     from api.utils.tmdb import fetch_movie_metadata
@@ -59,6 +76,9 @@ urlpatterns = [
     # 臨時端點：用來修復資料庫電影抓取錯誤與活動報名紀錄
     path('fix-tmdb/', fix_tmdb, name='fix_tmdb'),
     path('fix-events/', fix_events, name='fix_events'),
+    
+    # Cron Jobs
+    path('cron/daily-digest/', trigger_daily_digest, name='trigger_daily_digest'),
     
     # Domain: Reviews (Movies, Reviews, Votes, Comments)
     path('', include('api.domains.reviews.urls')),

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Shield, Check, X, Loader2 } from 'lucide-react';
-import api from '../utils/api';
+import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './EmailBindModal.module.css';
 
