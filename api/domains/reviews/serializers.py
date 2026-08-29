@@ -27,6 +27,12 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'review', 'user', 'content', 'created_at')
         read_only_fields = ('review',)
 
+    def validate_content(self, value):
+        import bleach
+        if value:
+            return bleach.clean(value, tags=[], attributes={}, strip=True)
+        return value
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if not data.get('user'):
@@ -50,6 +56,12 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'user', 'movie', 'movie_title', 'tmdb_id', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
+
+    def validate_content(self, value):
+        import bleach
+        if value:
+            return bleach.clean(value, tags=[], attributes={}, strip=True)
+        return value
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

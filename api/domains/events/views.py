@@ -65,6 +65,16 @@ class EventViewSet(viewsets.ModelViewSet):
     def register(self, request, pk=None):
         user = request.user
         
+        # 防範暴力破解與惡意洗 API
+        from django.core.cache import cache
+        cache_key = f'event_register_rate_{user.id}_{pk}'
+        attempts = cache.get(cache_key, 0)
+        
+        if attempts >= 10:
+            return Response({'detail': '操作過於頻繁，請稍後再試'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            
+        cache.set(cache_key, attempts + 1, 60 * 10) # 10 分鐘內最多 10 次
+        
         with transaction.atomic():
             # Use select_for_update to lock the row and prevent race conditions for capacity
             try:

@@ -66,6 +66,11 @@ class SendVerificationView(APIView):
         recent = EmailVerification.objects.filter(email=email, created_at__gte=one_min_ago).first()
         if recent:
             return Response({'error': '發送過於頻繁，請稍後再試'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        daily_count = EmailVerification.objects.filter(email=email, created_at__gte=today_start).count()
+        if daily_count >= 5:
+            return Response({'error': '今日發送次數已達上限 (5次)，請明天再試'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
         code = f"{random.randint(0, 999999):06d}"
         

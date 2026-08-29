@@ -237,6 +237,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
         cache.delete('trending_reviews')
         return response
 
+    def update(self, request, *args, **kwargs):
+        review = self.get_object()
+        if review.user != request.user and not request.user.is_staff:
+            return Response({"error": "You don't have permission to edit this review."}, status=status.HTTP_403_FORBIDDEN)
+        response = super().update(request, *args, **kwargs)
+        cache.delete('trending_reviews')
+        return response
+
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
     def deleted_reviews(self, request):
         deleted = Review.objects.filter(is_deleted=True).annotate(
