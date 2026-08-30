@@ -184,7 +184,7 @@ function Home() {
                   </div>
                 )}
                 <div className="hero-content">
-                  <div className="hero-badge" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                  <div className="hero-badge" style={{ background: '#F5A623', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                     <CalendarDays size={20} />
                     <span style={{ fontWeight: 600, marginLeft: '4px' }}>近期最熱門</span>
                   </div>
@@ -204,7 +204,7 @@ function Home() {
               >
                 <TmdbPoster title={item.title} className="hero-poster" />
                 <div className="hero-content">
-                  <div className="hero-badge" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                  <div className="hero-badge" style={{ background: '#F5A623', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                     <Flame size={20} />
                     <span style={{ fontWeight: 600, marginLeft: '4px' }}>近期最熱門</span>
                   </div>

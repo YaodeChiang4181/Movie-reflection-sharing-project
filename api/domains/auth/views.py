@@ -155,12 +155,12 @@ class BindEmailView(APIView):
             user.save(update_fields=['email', 'email_verified'])
             
             # 給予 20 EXP 獎勵
-            from api.services.gamification_service import GamificationService
-            level_up_info = GamificationService.add_exp(user, 20, reason="信箱綁定獎勵")
+            from api.domains.gamification.services import add_user_experience
+            user_exp = add_user_experience(user, 20)
             
             return Response({
                 'message': '信箱綁定成功！', 
-                'level_up_info': level_up_info
+                'level_up_info': {'level': user_exp.level, 'exp': user_exp.exp}
             })
             
         except EmailVerification.DoesNotExist:
