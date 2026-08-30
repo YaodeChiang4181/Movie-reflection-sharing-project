@@ -6,6 +6,7 @@ import ReviewForm from '../components/ReviewForm';
 import SpeedRatingModal from '../components/SpeedRatingModal';
 import EventForm from '../components/EventForm';
 import FeedCard from '../components/FeedCard';
+import EventDetailModal from '../components/EventDetailModal';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from '../components/EventFilterTabs.module.css';
@@ -20,6 +21,8 @@ function Home() {
   const [isLoading, setIsLoading] = useState(true);
   
   const [heroItems, setHeroItems] = useState([]);
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
@@ -58,10 +61,19 @@ function Home() {
 
   useEffect(() => {
     fetchFeed();
-    if (currentPage === 1 && feedType === 'all') {
-      fetchHeroItems();
-    }
   }, [currentPage, feedType]);
+
+  useEffect(() => {
+    fetchHeroItems();
+  }, []);
+
+  useEffect(() => {
+    if (heroItems.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % heroItems.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [heroItems.length]);
 
   const fetchFeed = async () => {
     try {
@@ -117,7 +129,7 @@ function Home() {
     if (item.feed_type === 'MOVIE') {
       navigate(`/movies/${item.id}`);
     } else {
-      navigate(`/events`);
+      setSelectedEvent(item);
     }
   };
 
@@ -144,66 +156,98 @@ function Home() {
         />
       )}
 
+      {selectedEvent && (
+        <EventDetailModal 
+          event={selectedEvent} 
+          onClose={() => setSelectedEvent(null)}
+          onUpdate={fetchFeed}
+        />
+      )}
+
       {/* 焦點橫幅輪播 (Hero Carousel) */}
-      {!isLoading && heroItems.length > 0 && feedType === 'all' && currentPage === 1 && (
-        <div style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', gap: '24px', paddingBottom: '24px', marginBottom: '24px' }}>
-          {heroItems.map((item, idx) => (
-            <div key={`${item.feed_type}-${item.id || idx}`} style={{ scrollSnapAlign: 'start', minWidth: '85%', maxWidth: '85%', flexShrink: 0 }}>
-              {item.feed_type === 'EVENT' ? (
-                <div 
-                  className="glass hover-scale hero-banner" 
-                  onClick={() => navigate(`/events`)}
-                  style={{ backgroundImage: item.cover_image ? `url(${item.cover_image})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden', isolation: 'isolate', transform: 'translateZ(0)', marginBottom: 0 }}
-                >
-                  {item.cover_image && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(15,10,25,0.9) 20%, rgba(15,10,25,0.4) 100%)', borderRadius: 'inherit', zIndex: -1 }}></div>}
-                  
-                  {!item.cover_image && <div style={{ padding: '40px' }}><Ticket size={64} opacity={0.2} /></div>}
-                  <div className="hero-content" style={{ position: 'relative', zIndex: 1 }}>
-                    <div className="hero-badge" style={{ background: '#FFFFFF', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                      <CalendarDays size={20} />
-                      <span style={{ fontWeight: 600 }}>近期最熱門</span>
-                    </div>
-                    <h2 style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{item.title}</h2>
-                    <div className="hero-stats">
-                      <span className="hero-review-count">
-                        報名進度：{item.registered_count} / {item.capacity || '無上限'}
-                      </span>
-                    </div>
+      {heroItems.length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          {(() => {
+            const item = heroItems[currentHeroIndex];
+            if (!item) return null;
+            return item.feed_type === 'EVENT' ? (
+              <div 
+                className="glass hover-scale hero-banner" 
+                onClick={() => setSelectedEvent(item)}
+                style={{ marginBottom: '16px' }}
+              >
+                {item.cover_image ? (
+                  <img src={item.cover_image} alt={item.title} className="hero-poster" style={{ objectFit: 'cover' }} />
+                ) : (
+                  <div className="hero-poster" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)' }}>
+                    <Ticket size={48} opacity={0.5} />
+                  </div>
+                )}
+                <div className="hero-content">
+                  <div className="hero-badge" style={{ background: '#FFFFFF', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                    <CalendarDays size={20} />
+                    <span style={{ fontWeight: 600 }}>近期最熱門</span>
+                  </div>
+                  <h2>{item.title}</h2>
+                  <div className="hero-stats">
+                    <span className="hero-review-count">
+                      報名進度：{item.registered_count} / {item.capacity || '無上限'}
+                    </span>
                   </div>
                 </div>
-              ) : (
-                <div 
-                  className="glass hover-scale hero-banner" 
-                  onClick={() => navigate(`/movies/${item.id}`)}
-                  style={{ marginBottom: 0 }}
-                >
-                  <TmdbPoster title={item.title} className="hero-poster" />
-                  <div className="hero-content">
-                    <div className="hero-badge" style={{ background: '#FFFFFF', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                      <Flame size={20} />
-                      <span style={{ fontWeight: 600 }}>近期最熱門</span>
+              </div>
+            ) : (
+              <div 
+                className="glass hover-scale hero-banner" 
+                onClick={() => navigate(`/movies/${item.id}`)}
+                style={{ marginBottom: '16px' }}
+              >
+                <TmdbPoster title={item.title} className="hero-poster" />
+                <div className="hero-content">
+                  <div className="hero-badge" style={{ background: '#FFFFFF', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                    <Flame size={20} />
+                    <span style={{ fontWeight: 600 }}>近期最熱門</span>
+                  </div>
+                  <h2>{item.title}</h2>
+                  {item.original_title && (
+                    <div className="hero-original-title">
+                      {item.original_title}
                     </div>
-                    <h2>{item.title}</h2>
-                    {item.original_title && (
-                      <div className="hero-original-title">
-                        {item.original_title}
-                      </div>
-                    )}
-                    {!item.original_title && <div style={{ marginBottom: '20px' }}></div>}
-                    <div className="hero-stats">
-                      <div className="hero-rating">
-                        <Star size={24} fill="#F5A623" />
-                        <span>{item.avg_rating ? item.avg_rating.toFixed(1) : '0.0'}</span>
-                      </div>
-                      <span className="hero-review-count">
-                        累積 {item.review_count || 0} 篇深度影評
-                      </span>
+                  )}
+                  {!item.original_title && <div style={{ marginBottom: '20px' }}></div>}
+                  <div className="hero-stats">
+                    <div className="hero-rating">
+                      <Star size={24} fill="#F5A623" />
+                      <span>{item.avg_rating ? item.avg_rating.toFixed(1) : '0.0'}</span>
                     </div>
+                    <span className="hero-review-count">
+                      累積 {item.review_count || 0} 篇深度影評
+                    </span>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })()}
+          
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            {heroItems.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentHeroIndex(idx)}
+                style={{
+                  width: idx === currentHeroIndex ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: idx === currentHeroIndex ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                  border: 'none',
+                  transition: 'all 0.3s ease',
+                  padding: 0,
+                  cursor: 'pointer'
+                }}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
         </div>
       )}
 
