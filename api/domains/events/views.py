@@ -248,6 +248,40 @@ class EventViewSet(viewsets.ModelViewSet):
             "attendee_list": attendee_list
         })
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def upload_recap_images(self, request, pk=None):
+        event = self.get_object()
+        if event.user != request.user and not request.user.is_staff:
+            return Response({"detail": "您沒有權限上傳。"}, status=status.HTTP_403_FORBIDDEN)
+        
+        images = request.FILES.getlist('images')
+        if not images:
+            return Response({"detail": "No images provided."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Check size limit (2MB)
+        for image in images:
+            if image.size > 2 * 1024 * 1024:
+                return Response({"detail": f"File {image.name} exceeds 2MB limit."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        from django.core.files.storage import default_storage
+        import uuid
+        import os
+        
+        uploaded_urls = []
+        for image in images:
+            ext = os.path.splitext(image.name)[1]
+            filename = f"events/recaps/{event.id}_{uuid.uuid4().hex}{ext}"
+            path = default_storage.save(filename, image)
+            url = default_storage.url(path)
+            uploaded_urls.append(url)
+            
+        if not isinstance(event.recap_images, list):
+            event.recap_images = []
+        event.recap_images.extend(uploaded_urls)
+        event.save()
+        
+        return Response({"recap_images": event.recap_images})
+
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def export_attendance(self, request, pk=None):
         event = self.get_object()

@@ -16,10 +16,10 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSpeedRating, setShowSpeedRating] = useState(false);
   const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
-  const [showQrProjector, setShowQrProjector] = useState(false);
-  
   const [isEditingRecap, setIsEditingRecap] = useState(false);
   const [editRecapText, setEditRecapText] = useState('');
+  const [editRecapUrl, setEditRecapUrl] = useState('');
+  const [selectedImages, setSelectedImages] = useState(null);
 
   const isUpcoming = event.status === 'UPCOMING';
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
@@ -106,12 +106,27 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const handleSaveRecap = async () => {
     try {
       setIsSubmitting(true);
-      await api.patch(`events/${event.id}/`, { recap_text: editRecapText });
+      await api.patch(`events/${event.id}/`, { 
+        recap_text: editRecapText,
+        recap_url: editRecapUrl
+      });
+      
+      if (selectedImages && selectedImages.length > 0) {
+        const formData = new FormData();
+        Array.from(selectedImages).forEach(file => {
+          formData.append('images', file);
+        });
+        await api.post(`events/${event.id}/upload_recap_images/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      
       setIsEditingRecap(false);
+      setSelectedImages(null);
       onUpdate(); 
       alert("活動花絮已更新！");
     } catch (error) {
-      alert("更新活動花絮失敗");
+      alert(error.response?.data?.detail || "更新活動花絮失敗");
     } finally {
       setIsSubmitting(false);
     }
@@ -263,26 +278,65 @@ function EventDetailModal({ event, onClose, onUpdate }) {
           {activeTab === 'RECAP' && !isUpcoming && (
             <div className={styles.recapSection}>
               {isAuthor && !isEditingRecap && (
-                <button onClick={() => { setIsEditingRecap(true); setEditRecapText(event.recap_text || ''); }} className="btn btn-outline" style={{ marginBottom: '16px' }}>
-                  {event.recap_text ? '編輯活動花絮' : '新增活動花絮'}
+                <button onClick={() => { 
+                  setIsEditingRecap(true); 
+                  setEditRecapText(event.recap_text || ''); 
+                  setEditRecapUrl(event.recap_url || '');
+                  setSelectedImages(null);
+                }} className="btn btn-outline" style={{ marginBottom: '16px' }}>
+                  {event.recap_text || (event.recap_images && event.recap_images.length > 0) ? '編輯活動花絮' : '新增活動花絮'}
                 </button>
               )}
               {isAuthor && isEditingRecap ? (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <textarea 
                     value={editRecapText}
                     onChange={(e) => setEditRecapText(e.target.value)}
-                    style={{ width: '100%', minHeight: '120px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', resize: 'vertical' }}
+                    style={{ width: '100%', minHeight: '100px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', resize: 'vertical' }}
                     placeholder="分享一下這次活動的精彩時刻吧！"
                   />
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px', justifyContent: 'flex-end' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>上傳活動照片 (單張限制 2MB)</label>
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*"
+                      onChange={(e) => setSelectedImages(e.target.files)}
+                      style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>外部回顧連結 (選填)</label>
+                    <input 
+                      type="url" 
+                      value={editRecapUrl}
+                      onChange={(e) => setEditRecapUrl(e.target.value)}
+                      placeholder="https://..."
+                      style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '4px', justifyContent: 'flex-end' }}>
                     <button onClick={() => setIsEditingRecap(false)} className="btn btn-outline">取消</button>
                     <button onClick={handleSaveRecap} className="btn btn-primary" disabled={isSubmitting}>儲存</button>
                   </div>
                 </div>
-              ) : event.recap_text ? (
+              ) : (event.recap_text || (event.recap_images && event.recap_images.length > 0) || event.recap_url) ? (
                 <div className={styles.recapContent}>
-                  <p>{event.recap_text}</p>
+                  {event.recap_text && <p style={{ marginBottom: '16px', whiteSpace: 'pre-wrap' }}>{event.recap_text}</p>}
+                  
+                  {event.recap_images && event.recap_images.length > 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '8px', marginBottom: '16px' }}>
+                      {event.recap_images.map((imgUrl, idx) => (
+                        <img key={idx} src={imgUrl} alt={`Recap ${idx + 1}`} style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px' }} />
+                      ))}
+                    </div>
+                  )}
+                  
+                  {event.recap_url && (
+                    <a href={event.recap_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      🔗 點連結看更多詳細資訊...
+                    </a>
+                  )}
                 </div>
               ) : (
                 <div className={styles.emptyState}>

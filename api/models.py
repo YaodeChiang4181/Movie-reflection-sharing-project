@@ -139,6 +139,7 @@ class Event(models.Model):
     cover_image = models.ImageField(upload_to='events/covers/', null=True, blank=True)
     movie = models.ForeignKey(Movie, on_delete=models.SET_NULL, null=True, blank=True, related_name='events')
     recap_text = models.TextField(blank=True)
+    recap_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="回顧網址")
     recap_images = models.JSONField(default=list, blank=True)
     organizer_nickname = models.CharField(max_length=200, default='')
     description = models.TextField(default="")

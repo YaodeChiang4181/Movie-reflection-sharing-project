@@ -29,7 +29,7 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = (
             'id', 'user', 'title', 'location', 'event_time', 'start_time', 'end_time', 
-            'capacity', 'cover_image', 'movie', 'movie_id', 'recap_text', 'recap_images', 
+            'capacity', 'cover_image', 'movie', 'movie_id', 'recap_text', 'recap_images', 'recap_url',
             'organizer_nickname', 'description', 'join_code', 'created_at', 'status', 
             'registered_count', 'comment_count', 'has_registered'
         )
