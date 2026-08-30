@@ -204,8 +204,13 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           
           {/* Progressive Binding Banner */}
-          {!activePartner && userProfile && !userProfile.email_verified && (
-            <ProgressiveBindingBanner onClick={() => setIsBindModalOpen(true)} />
+          {!activePartner && userProfile && (
+            <ProgressiveBindingBanner 
+              isBound={userProfile.email_verified}
+              onClick={() => {
+                if (!userProfile.email_verified) setIsBindModalOpen(true);
+              }} 
+            />
           )}
 
           <div style={{ padding: '0 16px 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>

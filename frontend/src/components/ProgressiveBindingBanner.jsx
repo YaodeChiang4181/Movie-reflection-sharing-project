@@ -1,7 +1,41 @@
 import React from 'react';
 import { Mail, ChevronRight } from 'lucide-react';
 
-export default function ProgressiveBindingBanner({ onClick }) {
+export default function ProgressiveBindingBanner({ onClick, isBound }) {
+  if (isBound) {
+    return (
+      <div 
+        style={{
+          margin: '0 16px 16px 16px',
+          padding: '12px 16px',
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}
+      >
+        <div style={{
+          width: '32px',
+          height: '32px',
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <Mail size={16} color="#94a3b8" />
+        </div>
+        <div>
+          <h4 style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 }}>
+            已綁定常用信箱
+          </h4>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       onClick={onClick}
