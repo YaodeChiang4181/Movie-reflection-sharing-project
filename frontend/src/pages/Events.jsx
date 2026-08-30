@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Ticket } from 'lucide-react';
+import { Ticket, Plus } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import EventForm from '../components/EventForm';
@@ -59,7 +59,9 @@ function Events() {
           <h1 className={styles.title}>電影迷活動板</h1>
           <p className={styles.subtitle}>尋找志同道合的影迷，一起揪團看電影、討論劇情！</p>
         </div>
-        <button className="btn btn-primary" onClick={handleCreateEvent}>發起活動</button>
+        <button className="btn btn-primary" onClick={handleCreateEvent} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Plus size={18} /> 發起活動
+        </button>
       </header>
 
       <EventFilterTabs activeTab={activeTab} onTabChange={setActiveTab} />
@@ -87,7 +89,9 @@ function Events() {
             <Ticket size={64} style={{ color: 'var(--accent-primary)', marginBottom: '20px', opacity: 0.8 }} />
             <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前還沒有任何活動</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>來發起第一場揪團，尋找一起看電影的好夥伴吧！</p>
-            <button className="btn btn-primary" onClick={handleCreateEvent}>+ 發起第一場觀影活動</button>
+            <button className="btn btn-primary" onClick={handleCreateEvent} style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}>
+              <Plus size={18} /> 發起第一場觀影活動
+            </button>
           </div>
         ) : (
           events.map(event => (

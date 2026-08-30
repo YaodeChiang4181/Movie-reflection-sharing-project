@@ -94,4 +94,7 @@ urlpatterns = [
     
     # Integrations: LINE Webhook
     path('line/', include('api.integrations.line.urls')),
+    
+    # Domain: Feed (首頁資訊流)
+    path('feed/', include('api.domains.feed.urls')),
 ]

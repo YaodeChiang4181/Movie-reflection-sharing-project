@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Users } from 'lucide-react';
+import { X, ExternalLink, RefreshCw, QrCode, Smartphone, Info, MapPin, Search, Ticket } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../api/axios';
 import styles from './HostQrProjectorModal.module.css';
@@ -90,7 +90,7 @@ function HostQrProjectorModal({ eventId, eventTitle, onClose }) {
         </button>
 
         <div className={styles.cardHeader}>
-          <h2>🎟️ 現場放映專場簽到</h2>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Ticket size={24} /> 現場放映專場簽到</h2>
           <p>請掃描 QR Code 進行報到或現場空降！</p>
         </div>
         

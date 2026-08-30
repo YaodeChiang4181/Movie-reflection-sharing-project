@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Clapperboard, User, Home, Search, CalendarDays, Menu, X, Bell } from 'lucide-react';
+import { Clapperboard, User, Home, Search, CalendarDays, Menu, X, Bell, Shield, Plus, ChevronDown, Edit3, Film } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CinemaMailboxDrawer from './CinemaMailboxDrawer';
 import styles from './Navbar.module.css';
@@ -12,6 +12,7 @@ function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
   const [mailboxPartner, setMailboxPartner] = useState(null);
+  const [publishMenuOpen, setPublishMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -60,7 +61,8 @@ function Navbar() {
             </Link>
             {userProfile?.is_staff && (
               <Link to="/admin" className={styles.navLink} style={{ color: '#F59E0B' }}>
-                🛡️ 管理後台
+                <Shield size={18} />
+                <span>管理後台</span>
               </Link>
             )}
           </div>
@@ -69,6 +71,24 @@ function Navbar() {
           <div className={styles.userActions}>
             {isLoggedIn ? (
               <>
+                <div className={styles.publishDropdownContainer} onMouseEnter={() => setPublishMenuOpen(true)} onMouseLeave={() => setPublishMenuOpen(false)}>
+                  <button className={styles.publishBtn}>
+                    <Plus size={16} />
+                    <span>發布</span>
+                    <ChevronDown size={14} />
+                  </button>
+                  {publishMenuOpen && (
+                    <div className={`${styles.publishDropdown} glass`}>
+                      <button onClick={() => window.dispatchEvent(new CustomEvent('open-review-form'))}>
+                        <Edit3 size={16} /> 寫電影心得
+                      </button>
+                      <button onClick={() => window.dispatchEvent(new CustomEvent('open-event-form'))}>
+                        <Film size={16} /> 發起放映活動
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <button 
                   onClick={() => setIsMailboxOpen(true)} 
                   className={styles.navLink} 
@@ -142,7 +162,8 @@ function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ color: '#F59E0B' }}
                   >
-                    🛡️ 管理後台
+                    <Shield size={18} />
+                    <span>管理後台</span>
                   </Link>
                 )}
                 <button

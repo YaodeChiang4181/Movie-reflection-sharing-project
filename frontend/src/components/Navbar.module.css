@@ -259,3 +259,10 @@
   transform: scale(0.92);
 }
 
+.publishDropdownContainer { position: relative; }
+.publishBtn { display: flex; align-items: center; gap: 6px; background: rgba(167, 139, 250, 0.2); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.4); padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.publishBtn:hover { background: rgba(167, 139, 250, 0.3); transform: translateY(-2px); }
+.publishDropdown { position: absolute; top: 120%; right: 0; width: 160px; display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 12px; z-index: 100; animation: slideDown 0.2s; }
+.publishDropdown button { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: transparent; border: none; color: var(--text-primary); text-align: left; cursor: pointer; border-radius: 8px; transition: background 0.2s; }
+.publishDropdown button:hover { background: rgba(255, 255, 255, 0.1); }
+
