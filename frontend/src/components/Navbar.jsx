@@ -57,7 +57,7 @@ function Navbar() {
             </Link>
             <Link to="/events" className={styles.navLink}>
               <CalendarDays size={18} />
-              <span>電影迷活動板</span>
+              <span>活動牆</span>
             </Link>
             {userProfile?.is_staff && (
               <Link to="/admin" className={styles.navLink} style={{ color: '#F59E0B' }}>
@@ -209,7 +209,7 @@ function Navbar() {
           className={`${styles.bottomTab} ${isActive('/events') ? styles.bottomTabActive : ''}`}
         >
           <CalendarDays size={22} />
-          <span>建立活動</span>
+          <span>活動牆</span>
         </Link>
       </nav>
 

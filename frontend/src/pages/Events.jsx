@@ -4,14 +4,12 @@ import { Ticket, Plus } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import EventForm from '../components/EventForm';
-import EventFilterTabs from '../components/EventFilterTabs';
 import EventCard from '../components/EventCard';
 import EventDetailModal from '../components/EventDetailModal';
 import styles from './Events.module.css';
 
 function Events() {
   const [events, setEvents] = useState([]);
-  const [activeTab, setActiveTab] = useState('UPCOMING');
   const [isLoading, setIsLoading] = useState(true);
   const [isComposing, setIsComposing] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -22,7 +20,7 @@ function Events() {
   const fetchEvents = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get(`events/?status=${activeTab}`);
+      const response = await api.get(`events/?status=UPCOMING`);
       setEvents(response.data.results || response.data);
     } catch (error) {
       console.error("Failed to fetch events", error);
@@ -33,7 +31,7 @@ function Events() {
 
   useEffect(() => {
     fetchEvents();
-  }, [activeTab]);
+  }, []);
 
   const handleCreateEvent = () => {
     if (!isLoggedIn) {
@@ -56,15 +54,13 @@ function Events() {
     <div className={`container ${styles.pageWrapper}`}>
       <header className={`flex-between ${styles.header}`}>
         <div>
-          <h1 className={styles.title}>電影迷活動板</h1>
+          <h1 className={styles.title}>活動牆</h1>
           <p className={styles.subtitle}>尋找志同道合的影迷，一起揪團看電影、討論劇情！</p>
         </div>
         <button className="btn btn-primary" onClick={handleCreateEvent} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Plus size={18} /> 發起活動
         </button>
       </header>
-
-      <EventFilterTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {isComposing && (
         <EventForm 
