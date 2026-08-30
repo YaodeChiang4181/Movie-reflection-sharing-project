@@ -45,48 +45,50 @@ function FeedCard({ item, onClick }) {
       </div>
     );
   } else if (item.feed_type === 'EVENT') {
-    const progress = item.capacity > 0 
-      ? Math.min((item.registered_count / item.capacity) * 100, 100) 
-      : 0;
-    const isFull = item.capacity > 0 && item.registered_count >= item.capacity;
-
     return (
-      <div className={`glass hover-scale ${styles.card}`} onClick={onClick}>
-        <div className={styles.coverWrapper}>
+      <div 
+        className="glass hover-scale" 
+        style={{ padding: '20px', borderRadius: '16px', display: 'flex', gap: '16px', cursor: 'pointer' }}
+        onClick={onClick}
+      >
+        <div style={{ flexShrink: 0, width: '100px' }}>
           {item.cover_image ? (
-            <img src={item.cover_image} alt={item.title} className={styles.coverImage} />
+            <img src={item.cover_image} alt={item.title} style={{ width: '100px', height: '150px', objectFit: 'cover', borderRadius: '8px' }} />
           ) : (
-            <div className={styles.coverPlaceholder}>
+            <div style={{ width: '100px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
               <Ticket size={32} opacity={0.5} />
             </div>
           )}
-          <div className={`${styles.statusBadge} ${styles.statusCompleted}`} style={{ background: 'rgba(167,139,250,0.8)' }}>
-            <CalendarDays size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
-            活動回顧
-          </div>
         </div>
         
-        <div className={styles.content}>
-          <h3 className={styles.title}>{item.title}</h3>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-            <Users size={14} style={{ color: '#F5A623' }} />
-            <span style={{ fontWeight: 500 }}>主辦：{item.user?.nickname || item.user?.campus_id}</span>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>{item.title}</h3>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)', fontSize: '0.9rem', marginBottom: '8px' }}>
+              <Users size={14} style={{ color: '#F5A623' }} />
+              <span style={{ fontWeight: 500 }}>主辦：{item.user?.nickname || item.user?.campus_id}</span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.85rem', color: '#fff', background: 'rgba(167,139,250,0.8)', padding: '2px 8px', borderRadius: '12px' }}>
+                <CalendarDays size={12} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} />
+                活動回顧
+              </span>
+            </div>
           </div>
 
-          <div className={styles.footer} style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
-            <div className={styles.completedInfo}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: 'var(--text-secondary)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Users size={16} />
-                  <span>{item.registered_count} 人到場</span>
+                  <span style={{ fontSize: '0.9rem' }}>{item.registered_count} 人到場</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <MessageCircle size={16} />
-                  <span>{item.comment_count || 0} 則迴響</span>
+                  <span style={{ fontSize: '0.9rem' }}>{item.comment_count || 0} 則迴響</span>
                 </div>
               </div>
-            </div>
           </div>
         </div>
       </div>
