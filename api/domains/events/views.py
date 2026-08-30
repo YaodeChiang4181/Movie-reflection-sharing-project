@@ -39,6 +39,9 @@ class EventViewSet(viewsets.ModelViewSet):
             event = serializer.save(user=self.request.user)
             EventRegistration.objects.create(event=event, user=self.request.user, status='REGISTERED')
             
+            # 建立活動獲得 25 EXP
+            add_user_experience(self.request.user, 25)
+            
             # 建立通知給追蹤者
             from api.models import Follow, Notification
             followers = Follow.objects.filter(following=self.request.user).select_related('follower')

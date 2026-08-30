@@ -295,7 +295,7 @@ class SyncUserExpView(APIView):
     
     def post(self, request):
         try:
-            from api.models import Review, Comment, Vote, UserExperience
+            from api.models import Review, Comment, Vote, UserExperience, Event
             from api.domains.gamification.services import add_user_experience
             from django.db import transaction
             
@@ -305,6 +305,12 @@ class SyncUserExpView(APIView):
                 UserExperience.objects.filter(user=user).delete()
                 
                 total_exp = 0
+                
+                if user.email_verified:
+                    total_exp += 20
+                    
+                events_count = Event.objects.filter(user=user).count()
+                total_exp += (events_count * 25)
                 
                 reviews_count = Review.objects.filter(user=user, is_deleted=False).count()
                 total_exp += (reviews_count * 25)
@@ -379,7 +385,7 @@ class RecalculateExpView(APIView):
     
     def post(self, request):
         try:
-            from api.models import User, Review, Comment, Vote, UserExperience
+            from api.models import User, Review, Comment, Vote, UserExperience, Event
             from api.domains.gamification.services import add_user_experience
             from django.db import transaction
             
@@ -390,6 +396,12 @@ class RecalculateExpView(APIView):
                 updated_count = 0
                 for user in users:
                     total_exp = 0
+                    
+                    if user.email_verified:
+                        total_exp += 20
+                        
+                    events_count = Event.objects.filter(user=user).count()
+                    total_exp += (events_count * 25)
                     
                     reviews_count = Review.objects.filter(user=user, is_deleted=False).count()
                     total_exp += (reviews_count * 25)
