@@ -50,7 +50,7 @@ class UserMeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'is_staff', 'avatar')
+        fields = ('id', 'campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'is_staff', 'avatar', 'email', 'email_verified')
 
     def get_nickname(self, obj):
         if hasattr(obj, 'profile') and obj.profile:
