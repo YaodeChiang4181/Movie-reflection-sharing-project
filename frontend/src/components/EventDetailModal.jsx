@@ -17,6 +17,9 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const [showSpeedRating, setShowSpeedRating] = useState(false);
   const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
   const [showQrProjector, setShowQrProjector] = useState(false);
+  
+  const [isEditingRecap, setIsEditingRecap] = useState(false);
+  const [editRecapText, setEditRecapText] = useState('');
 
   const isUpcoming = event.status === 'UPCOMING';
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
@@ -95,6 +98,20 @@ function EventDetailModal({ event, onClose, onUpdate }) {
       onUpdate(); // update comment count in list
     } catch (error) {
       alert("留言失敗");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveRecap = async () => {
+    try {
+      setIsSubmitting(true);
+      await api.patch(`events/${event.id}/`, { recap_text: editRecapText });
+      setIsEditingRecap(false);
+      onUpdate(); 
+      alert("活動花絮已更新！");
+    } catch (error) {
+      alert("更新活動花絮失敗");
     } finally {
       setIsSubmitting(false);
     }
@@ -245,7 +262,25 @@ function EventDetailModal({ event, onClose, onUpdate }) {
 
           {activeTab === 'RECAP' && !isUpcoming && (
             <div className={styles.recapSection}>
-              {event.recap_text ? (
+              {isAuthor && !isEditingRecap && (
+                <button onClick={() => { setIsEditingRecap(true); setEditRecapText(event.recap_text || ''); }} className="btn btn-outline" style={{ marginBottom: '16px' }}>
+                  {event.recap_text ? '編輯活動花絮' : '新增活動花絮'}
+                </button>
+              )}
+              {isAuthor && isEditingRecap ? (
+                <div style={{ marginBottom: '16px' }}>
+                  <textarea 
+                    value={editRecapText}
+                    onChange={(e) => setEditRecapText(e.target.value)}
+                    style={{ width: '100%', minHeight: '120px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', resize: 'vertical' }}
+                    placeholder="分享一下這次活動的精彩時刻吧！"
+                  />
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px', justifyContent: 'flex-end' }}>
+                    <button onClick={() => setIsEditingRecap(false)} className="btn btn-outline">取消</button>
+                    <button onClick={handleSaveRecap} className="btn btn-primary" disabled={isSubmitting}>儲存</button>
+                  </div>
+                </div>
+              ) : event.recap_text ? (
                 <div className={styles.recapContent}>
                   <p>{event.recap_text}</p>
                 </div>

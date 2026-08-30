@@ -65,13 +65,13 @@ function FeedCard({ item, onClick }) {
           <div>
             <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>{item.title}</h3>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)', fontSize: '0.9rem', marginBottom: '8px' }}>
-              <Users size={14} style={{ color: '#F5A623' }} />
-              <span style={{ fontWeight: 500 }}>主辦：{item.user?.nickname || item.user?.campus_id}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>
+              <Users size={14} style={{ color: 'var(--text-secondary)' }} />
+              <span style={{ fontWeight: 400 }}>主辦：{item.user?.nickname || item.user?.campus_id}</span>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.85rem', color: '#fff', background: 'rgba(167,139,250,0.8)', padding: '2px 8px', borderRadius: '12px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#a78bfa', background: 'rgba(167,139,250,0.1)', padding: '2px 8px', borderRadius: '12px' }}>
                 <CalendarDays size={12} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} />
                 活動回顧
               </span>
