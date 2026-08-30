@@ -148,13 +148,13 @@ function Home() {
         <div 
           className="glass hover-scale hero-banner" 
           onClick={() => navigate(`/events`)}
-          style={{ backgroundImage: heroEvent.cover_image ? `url(${heroEvent.cover_image})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden' }}
+          style={{ backgroundImage: heroEvent.cover_image ? `url(${heroEvent.cover_image})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden', isolation: 'isolate', transform: 'translateZ(0)' }}
         >
-          {heroEvent.cover_image && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(15,10,25,0.9) 20%, rgba(15,10,25,0.4) 100%)' }}></div>}
+          {heroEvent.cover_image && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(15,10,25,0.9) 20%, rgba(15,10,25,0.4) 100%)', borderRadius: 'inherit', zIndex: -1 }}></div>}
           
           {!heroEvent.cover_image && <div style={{ padding: '40px' }}><Ticket size={64} opacity={0.2} /></div>}
-          <div className="hero-content" style={{ position: 'relative', zIndex: 2 }}>
-            <div className="hero-badge" style={{ background: '#F5A623', color: '#111' }}>
+          <div className="hero-content" style={{ position: 'relative', zIndex: 1 }}>
+            <div className="hero-badge" style={{ background: '#F5A623', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex' }}>
               <CalendarDays size={20} />
               <span style={{ fontWeight: 600 }}>近期最熱門實體活動</span>
             </div>
