@@ -19,7 +19,7 @@ function Home() {
   const [feedType, setFeedType] = useState('all'); // 'all', 'movies', 'events'
   const [isLoading, setIsLoading] = useState(true);
   
-  const [heroEvent, setHeroEvent] = useState(null);
+  const [heroItems, setHeroItems] = useState([]);
   
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ function Home() {
   useEffect(() => {
     fetchFeed();
     if (currentPage === 1 && feedType === 'all') {
-      fetchHeroEvent();
+      fetchHeroItems();
     }
   }, [currentPage, feedType]);
 
@@ -80,18 +80,27 @@ function Home() {
     }
   };
 
-  const fetchHeroEvent = async () => {
+  const fetchHeroItems = async () => {
     try {
-      // Get the most upcoming active event
-      const response = await api.get(`events/?status=UPCOMING`);
-      const events = response.data.results || response.data;
-      if (events && events.length > 0) {
-        setHeroEvent(events[0]);
-      } else {
-        setHeroEvent(null);
-      }
+      // Fetch upcoming events and top movies simultaneously
+      const [eventsRes, moviesRes] = await Promise.all([
+        api.get(`events/?status=UPCOMING`),
+        api.get(`movies/`) // This endpoint returns movies sorted by popularity
+      ]);
+      const upcomingEvents = eventsRes.data.results || eventsRes.data || [];
+      const topMovies = moviesRes.data.results || moviesRes.data || [];
+      
+      const mixed = [];
+      if (upcomingEvents.length > 0) mixed.push({...upcomingEvents[0], feed_type: 'EVENT'});
+      if (upcomingEvents.length > 1) mixed.push({...upcomingEvents[1], feed_type: 'EVENT'});
+      if (topMovies.length > 0) mixed.push({...topMovies[0], feed_type: 'MOVIE'});
+      if (topMovies.length > 1) mixed.push({...topMovies[1], feed_type: 'MOVIE'});
+      if (upcomingEvents.length > 2) mixed.push({...upcomingEvents[2], feed_type: 'EVENT'});
+      if (topMovies.length > 2) mixed.push({...topMovies[2], feed_type: 'MOVIE'});
+      
+      setHeroItems(mixed.slice(0, 5));
     } catch (err) {
-      console.error("Failed to fetch hero event", err);
+      console.error("Failed to fetch hero items", err);
     }
   };
 
@@ -109,16 +118,8 @@ function Home() {
       navigate(`/movies/${item.id}`);
     } else {
       navigate(`/events`);
-      // Optionally we could open the event modal here, but navigating to /events is fine
     }
   };
-
-  // Hero logic: Show Upcoming Event if available, otherwise show top movie if in 'all' or 'movies'
-  const heroMovie = (!heroEvent && (feedType === 'all' || feedType === 'movies') && currentPage === 1 && feedItems.length > 0 && feedItems[0].feed_type === 'MOVIE') 
-    ? feedItems[0] 
-    : null;
-    
-  const displayItems = heroMovie ? feedItems.slice(1) : feedItems;
 
   return (
     <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
@@ -133,7 +134,7 @@ function Home() {
       {isEventComposing && (
         <EventForm 
           onClose={() => setIsEventComposing(false)} 
-          onEventAdded={() => { fetchFeed(); fetchHeroEvent(); }} 
+          onEventAdded={() => { fetchFeed(); fetchHeroItems(); }} 
         />
       )}
 
@@ -143,60 +144,66 @@ function Home() {
         />
       )}
 
-      {/* 首頁焦點橫幅 (Hero Banner) - 活動優先 */}
-      {!isLoading && heroEvent && (
-        <div 
-          className="glass hover-scale hero-banner" 
-          onClick={() => navigate(`/events`)}
-          style={{ backgroundImage: heroEvent.cover_image ? `url(${heroEvent.cover_image})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden', isolation: 'isolate', transform: 'translateZ(0)' }}
-        >
-          {heroEvent.cover_image && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(15,10,25,0.9) 20%, rgba(15,10,25,0.4) 100%)', borderRadius: 'inherit', zIndex: -1 }}></div>}
-          
-          {!heroEvent.cover_image && <div style={{ padding: '40px' }}><Ticket size={64} opacity={0.2} /></div>}
-          <div className="hero-content" style={{ position: 'relative', zIndex: 1 }}>
-            <div className="hero-badge" style={{ background: '#F5A623', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex' }}>
-              <CalendarDays size={20} />
-              <span style={{ fontWeight: 600 }}>近期最熱門實體活動</span>
+      {/* 焦點橫幅輪播 (Hero Carousel) */}
+      {!isLoading && heroItems.length > 0 && feedType === 'all' && currentPage === 1 && (
+        <div style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', gap: '24px', paddingBottom: '24px', marginBottom: '24px' }}>
+          {heroItems.map((item, idx) => (
+            <div key={`${item.feed_type}-${item.id || idx}`} style={{ scrollSnapAlign: 'start', minWidth: '85%', maxWidth: '85%', flexShrink: 0 }}>
+              {item.feed_type === 'EVENT' ? (
+                <div 
+                  className="glass hover-scale hero-banner" 
+                  onClick={() => navigate(`/events`)}
+                  style={{ backgroundImage: item.cover_image ? `url(${item.cover_image})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden', isolation: 'isolate', transform: 'translateZ(0)', marginBottom: 0 }}
+                >
+                  {item.cover_image && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(15,10,25,0.9) 20%, rgba(15,10,25,0.4) 100%)', borderRadius: 'inherit', zIndex: -1 }}></div>}
+                  
+                  {!item.cover_image && <div style={{ padding: '40px' }}><Ticket size={64} opacity={0.2} /></div>}
+                  <div className="hero-content" style={{ position: 'relative', zIndex: 1 }}>
+                    <div className="hero-badge" style={{ background: '#FFFFFF', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                      <CalendarDays size={20} />
+                      <span style={{ fontWeight: 600 }}>近期最熱門</span>
+                    </div>
+                    <h2 style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{item.title}</h2>
+                    <div className="hero-stats">
+                      <span className="hero-review-count">
+                        報名進度：{item.registered_count} / {item.capacity || '無上限'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div 
+                  className="glass hover-scale hero-banner" 
+                  onClick={() => navigate(`/movies/${item.id}`)}
+                  style={{ marginBottom: 0 }}
+                >
+                  <TmdbPoster title={item.title} className="hero-poster" />
+                  <div className="hero-content">
+                    <div className="hero-badge" style={{ background: '#FFFFFF', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                      <Flame size={20} />
+                      <span style={{ fontWeight: 600 }}>近期最熱門</span>
+                    </div>
+                    <h2>{item.title}</h2>
+                    {item.original_title && (
+                      <div className="hero-original-title">
+                        {item.original_title}
+                      </div>
+                    )}
+                    {!item.original_title && <div style={{ marginBottom: '20px' }}></div>}
+                    <div className="hero-stats">
+                      <div className="hero-rating">
+                        <Star size={24} fill="#F5A623" />
+                        <span>{item.avg_rating ? item.avg_rating.toFixed(1) : '0.0'}</span>
+                      </div>
+                      <span className="hero-review-count">
+                        累積 {item.review_count || 0} 篇深度影評
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <h2 style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{heroEvent.title}</h2>
-            <div className="hero-stats">
-              <span className="hero-review-count">
-                報名進度：{heroEvent.registered_count} / {heroEvent.capacity || '無上限'}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 首頁焦點橫幅 (Hero Banner) - 電影預設 */}
-      {!isLoading && !heroEvent && heroMovie && (
-        <div 
-          className="glass hover-scale hero-banner" 
-          onClick={() => navigate(`/movies/${heroMovie.id}`)}
-        >
-          <TmdbPoster title={heroMovie.title} className="hero-poster" />
-          <div className="hero-content">
-            <div className="hero-badge">
-              <Flame size={24} />
-              <span>本週社群最高分推薦</span>
-            </div>
-            <h2>{heroMovie.title}</h2>
-            {heroMovie.original_title && (
-              <div className="hero-original-title">
-                {heroMovie.original_title}
-              </div>
-            )}
-            {!heroMovie.original_title && <div style={{ marginBottom: '20px' }}></div>}
-            <div className="hero-stats">
-              <div className="hero-rating">
-                <Star size={24} fill="#F5A623" />
-                <span>{heroMovie.avg_rating ? heroMovie.avg_rating.toFixed(1) : '0.0'}</span>
-              </div>
-              <span className="hero-review-count">
-                累積 {heroMovie.review_count || 0} 篇深度影評
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
       )}
 
@@ -233,7 +240,7 @@ function Home() {
             </div>
           ) : (
             <div style={{ display: 'grid', gap: '16px' }}>
-              {displayItems.map(item => (
+              {feedItems.map(item => (
                 <FeedCard key={`${item.feed_type}-${item.id}`} item={item} onClick={() => handleCardClick(item)} />
               ))}
             </div>

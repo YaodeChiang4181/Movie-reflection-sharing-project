@@ -24,10 +24,12 @@ function FeedCard({ item, onClick }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.85rem', color: '#a78bfa', background: 'rgba(167,139,250,0.1)', padding: '2px 8px', borderRadius: '12px' }}>
-                <Flame size={12} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} />
-                熱門討論
-              </span>
+              {item.tags && item.tags.map((tag, index) => (
+                <span key={tag.id || index} style={{ fontSize: '0.85rem', color: '#a78bfa', background: 'rgba(167,139,250,0.1)', padding: '2px 8px', borderRadius: '12px' }}>
+                  <Flame size={12} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} />
+                  {tag.name}
+                </span>
+              ))}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
