@@ -63,13 +63,24 @@ class Command(BaseCommand):
                 body += "請登入系統查看完整內容！\n"
                 
                 try:
-                    send_mail(
-                        subject,
-                        body,
-                        settings.DEFAULT_FROM_EMAIL,
-                        [user.email],
-                        fail_silently=False,
-                    )
+                    import os, requests
+                    gas_url = os.environ.get('GAS_EMAIL_URL')
+                    if gas_url:
+                        response = requests.post(gas_url, json={
+                            'email': user.email,
+                            'subject': subject,
+                            'body': body
+                        })
+                        if response.status_code != 200:
+                            raise Exception('GAS 回傳錯誤')
+                    else:
+                        send_mail(
+                            subject,
+                            body,
+                            settings.DEFAULT_FROM_EMAIL,
+                            [user.email],
+                            fail_silently=False,
+                        )
                     DailyDigestLog.objects.create(
                         user=user,
                         unread_messages_count=unread_count,

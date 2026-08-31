@@ -20,6 +20,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const [editRecapText, setEditRecapText] = useState('');
   const [editRecapUrl, setEditRecapUrl] = useState('');
   const [selectedImages, setSelectedImages] = useState(null);
+  const [showQrProjector, setShowQrProjector] = useState(false);
 
   const isUpcoming = event.status === 'UPCOMING';
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
