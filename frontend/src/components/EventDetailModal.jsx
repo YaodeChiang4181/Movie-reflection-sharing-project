@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Calendar, MapPin, Clock, Users, Star, MessageSquare, Send, User, Trash2, QrCode } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Calendar, MapPin, Clock, Users, Star, MessageSquare, Send, User, Trash2, QrCode, MoreVertical, Edit2 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './EventDetailModal.module.css';
@@ -14,6 +14,11 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [mentionableUsers, setMentionableUsers] = useState([]);
+  const [mentionDropdown, setMentionDropdown] = useState({ show: false, query: '', isEdit: false });
   const [showSpeedRating, setShowSpeedRating] = useState(false);
   const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
   const [isEditingRecap, setIsEditingRecap] = useState(false);
@@ -63,8 +68,18 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   useEffect(() => {
     if (activeTab === 'COMMENTS') {
       fetchComments();
+      fetchMentionableUsers();
     }
   }, [activeTab]);
+
+  const fetchMentionableUsers = async () => {
+    try {
+      const response = await api.get(`events/${event.id}/mentionable_users/`);
+      setMentionableUsers(response.data);
+    } catch (error) {
+      console.error("Failed to fetch mentionable users:", error);
+    }
+  };
 
   const fetchComments = async () => {
     try {
@@ -95,6 +110,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
       setIsSubmitting(true);
       await api.post(`events/${event.id}/comments/`, { content: newComment });
       setNewComment('');
+      setMentionDropdown({ show: false, query: '', isEdit: false });
       fetchComments();
       onUpdate(); // update comment count in list
     } catch (error) {
@@ -102,6 +118,69 @@ function EventDetailModal({ event, onClose, onUpdate }) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleUpdateComment = async (commentId) => {
+    if (!editCommentContent.trim()) return;
+    try {
+      setIsSubmitting(true);
+      await api.patch(`event-comments/${commentId}/`, { content: editCommentContent });
+      setEditingCommentId(null);
+      setMentionDropdown({ show: false, query: '', isEdit: false });
+      fetchComments();
+    } catch (error) {
+      alert("更新失敗");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("確定要刪除這則留言嗎？")) return;
+    try {
+      await api.delete(`event-comments/${commentId}/`);
+      fetchComments();
+      onUpdate();
+    } catch (error) {
+      alert("刪除失敗");
+    }
+  };
+
+  const handleCommentChange = (e, isEdit = false) => {
+    const val = e.target.value;
+    if (isEdit) setEditCommentContent(val);
+    else setNewComment(val);
+
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = val.slice(0, cursorPos);
+    const match = textBeforeCursor.match(/@([^\s]*)$/);
+
+    if (match) {
+      setMentionDropdown({ show: true, query: match[1], isEdit });
+    } else {
+      setMentionDropdown({ show: false, query: '', isEdit });
+    }
+  };
+
+  const insertMention = (nickname, isEdit = false) => {
+    const currentVal = isEdit ? editCommentContent : newComment;
+    const setter = isEdit ? setEditCommentContent : setNewComment;
+    const match = currentVal.match(/@([^\s]*)$/);
+    if (match) {
+      const newVal = currentVal.slice(0, match.index) + `@${nickname} ` + currentVal.slice(match.index + match[0].length);
+      setter(newVal);
+    }
+    setMentionDropdown({ show: false, query: '', isEdit: false });
+  };
+
+  const formatCommentContent = (content) => {
+    const parts = content.split(/(@[^\s]+)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('@')) {
+        return <span key={i} style={{ color: 'var(--accent-primary)', fontWeight: 'bold' }}>{part}</span>;
+      }
+      return part;
+    });
   };
 
   const handleSaveRecap = async () => {
@@ -364,13 +443,13 @@ function EventDetailModal({ event, onClose, onUpdate }) {
           )}
 
           {activeTab === 'COMMENTS' && !isUpcoming && (
-            <div className={styles.commentsSection}>
-              <div className={styles.commentInputBox}>
+            <div className={styles.commentsSection} onClick={() => setActiveMenuId(null)}>
+              <div className={styles.commentInputBox} style={{ position: 'relative' }}>
                 <textarea 
                   className={styles.commentInput}
-                  placeholder="寫下你的心得或給主辦方的話..."
+                  placeholder="寫下你的心得或給主辦方的話... (輸入 @ 標記參與者)"
                   value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+                  onChange={(e) => handleCommentChange(e, false)}
                   rows={3}
                 />
                 <button 
@@ -380,6 +459,23 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                 >
                   <Send size={16} /> 留言
                 </button>
+                {mentionDropdown.show && !mentionDropdown.isEdit && (
+                  <div style={{ position: 'absolute', bottom: '100%', left: 0, width: '200px', maxHeight: '150px', overflowY: 'auto', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                    {mentionableUsers.filter(u => u.nickname.toLowerCase().includes(mentionDropdown.query.toLowerCase())).length === 0 && (
+                      <div style={{ padding: '8px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>找不到符合的參與者</div>
+                    )}
+                    {mentionableUsers.filter(u => u.nickname.toLowerCase().includes(mentionDropdown.query.toLowerCase())).map(u => (
+                      <div 
+                        key={u.campus_id} 
+                        onClick={() => insertMention(u.nickname, false)}
+                        style={{ padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                        className="hover-bg-tertiary"
+                      >
+                        {u.nickname}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className={styles.commentsList}>
@@ -415,11 +511,78 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                             </span>
                           )}
                           <span className={styles.commentTime}>{formatDate(comment.created_at)}</span>
+                          
+                          {(userProfile?.id === comment.user?.id || userProfile?.is_staff) && (
+                            <div style={{ position: 'relative' }}>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === comment.id ? null : comment.id); }}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                              >
+                                <MoreVertical size={16} />
+                              </button>
+                              
+                              {activeMenuId === comment.id && (
+                                <div style={{ 
+                                  position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+                                  background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                                  borderRadius: '8px', overflow: 'hidden', zIndex: 10, minWidth: '100px',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                                }}>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); setEditingCommentId(comment.id); setEditCommentContent(comment.content); setActiveMenuId(null); }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left', fontSize: '0.85rem' }}
+                                    className="hover-bg-tertiary"
+                                  >
+                                    <Edit2 size={14} /> 編輯
+                                  </button>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteComment(comment.id); setActiveMenuId(null); }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', textAlign: 'left', fontSize: '0.85rem' }}
+                                    className="hover-bg-tertiary"
+                                  >
+                                    <Trash2 size={14} /> 刪除
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className={styles.commentContent}>
-                        {comment.content}
-                      </div>
+                      
+                      {editingCommentId === comment.id ? (
+                        <div style={{ marginTop: '12px', position: 'relative' }}>
+                          <textarea 
+                            value={editCommentContent}
+                            onChange={(e) => handleCommentChange(e, true)}
+                            style={{ width: '100%', minHeight: '60px', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', resize: 'vertical', fontSize: '0.9rem' }}
+                          />
+                          {mentionDropdown.show && mentionDropdown.isEdit && (
+                            <div style={{ position: 'absolute', top: '100%', left: 0, width: '200px', maxHeight: '150px', overflowY: 'auto', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                              {mentionableUsers.filter(u => u.nickname.toLowerCase().includes(mentionDropdown.query.toLowerCase())).length === 0 && (
+                                <div style={{ padding: '8px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>找不到符合的參與者</div>
+                              )}
+                              {mentionableUsers.filter(u => u.nickname.toLowerCase().includes(mentionDropdown.query.toLowerCase())).map(u => (
+                                <div 
+                                  key={u.campus_id} 
+                                  onClick={() => insertMention(u.nickname, true)}
+                                  style={{ padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                                  className="hover-bg-tertiary"
+                                >
+                                  {u.nickname}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => { setEditingCommentId(null); setMentionDropdown({ show: false, query: '', isEdit: false }); }} className="btn btn-outline" style={{ padding: '4px 12px', fontSize: '0.85rem' }}>取消</button>
+                            <button onClick={() => handleUpdateComment(comment.id)} className="btn btn-primary" disabled={isSubmitting} style={{ padding: '4px 12px', fontSize: '0.85rem' }}>儲存</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={styles.commentContent} style={{ whiteSpace: 'pre-wrap' }}>
+                          {formatCommentContent(comment.content)}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}

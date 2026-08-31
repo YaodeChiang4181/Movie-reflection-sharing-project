@@ -8,8 +8,69 @@ from django.db import transaction
 from django.db.models import Count, Q
 from django.utils import timezone
 from api.models import Event, EventRegistration, EventComment
+import re
 from api.domains.gamification.services import add_user_experience
 from .serializers import EventSerializer, EventRegistrationSerializer, EventCommentSerializer
+
+def extract_and_notify_mentions(comment, event, request_user):
+    from api.models import Notification
+    content = comment.content
+    mentioned_nicknames = re.findall(r'@([^\s]+)', content)
+    if not mentioned_nicknames:
+        return
+        
+    attendees = event.registrations.filter(status__in=['REGISTERED', 'CHECKED_IN']).select_related('user', 'user__profile')
+    
+    notifications = []
+    # Ensure unique users to notify
+    notified_users = set()
+    for reg in attendees:
+        user = reg.user
+        nickname = getattr(user, 'profile', None) and user.profile.nickname or user.campus_id
+        if nickname in mentioned_nicknames and user != request_user and user.id not in notified_users:
+            sender_name = request_user.profile.nickname if hasattr(request_user, 'profile') else request_user.campus_id
+            notifications.append(
+                Notification(
+                    user=user,
+                    type='mention',
+                    title=f"{sender_name} 在活動「{event.title}」的留言中標記了你",
+                    target_url=f"/events?id={event.id}" # We'll just open the modal via id or they can view events page
+                )
+            )
+            notified_users.add(user.id)
+            
+    if notifications:
+        Notification.objects.bulk_create(notifications)
+
+class EventCommentViewSet(viewsets.ModelViewSet):
+    serializer_class = EventCommentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return EventComment.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        comment = self.get_object()
+        if comment.user != request.user and not request.user.is_staff:
+            return Response({'detail': '您沒有權限編輯此留言'}, status=status.HTTP_403_FORBIDDEN)
+        
+        content = request.data.get('content', '').strip()
+        if not content:
+            return Response({'detail': '留言內容不能為空'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        comment.content = content
+        comment.save()
+        
+        # parse mentions again on update
+        extract_and_notify_mentions(comment, comment.event, request.user)
+        
+        return Response(EventCommentSerializer(comment).data)
+
+    def destroy(self, request, *args, **kwargs):
+        comment = self.get_object()
+        if comment.user != request.user and not request.user.is_staff:
+            return Response({'detail': '您沒有權限刪除此留言'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
 
 class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
@@ -126,6 +187,8 @@ class EventViewSet(viewsets.ModelViewSet):
         comment = EventComment.objects.create(
             event=event, user=user, content=content, user_tag=user_tag
         )
+        
+        extract_and_notify_mentions(comment, event, user)
         
         serializer = EventCommentSerializer(comment)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -250,6 +313,37 @@ class EventViewSet(viewsets.ModelViewSet):
             },
             "attendee_list": attendee_list
         })
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def mentionable_users(self, request, pk=None):
+        event = self.get_object()
+        attendees = event.registrations.filter(status__in=['REGISTERED', 'CHECKED_IN']).select_related('user', 'user__profile')
+        
+        users_list = []
+        seen_campus_ids = set()
+        
+        for reg in attendees:
+            campus_id = reg.user.campus_id
+            if campus_id in seen_campus_ids:
+                continue
+                
+            nickname = reg.user.profile.nickname if hasattr(reg.user, 'profile') else campus_id
+            users_list.append({
+                'campus_id': campus_id,
+                'nickname': nickname
+            })
+            seen_campus_ids.add(campus_id)
+            
+        # also add host if not already in list
+        host = event.user
+        if host and host.campus_id not in seen_campus_ids:
+            host_nickname = host.profile.nickname if hasattr(host, 'profile') else host.campus_id
+            users_list.append({
+                'campus_id': host.campus_id,
+                'nickname': host_nickname
+            })
+            
+        return Response(users_list)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def upload_recap_images(self, request, pk=None):
