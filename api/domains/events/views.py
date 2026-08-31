@@ -188,6 +188,9 @@ class EventViewSet(viewsets.ModelViewSet):
             event=event, user=user, content=content, user_tag=user_tag
         )
         
+        # Grant EXP for leaving an event comment
+        add_user_experience(user, 10)
+        
         extract_and_notify_mentions(comment, event, user)
         
         serializer = EventCommentSerializer(comment)

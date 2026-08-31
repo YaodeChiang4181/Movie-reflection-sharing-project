@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ExternalLink, RefreshCw, QrCode, Smartphone, Info, MapPin, Search, Ticket } from 'lucide-react';
+import { X, ExternalLink, RefreshCw, QrCode, Smartphone, Info, MapPin, Search, Ticket, Monitor, Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../api/axios';
 import styles from './HostQrProjectorModal.module.css';
@@ -126,11 +126,11 @@ function HostQrProjectorModal({ eventId, eventTitle, onClose }) {
         </div>
         
         <div className={styles.actionButtons}>
-          <button className={styles.btnGhost} onClick={toggleFullscreen}>
-            🖥️ {isFullscreen ? '退出全螢幕投影' : '切換全螢幕投影'}
+          <button className={styles.btnGhost} onClick={toggleFullscreen} style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+            <Monitor size={18} /> {isFullscreen ? '退出全螢幕投影' : '切換全螢幕投影'}
           </button>
-          <button className={styles.btnPrimary} onClick={downloadQR}>
-            📥 下載 QR 圖片
+          <button className={styles.btnPrimary} onClick={downloadQR} style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+            <Download size={18} /> 下載 QR 圖片
           </button>
         </div>
       </div>

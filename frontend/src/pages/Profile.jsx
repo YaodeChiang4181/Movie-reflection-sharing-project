@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw, Camera } from 'lucide-react';
+import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw, Camera, Calendar, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';
@@ -254,21 +254,25 @@ function Profile() {
 
             {/* 數據格子 */}
             <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <Film size={20} className={styles.statCardIcon} />
-                <span className={styles.statCardValue}>{totalReviews}</span>
-                <span className={styles.statCardLabel}>已發布心得</span>
-              </div>
-              <div className={styles.statCard}>
-                <ThumbsUp size={20} className={styles.statCardIcon} />
-                <span className={styles.statCardValue}>{totalVotes}</span>
-                <span className={styles.statCardLabel}>獲得推薦</span>
-              </div>
-              <div className={styles.statCard}>
-                <MessageSquare size={18} className={styles.statCardIcon} />
-                <span className={styles.statCardValue}>{commentedReviews.length}</span>
-                <span className={styles.statCardLabel}>留言互動</span>
-              </div>
+              {(() => {
+                const stats = [
+                  { icon: Film, value: totalReviews, label: '已發布心得' },
+                  { icon: ThumbsUp, value: totalVotes, label: '獲得推薦' },
+                  { icon: MessageSquare, value: commentedReviews.length, label: '留言互動' },
+                  { icon: Calendar, value: userData?.hosted_events_count || 0, label: '發起活動' },
+                  { icon: Users, value: userData?.attended_events_count || 0, label: '參與活動' }
+                ];
+                return stats
+                  .sort((a, b) => b.value - a.value)
+                  .slice(0, 3)
+                  .map((stat, idx) => (
+                    <div key={idx} className={styles.statCard}>
+                      <stat.icon size={20} className={styles.statCardIcon} />
+                      <span className={styles.statCardValue}>{stat.value}</span>
+                      <span className={styles.statCardLabel}>{stat.label}</span>
+                    </div>
+                  ));
+              })()}
             </div>
           </div>
         </div>

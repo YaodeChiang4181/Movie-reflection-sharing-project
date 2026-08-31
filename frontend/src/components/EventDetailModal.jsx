@@ -271,7 +271,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
           ) : (
             <>
               <button className={`${styles.navTab} ${activeTab === 'RECAP' ? styles.active : ''}`} onClick={() => setActiveTab('RECAP')}>活動花絮</button>
-              <button className={`${styles.navTab} ${activeTab === 'COMMENTS' ? styles.active : ''}`} onClick={() => setActiveTab('COMMENTS')}>交流留言 ({event.comment_count || 0})</button>
+              <button className={`${styles.navTab} ${activeTab === 'COMMENTS' ? styles.active : ''}`} onClick={() => setActiveTab('COMMENTS')}>交流留言 ({Math.max(comments.length, event.comment_count || 0)})</button>
               {isAuthor && <button className={`${styles.navTab} ${activeTab === 'DASHBOARD' ? styles.active : ''}`} onClick={() => setActiveTab('DASHBOARD')}>管理看板</button>}
             </>
           )}

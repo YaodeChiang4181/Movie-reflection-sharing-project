@@ -48,9 +48,12 @@ class UserMeSerializer(serializers.ModelSerializer):
     common_tags = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
 
+    hosted_events_count = serializers.SerializerMethodField()
+    attended_events_count = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ('id', 'campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'is_staff', 'avatar', 'email', 'email_verified')
+        fields = ('id', 'campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'is_staff', 'avatar', 'email', 'email_verified', 'hosted_events_count', 'attended_events_count')
 
     def get_nickname(self, obj):
         if hasattr(obj, 'profile') and obj.profile:
@@ -96,6 +99,14 @@ class UserMeSerializer(serializers.ModelSerializer):
         ).order_by('-use_count')[:3]
         
         return [tag.name.replace('#', '') for tag in tags]
+
+    def get_hosted_events_count(self, obj):
+        from api.models import Event
+        return Event.objects.filter(user=obj).count()
+
+    def get_attended_events_count(self, obj):
+        from api.models import EventRegistration
+        return EventRegistration.objects.filter(user=obj, status__in=['REGISTERED', 'CHECKED_IN']).count()
 
 class AdminUserSerializer(serializers.ModelSerializer):
     """管理後台專用：顯示真實姓名、信箱（兼容校內/校外使用者）"""
