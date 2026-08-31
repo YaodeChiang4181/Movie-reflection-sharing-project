@@ -388,14 +388,34 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                 ) : (
                   comments.map(comment => (
                     <div key={comment.id} className={styles.commentItem}>
-                      <div className={styles.commentHeader}>
-                        <span className={styles.commentUser}>{comment.user.nickname}</span>
-                        {comment.user_tag && (
-                          <span className={`${styles.userTag} ${styles[comment.user_tag === '主辦方' ? 'tagHost' : comment.user_tag === '現場觀眾' ? 'tagAttendee' : 'tagFan']}`}>
-                            {comment.user_tag}
+                      <div className={styles.commentHeader} style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-between' }}>
+                        <div 
+                          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (comment.user?.campus_id) setSelectedUserCampusId(comment.user.campus_id); 
+                          }}
+                        >
+                          <div className="clickable-avatar" style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 14, fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
+                            {comment.user?.avatar ? (
+                              <img src={comment.user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              comment.user?.nickname ? comment.user.nickname.charAt(0).toUpperCase() : '?'
+                            )}
+                          </div>
+                          <span className={`${styles.commentUser} hover-text-accent`} style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                            {comment.user?.nickname || '未知使用者'}
                           </span>
-                        )}
-                        <span className={styles.commentTime}>{formatDate(comment.created_at)}</span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {comment.user_tag && (
+                            <span className={`${styles.userTag} ${styles[comment.user_tag === '主辦方' ? 'tagHost' : comment.user_tag === '現場觀眾' ? 'tagAttendee' : 'tagFan']}`}>
+                              {comment.user_tag}
+                            </span>
+                          )}
+                          <span className={styles.commentTime}>{formatDate(comment.created_at)}</span>
+                        </div>
                       </div>
                       <div className={styles.commentContent}>
                         {comment.content}
