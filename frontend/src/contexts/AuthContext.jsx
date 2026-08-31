@@ -10,6 +10,8 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [messageCount, setMessageCount] = useState(0);
 
   useEffect(() => {
     // 監聽來自 Axios 攔截器的全局登出事件
@@ -109,6 +111,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.get('/notifications/unread_count/');
       setUnreadCount(res.data.count || 0);
+      setNotificationCount(res.data.notification_count || 0);
+      setMessageCount(res.data.message_count || 0);
     } catch (error) {
       console.error("Failed to fetch notifications count", error);
     }
@@ -144,7 +148,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, userProfile, isAuthLoading, login, logout, fetchUserProfile, unreadCount, setUnreadCount }}>
+    <AuthContext.Provider value={{ isLoggedIn, userProfile, isAuthLoading, login, logout, fetchUserProfile, unreadCount, setUnreadCount, notificationCount, setNotificationCount, messageCount, setMessageCount }}>
       {children}
     </AuthContext.Provider>
   );

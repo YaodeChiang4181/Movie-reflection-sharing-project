@@ -22,7 +22,11 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def unread_count(self, request):
         count = self.get_queryset().filter(is_read=False).count()
         dm_count = DirectMessage.objects.filter(receiver=request.user, is_read=False).count()
-        return Response({'count': count + dm_count})
+        return Response({
+            'count': count + dm_count,
+            'notification_count': count,
+            'message_count': dm_count
+        })
 
 class DirectMessageViewSet(viewsets.ModelViewSet):
     serializer_class = DirectMessageSerializer

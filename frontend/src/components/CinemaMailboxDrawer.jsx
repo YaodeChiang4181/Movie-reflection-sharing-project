@@ -5,8 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import ProgressiveBindingBanner from './ProgressiveBindingBanner';
 import EmailBindModal from './EmailBindModal';
 
-export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, initialPartner = null }) {
-  const { userProfile, setUnreadCount } = useAuth();
+export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = null }) {
+  const { userProfile, setUnreadCount, messageCount, setMessageCount, notificationCount, setNotificationCount } = useAuth();
   const [activeTab, setActiveTab] = useState('messages'); // 'messages' | 'notifications'
   
   // Messages state
@@ -17,7 +17,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
   
   // Notifications state
   const [notifications, setNotifications] = useState([]);
-  const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
+  // notificationUnreadCount is now managed by AuthContext
   
   const [isLoading, setIsLoading] = useState(false);
   const [isBindModalOpen, setIsBindModalOpen] = useState(false);
@@ -71,7 +71,9 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
       const dataList = Array.isArray(res.data) ? res.data : (res.data.results || []);
       setNotifications(dataList);
       const unreadRes = await api.get('/notifications/unread_count/');
-      setNotificationUnreadCount(unreadRes.data.count);
+      setNotificationCount(unreadRes.data.notification_count || 0);
+      setMessageCount(unreadRes.data.message_count || 0);
+      setUnreadCount(unreadRes.data.count || 0);
     } catch (err) {
       console.error('Failed to fetch notifications', err);
     }
@@ -80,7 +82,8 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
   const handleMarkAllNotificationsRead = async () => {
     try {
       await api.post('/notifications/mark_all_read/');
-      setNotificationUnreadCount(0);
+      setNotificationCount(0);
+      setUnreadCount(prev => Math.max(0, prev - notificationCount));
       setNotifications(notifications.map(n => ({...n, is_read: true})));
     } catch (err) {
       console.error('Failed to mark notifications as read', err);
@@ -100,7 +103,11 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
   const markAsRead = async (partnerId) => {
     try {
       await api.patch('/messages/mark-read/', { partner_id: partnerId });
-      setUnreadCount(prev => Math.max(0, prev - (conversations.find(c => c.partner.campus_id === partnerId)?.unread_count || 0)));
+      const conv = conversations.find(c => c.partner.campus_id === partnerId);
+      if (conv && conv.unread_count > 0) {
+        setMessageCount(prev => Math.max(0, prev - conv.unread_count));
+        setUnreadCount(prev => Math.max(0, prev - conv.unread_count));
+      }
       setConversations(prev => prev.map(c => 
         c.partner.campus_id === partnerId ? { ...c, unread_count: 0 } : c
       ));
@@ -142,7 +149,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
         }}
       >
         <Mail size={16} /> 訊息
-        {unreadCount > 0 && <span style={{ background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '10px', fontSize: '10px' }}>{unreadCount}</span>}
+        {messageCount > 0 && <span style={{ background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '10px', fontSize: '10px' }}>{messageCount}</span>}
       </button>
       <button 
         onClick={() => { setActiveTab('notifications'); setActivePartner(null); handleMarkAllNotificationsRead(); }}
@@ -155,7 +162,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, unreadCount = 0, 
         }}
       >
         <Bell size={16} /> 通知
-        {notificationUnreadCount > 0 && <span style={{ background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '10px', fontSize: '10px' }}>{notificationUnreadCount}</span>}
+        {notificationCount > 0 && <span style={{ background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '10px', fontSize: '10px' }}>{notificationCount}</span>}
       </button>
     </div>
   );

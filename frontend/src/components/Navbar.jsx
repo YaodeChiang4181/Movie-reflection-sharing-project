@@ -217,7 +217,6 @@ function Navbar() {
       <CinemaMailboxDrawer 
         isOpen={isMailboxOpen} 
         onClose={() => setIsMailboxOpen(false)} 
-        unreadCount={unreadCount} 
         initialPartner={mailboxPartner}
       />
     </>
