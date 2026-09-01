@@ -159,21 +159,24 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
               <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>活動日期 *</label>
               <input
                 type="date" name="date" value={formData.date} onChange={handleChange}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} required
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', opacity: initialEvent ? 0.6 : 1 }} required
+                disabled={!!initialEvent}
               />
             </div>
             <div className={styles.formGroup} style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時間 *</label>
               <input
                 type="time" name="time" value={formData.time} onChange={handleChange}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }} required
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', opacity: initialEvent ? 0.6 : 1 }} required
+                disabled={!!initialEvent}
               />
             </div>
             <div className={styles.formGroup} style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時長 *</label>
               <select
                 name="durationMins" value={formData.durationMins} onChange={handleChange}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', appearance: 'none' }} required
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', appearance: 'none', opacity: initialEvent ? 0.6 : 1 }} required
+                disabled={!!initialEvent}
               >
                 <option value="60" style={{ color: '#000' }}>1 小時 (60 mins)</option>
                 <option value="90" style={{ color: '#000' }}>1.5 小時 (90 mins)</option>
@@ -207,11 +210,12 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
 
           <div className={styles.formGroup}>
             <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>主辦人代稱 *</label>
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', paddingLeft: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', paddingLeft: '12px', opacity: 0.6 }}>
               <User size={18} style={{ color: 'var(--text-muted)' }} />
               <input
                 type="text" name="organizer_nickname" value={formData.organizer_nickname} onChange={handleChange}
                 style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', padding: '12px', outline: 'none' }} required
+                disabled
               />
             </div>
           </div>
