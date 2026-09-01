@@ -207,12 +207,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
         from api.models import Follow, Notification
         followers = Follow.objects.filter(following=self.request.user).select_related('follower')
         notifications = []
+        
+        sender_name = getattr(self.request.user, 'profile', None) and self.request.user.profile.nickname or self.request.user.campus_id
         for follow in followers:
             notifications.append(
                 Notification(
                     user=follow.follower,
                     type='new_review',
-                    title=f"{self.request.user.username or self.request.user.campus_id} 發布了新心得: {review.movie.title}",
+                    title=f"{sender_name} 發布了新心得: {review.movie.title}",
                     target_url=f"/movies/{review.movie.id}"
                 )
             )

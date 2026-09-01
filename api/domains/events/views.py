@@ -107,12 +107,14 @@ class EventViewSet(viewsets.ModelViewSet):
             from api.models import Follow, Notification
             followers = Follow.objects.filter(following=self.request.user).select_related('follower')
             notifications = []
+            
+            sender_name = getattr(self.request.user, 'profile', None) and self.request.user.profile.nickname or self.request.user.campus_id
             for follow in followers:
                 notifications.append(
                     Notification(
                         user=follow.follower,
                         type='new_event',
-                        title=f"{self.request.user.username or self.request.user.campus_id} 發起了新活動: {event.title}",
+                        title=f"{sender_name} 發起了新活動: {event.title}",
                         target_url=f"/events/{event.id}"
                     )
                 )
