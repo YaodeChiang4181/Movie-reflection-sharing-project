@@ -27,7 +27,7 @@ def extract_and_notify_mentions(comment, event, request_user):
     for reg in attendees:
         user = reg.user
         nickname = getattr(user, 'profile', None) and user.profile.nickname or user.campus_id
-        if nickname in mentioned_nicknames and user != request_user and user.id not in notified_users:
+        if nickname in mentioned_nicknames and user != request_user and user.pk not in notified_users:
             sender_name = request_user.profile.nickname if hasattr(request_user, 'profile') else request_user.campus_id
             notifications.append(
                 Notification(
@@ -37,7 +37,7 @@ def extract_and_notify_mentions(comment, event, request_user):
                     target_url=f"/events?id={event.id}" # We'll just open the modal via id or they can view events page
                 )
             )
-            notified_users.add(user.id)
+            notified_users.add(user.pk)
             
     if notifications:
         Notification.objects.bulk_create(notifications)
@@ -143,7 +143,7 @@ class EventViewSet(viewsets.ModelViewSet):
         
         # 防範暴力破解與惡意洗 API
         from django.core.cache import cache
-        cache_key = f'event_register_rate_{user.id}_{pk}'
+        cache_key = f'event_register_rate_{user.pk}_{pk}'
         attempts = cache.get(cache_key, 0)
         
         if attempts >= 10:
