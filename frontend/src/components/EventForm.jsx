@@ -4,22 +4,22 @@ import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './ReviewForm.module.css';
 
-function EventForm({ onClose, onEventAdded }) {
+function EventForm({ onClose, onEventAdded, initialEvent = null }) {
   const { userProfile } = useAuth();
   const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    title: '',
-    date: '',
-    time: '',
-    durationMins: '120', // default 2 hours
-    location: '',
-    capacity: '',
-    organizer_nickname: userProfile?.nickname || '',
-    description: ''
+    title: initialEvent?.title || '',
+    date: initialEvent?.start_time ? new Date(initialEvent.start_time).toLocaleDateString('en-CA') : '',
+    time: initialEvent?.start_time ? new Date(initialEvent.start_time).toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'}) : '',
+    durationMins: initialEvent?.end_time && initialEvent?.start_time ? String(Math.round((new Date(initialEvent.end_time) - new Date(initialEvent.start_time))/60000)) : '120',
+    location: initialEvent?.location || '',
+    capacity: initialEvent?.capacity ? String(initialEvent.capacity) : '',
+    organizer_nickname: initialEvent?.organizer_nickname || userProfile?.nickname || '',
+    description: initialEvent?.description || ''
   });
   const [coverImage, setCoverImage] = useState(null);
-  const [coverImagePreview, setCoverImagePreview] = useState(null);
+  const [coverImagePreview, setCoverImagePreview] = useState(initialEvent?.cover_image || null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -49,7 +49,7 @@ function EventForm({ onClose, onEventAdded }) {
       return;
     }
 
-    if (!coverImage) {
+    if (!initialEvent && !coverImage) {
       setError('請上傳活動封面圖');
       return;
     }
@@ -91,11 +91,16 @@ function EventForm({ onClose, onEventAdded }) {
         payload.append('cover_image', coverImage);
       }
 
-      const response = await api.post('events/', payload, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      let response;
+      if (initialEvent) {
+        response = await api.patch(`events/${initialEvent.id}/`, payload, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      } else {
+        response = await api.post('events/', payload, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
       onEventAdded(response.data);
       onClose();
     } catch (err) {
@@ -113,7 +118,7 @@ function EventForm({ onClose, onEventAdded }) {
           <X size={24} />
         </button>
 
-        <h2 className={styles.title} style={{ marginBottom: '20px', color: 'var(--accent-primary)' }}>發起電影揪團活動</h2>
+        <h2 className={styles.title} style={{ marginBottom: '20px', color: 'var(--accent-primary)' }}>{initialEvent ? '編輯活動' : '發起電影揪團活動'}</h2>
 
         {error && <div className={styles.error} style={{ color: '#ff4444', marginBottom: '16px', padding: '10px', background: 'rgba(255,68,68,0.1)', borderRadius: '8px' }}>{error}</div>}
 
@@ -220,7 +225,7 @@ function EventForm({ onClose, onEventAdded }) {
           </div>
 
           <button type="submit" className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: '8px', marginTop: '10px' }} disabled={isSubmitting}>
-            {isSubmitting ? '發布中...' : '確認發起'}
+            {isSubmitting ? (initialEvent ? '儲存中...' : '發布中...') : (initialEvent ? '儲存變更' : '確認發起')}
           </button>
         </form>
       </div>

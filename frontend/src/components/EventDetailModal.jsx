@@ -7,6 +7,7 @@ import SpeedRatingModal from './SpeedRatingModal';
 import UserCardModal from './UserCardModal';
 import AttendanceDashboard from './AttendanceDashboard';
 import HostQrProjectorModal from './HostQrProjectorModal';
+import EventForm from './EventForm';
 
 function EventDetailModal({ event, onClose, onUpdate }) {
   const { userProfile } = useAuth();
@@ -26,6 +27,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const [editRecapUrl, setEditRecapUrl] = useState('');
   const [selectedImages, setSelectedImages] = useState(null);
   const [showQrProjector, setShowQrProjector] = useState(false);
+  const [isEditingEvent, setIsEditingEvent] = useState(false);
 
   const isUpcoming = event.status === 'UPCOMING';
   const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
@@ -226,14 +228,26 @@ function EventDetailModal({ event, onClose, onUpdate }) {
         </button>
 
         {(isAuthor || isAdmin) && (
-          <button 
-            className={styles.closeBtn} 
-            style={{ top: '64px', background: 'rgba(220, 38, 38, 0.7)' }} 
-            onClick={handleDeleteEvent}
-            title="刪除活動"
-          >
-            <Trash2 size={20} />
-          </button>
+          <div style={{ position: 'absolute', top: '64px', right: '16px', display: 'flex', gap: '8px', zIndex: 10 }}>
+            {isAuthor && (
+              <button 
+                className={styles.closeBtn} 
+                style={{ position: 'static', background: 'var(--accent-primary)' }} 
+                onClick={() => setIsEditingEvent(true)}
+                title="編輯活動"
+              >
+                <Edit2 size={20} />
+              </button>
+            )}
+            <button 
+              className={styles.closeBtn} 
+              style={{ position: 'static', background: 'rgba(220, 38, 38, 0.7)' }} 
+              onClick={handleDeleteEvent}
+              title="刪除活動"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
         )}
 
         <div className={styles.header}>
@@ -606,6 +620,16 @@ function EventDetailModal({ event, onClose, onUpdate }) {
           eventId={event.id} 
           eventTitle={event.title}
           onClose={() => setShowQrProjector(false)} 
+        />
+      )}
+      {isEditingEvent && (
+        <EventForm 
+          initialEvent={event}
+          onClose={() => setIsEditingEvent(false)}
+          onEventAdded={() => {
+            onUpdate();
+            setIsEditingEvent(false);
+          }}
         />
       )}
     </div>

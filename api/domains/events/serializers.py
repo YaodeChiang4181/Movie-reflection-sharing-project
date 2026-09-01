@@ -54,11 +54,13 @@ class EventSerializer(serializers.ModelSerializer):
     def validate(self, data):
         # Backwards compatibility or future-proofing validation
         if 'start_time' in data and data['start_time'] < timezone.now():
-            raise serializers.ValidationError({"start_time": "開始時間不能是過去的時間。"})
+            if not self.instance or self.instance.start_time != data['start_time']:
+                raise serializers.ValidationError({"start_time": "開始時間不能是過去的時間。"})
         if 'start_time' in data and 'end_time' in data and data['end_time'] <= data['start_time']:
             raise serializers.ValidationError({"end_time": "結束時間必須晚於開始時間。"})
         if 'event_time' in data and data['event_time'] < timezone.now():
-            raise serializers.ValidationError({"event_time": "放映時間不能是過去的時間。"})
+            if not self.instance or self.instance.event_time != data['event_time']:
+                raise serializers.ValidationError({"event_time": "放映時間不能是過去的時間。"})
             
         # UI/UX validations
         if not self.instance and not data.get('cover_image'):

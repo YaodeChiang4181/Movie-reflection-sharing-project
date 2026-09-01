@@ -119,6 +119,18 @@ class EventViewSet(viewsets.ModelViewSet):
             if notifications:
                 Notification.objects.bulk_create(notifications)
 
+    def update(self, request, *args, **kwargs):
+        event = self.get_object()
+        if event.user != request.user and not request.user.is_staff:
+            return Response({"detail": "您沒有權限編輯此活動。"}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+        
+    def partial_update(self, request, *args, **kwargs):
+        event = self.get_object()
+        if event.user != request.user and not request.user.is_staff:
+            return Response({"detail": "您沒有權限編輯此活動。"}, status=status.HTTP_403_FORBIDDEN)
+        return super().partial_update(request, *args, **kwargs)
+
     def destroy(self, request, *args, **kwargs):
         event = self.get_object()
         if event.user != request.user and not request.user.is_staff:
@@ -140,31 +152,34 @@ class EventViewSet(viewsets.ModelViewSet):
         cache.set(cache_key, attempts + 1, 60 * 10) # 10 分鐘內最多 10 次
         
         with transaction.atomic():
-            # Use select_for_update to lock the row and prevent race conditions for capacity
+            # Support SQLite safely
             try:
-                event = Event.objects.select_for_update().get(pk=pk)
+                from django.db import connection
+                if connection.vendor in ['postgresql', 'mysql', 'oracle']:
+                    event = Event.objects.select_for_update().get(pk=pk)
+                else:
+                    event = Event.objects.get(pk=pk)
             except Event.DoesNotExist:
                 return Response({'detail': '活動不存在'}, status=status.HTTP_404_NOT_FOUND)
 
             if event.end_time and timezone.now() > event.end_time:
                 return Response({'detail': '活動已結束'}, status=status.HTTP_400_BAD_REQUEST)
-
-            reg, created = EventRegistration.objects.get_or_create(
-                event=event, user=user,
-                defaults={'status': 'REGISTERED'}
-            )
-            
-            if not created and reg.status == 'REGISTERED':
-                return Response({'detail': '您已經報名過了'}, status=status.HTTP_400_BAD_REQUEST)
                 
             current_registrations = event.registrations.filter(status='REGISTERED').count()
+            
+            reg = EventRegistration.objects.filter(event=event, user=user).first()
+            if reg and reg.status == 'REGISTERED':
+                return Response({'detail': '您已經報名過了'}, status=status.HTTP_400_BAD_REQUEST)
+
             if event.capacity > 0 and current_registrations >= event.capacity:
                 return Response({'detail': '名額已滿'}, status=status.HTTP_400_BAD_REQUEST)
 
-            if not created and reg.status == 'CANCELLED':
-                reg.status = 'REGISTERED'
-
-            reg.save()
+            if reg:
+                if reg.status == 'CANCELLED':
+                    reg.status = 'REGISTERED'
+                    reg.save()
+            else:
+                EventRegistration.objects.create(event=event, user=user, status='REGISTERED')
             
         return Response({'detail': '報名成功'}, status=status.HTTP_200_OK)
 
@@ -209,7 +224,11 @@ class EventViewSet(viewsets.ModelViewSet):
         
         with transaction.atomic():
             try:
-                event = Event.objects.select_for_update().get(pk=pk)
+                from django.db import connection
+                if connection.vendor in ['postgresql', 'mysql', 'oracle']:
+                    event = Event.objects.select_for_update().get(pk=pk)
+                else:
+                    event = Event.objects.get(pk=pk)
             except Event.DoesNotExist:
                 return Response({'detail': '活動不存在'}, status=status.HTTP_404_NOT_FOUND)
 

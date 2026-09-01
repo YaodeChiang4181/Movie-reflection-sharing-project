@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ChevronRight, MessageCircle, ThumbsUp, Edit3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
 import styles from './UserCardModal.module.css';
 
 // 影迷等級的對應邏輯 (與 Profile.jsx 共用)
@@ -16,6 +17,7 @@ function getBadge(level) {
 }
 
 function UserCardModal({ campusId, onClose }) {
+  const { userProfile } = useAuth();
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
@@ -114,49 +116,51 @@ function UserCardModal({ campusId, onClose }) {
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
-            <button 
-              className={`btn ${profile.is_following ? 'btn-outline' : 'btn-primary'}`}
-              style={{ 
-                height: '38px', 
-                minWidth: '110px',
-                padding: '0 16px', 
-                fontSize: '0.9rem', 
-                borderRadius: '20px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                whiteSpace: 'nowrap'
-              }}
-              onClick={handleFollowToggle}
-              disabled={isFollowLoading}
-            >
-              {profile.is_following ? '取消追蹤' : '追蹤'}
-            </button>
-            <button 
-              className="btn btn-primary" 
-              style={{ 
-                height: '38px', 
-                minWidth: '110px',
-                padding: '0 16px', 
-                fontSize: '0.9rem', 
-                borderRadius: '20px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                gap: '6px',
-                whiteSpace: 'nowrap',
-                background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
-                border: 'none'
-              }}
-              onClick={() => {
-                onClose();
-                window.dispatchEvent(new CustomEvent('open-mailbox', { detail: profile }));
-              }}
-            >
-              <MessageCircle size={16} /> 傳送訊息
-            </button>
-          </div>
+          {userProfile?.campus_id !== profile.campus_id && (
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
+              <button 
+                className={`btn ${profile.is_following ? 'btn-outline' : 'btn-primary'}`}
+                style={{ 
+                  height: '38px', 
+                  minWidth: '110px',
+                  padding: '0 16px', 
+                  fontSize: '0.9rem', 
+                  borderRadius: '20px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  whiteSpace: 'nowrap'
+                }}
+                onClick={handleFollowToggle}
+                disabled={isFollowLoading}
+              >
+                {profile.is_following ? '取消追蹤' : '追蹤'}
+              </button>
+              <button 
+                className="btn btn-primary" 
+                style={{ 
+                  height: '38px', 
+                  minWidth: '110px',
+                  padding: '0 16px', 
+                  fontSize: '0.9rem', 
+                  borderRadius: '20px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '6px',
+                  whiteSpace: 'nowrap',
+                  background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                  border: 'none'
+                }}
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new CustomEvent('open-mailbox', { detail: profile }));
+                }}
+              >
+                <MessageCircle size={16} /> 傳送訊息
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 中段品味數據 */}
