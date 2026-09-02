@@ -231,28 +231,75 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-            <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.05)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 300px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Glassmorphism Toggle Switch */}
+              <label style={{
+                position: 'relative',
+                display: 'inline-block',
+                width: '44px',
+                height: '24px',
+                cursor: 'pointer',
+                flexShrink: 0
+              }}>
                 <input 
                   type="checkbox" 
                   name="requires_check_out" 
                   checked={formData.requires_check_out} 
                   onChange={handleChange} 
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
                 />
-                需要強制簽退 (適用於時數計算)
+                <span style={{
+                  position: 'absolute',
+                  cursor: 'pointer',
+                  top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: formData.requires_check_out ? 'var(--accent-primary, #3b82f6)' : 'rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(4px)',
+                  transition: '.4s',
+                  borderRadius: '24px',
+                  border: '1px solid rgba(255,255,255,0.2)'
+                }}>
+                  <span style={{
+                    position: 'absolute',
+                    content: '""',
+                    height: '18px',
+                    width: '18px',
+                    left: formData.requires_check_out ? '22px' : '3px',
+                    bottom: '2px',
+                    backgroundColor: 'white',
+                    transition: '.4s',
+                    borderRadius: '50%',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }} />
+                </span>
               </label>
-            </div>
-            {formData.requires_check_out && (
-              <div className={styles.formGroup} style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時數標籤</label>
-                <input
-                  type="text" name="hours_tag" value={formData.hours_tag} onChange={handleChange}
-                  style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', outline: 'none' }} placeholder="例如：服務學習、通識講座"
-                />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 500, fontSize: '0.95rem' }}>需要強制簽退 (適用於時數計算)</span>
               </div>
-            )}
+            </div>
+            
+            <div style={{ flex: '1 1 200px' }}>
+              <input
+                type="text"
+                name="hours_tag"
+                value={formData.hours_tag}
+                onChange={handleChange}
+                style={{ 
+                  width: '100%', 
+                  padding: '10px 12px', 
+                  background: 'rgba(255,255,255,0.08)', 
+                  border: '1px solid rgba(255,255,255,0.1)', 
+                  borderRadius: '8px', 
+                  color: 'white', 
+                  outline: 'none',
+                  transition: 'all 0.3s ease',
+                  fontSize: '0.95rem'
+                }}
+                placeholder="時數標籤 (例如：服務學習、通識)"
+                onFocus={(e) => e.target.style.background = 'rgba(255,255,255,0.12)'}
+                onBlur={(e) => e.target.style.background = 'rgba(255,255,255,0.08)'}
+              />
+            </div>
           </div>
 
           <button type="submit" className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: '8px', marginTop: '10px' }} disabled={isSubmitting}>
