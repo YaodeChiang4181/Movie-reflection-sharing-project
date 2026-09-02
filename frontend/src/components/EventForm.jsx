@@ -17,7 +17,7 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
     capacity: initialEvent?.capacity ? String(initialEvent.capacity) : '',
     organizer_nickname: initialEvent?.organizer_nickname || userProfile?.nickname || '',
     description: initialEvent?.description || '',
-    requires_check_out: initialEvent?.requires_check_out || False,
+    requires_check_out: initialEvent?.requires_check_out || false,
     hours_tag: initialEvent?.hours_tag || ''
   });
   const [coverImage, setCoverImage] = useState(null);
