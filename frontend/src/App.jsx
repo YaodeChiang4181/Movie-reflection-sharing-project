@@ -6,7 +6,7 @@ import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 import Search from './pages/Search';
 import Events from './pages/Events';
-import CheckInSuccessView from './pages/CheckInSuccessView';
+import EventScan from './pages/EventScan';
 import AdminDashboard from './pages/AdminDashboard';
 import ReviewForm from './pages/liff/ReviewForm';
 import ProfileCard from './pages/liff/ProfileCard';
@@ -20,7 +20,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/events" element={<Events />} />
-          <Route path="/events/:id/checkin" element={<CheckInSuccessView />} />
+          <Route path="/events/:id/scan" element={<EventScan />} />
           <Route path="/search" element={<Search />} />
           <Route path="/movies/:id" element={<MovieDetail />} />
           <Route path="/profile" element={<Profile />} />

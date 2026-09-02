@@ -4,13 +4,13 @@ import { QRCodeSVG } from 'qrcode.react';
 import api from '../api/axios';
 import styles from './HostQrProjectorModal.module.css';
 
-function HostQrProjectorModal({ eventId, eventTitle, onClose }) {
+function HostQrProjectorModal({ eventId, eventTitle, onClose, actionType = 'checkin' }) {
   const [attendance, setAttendance] = useState({ total_attended: 0, total_capacity: 0 });
   const [prevAttended, setPrevAttended] = useState(0);
   const [isPulsing, setIsPulsing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  const checkInUrl = `${window.location.origin}/events/${eventId}/checkin`;
+  const scanUrl = `${window.location.origin}/events/${eventId}/scan?action=${actionType}`;
 
   useEffect(() => {
     fetchAttendance();
@@ -90,15 +90,15 @@ function HostQrProjectorModal({ eventId, eventTitle, onClose }) {
         </button>
 
         <div className={styles.cardHeader}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Ticket size={24} /> 現場放映專場簽到</h2>
-          <p>請掃描 QR Code 進行報到或現場空降！</p>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Ticket size={24} /> 現場放映專場{actionType === 'checkout' ? '簽退' : '簽到'}</h2>
+          <p>請掃描 QR Code 進行{actionType === 'checkout' ? '簽退 (時數結算)' : '報到或現場空降'}！</p>
         </div>
         
         <div className={styles.qrContainer}>
           <div className={styles.qrInner}>
             <QRCodeSVG 
               id="qr-svg"
-              value={checkInUrl} 
+              value={scanUrl} 
               size={240} 
               level="H"
               includeMargin={false}

@@ -27,6 +27,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
   const [editRecapUrl, setEditRecapUrl] = useState('');
   const [selectedImages, setSelectedImages] = useState(null);
   const [showQrProjector, setShowQrProjector] = useState(false);
+  const [qrActionType, setQrActionType] = useState('checkin');
   const [isEditingEvent, setIsEditingEvent] = useState(false);
 
   const isUpcoming = event.status === 'UPCOMING';
@@ -348,14 +349,34 @@ function EventDetailModal({ event, onClose, onUpdate }) {
                       {event.capacity > 0 ? `${Math.round((event.registered_count / event.capacity) * 100)}% (剩餘 ${event.capacity - event.registered_count} 席)` : '無人數上限'}
                     </span>
                   </div>
-                  <button 
-                    className={`btn btn-primary ${styles.registerBtn}`}
-                    onClick={isAuthor ? () => setShowQrProjector(true) : handleRegister}
-                    disabled={!isAuthor && (isSubmitting || (isFull && !event.has_registered))}
-                    style={isAuthor ? { background: 'var(--accent-primary)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' } : {}}
-                  >
-                    {isAuthor ? <><QrCode size={18} /> 開啟現場投影 QR Code</> : (event.has_registered ? '您已報名' : (isFull ? '已額滿' : '立即報名'))}
-                  </button>
+                  {isAuthor ? (
+                    <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                      <button 
+                        className={`btn btn-primary ${styles.registerBtn}`}
+                        onClick={() => { setQrActionType('checkin'); setShowQrProjector(true); }}
+                        style={{ flex: 1, background: 'var(--accent-primary)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.9rem' }}
+                      >
+                        <QrCode size={18} /> 現場簽到 QR Code
+                      </button>
+                      {event.requires_check_out && (
+                        <button 
+                          className={`btn btn-primary ${styles.registerBtn}`}
+                          onClick={() => { setQrActionType('checkout'); setShowQrProjector(true); }}
+                          style={{ flex: 1, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.9rem' }}
+                        >
+                          <QrCode size={18} /> 現場簽退 QR Code
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <button 
+                      className={`btn btn-primary ${styles.registerBtn}`}
+                      onClick={handleRegister}
+                      disabled={isSubmitting || (isFull && !event.has_registered)}
+                    >
+                      {event.has_registered ? '您已報名' : (isFull ? '已額滿' : '立即報名')}
+                    </button>
+                  )}
                 </div>
               )}
               
@@ -365,7 +386,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
 
           {activeTab === 'DASHBOARD' && isAuthor && (
             <div className={styles.dashboardSection}>
-              <AttendanceDashboard event={event} inline={true} onOpenQr={() => setShowQrProjector(true)} />
+              <AttendanceDashboard event={event} inline={true} onOpenQr={() => { setQrActionType('checkin'); setShowQrProjector(true); }} />
             </div>
           )}
 
@@ -619,6 +640,7 @@ function EventDetailModal({ event, onClose, onUpdate }) {
         <HostQrProjectorModal 
           eventId={event.id} 
           eventTitle={event.title}
+          actionType={qrActionType}
           onClose={() => setShowQrProjector(false)} 
         />
       )}
