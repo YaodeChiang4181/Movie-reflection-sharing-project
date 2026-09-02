@@ -145,6 +145,8 @@ class Event(models.Model):
     description = models.TextField(default="")
     join_code = models.CharField(max_length=10, unique=True, blank=True)
     attendees = models.ManyToManyField(User, related_name='joined_events', blank=True)
+    requires_check_out = models.BooleanField(default=False)
+    hours_tag = models.CharField(max_length=100, blank=True, null=True, verbose_name="時數標籤")
     created_at = models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):
@@ -171,6 +173,8 @@ class EventRegistration(models.Model):
     registration_type = models.CharField(max_length=16, default='ONLINE') # 'ONLINE' or 'WALK_IN'
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REGISTERED')
     checked_in_at = models.DateTimeField(null=True, blank=True)
+    checked_out_at = models.DateTimeField(null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

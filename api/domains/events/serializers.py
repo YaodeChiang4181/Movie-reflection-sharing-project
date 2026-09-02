@@ -31,7 +31,7 @@ class EventSerializer(serializers.ModelSerializer):
             'id', 'user', 'title', 'location', 'event_time', 'start_time', 'end_time', 
             'capacity', 'cover_image', 'movie', 'movie_id', 'recap_text', 'recap_images', 'recap_url',
             'organizer_nickname', 'description', 'join_code', 'created_at', 'status', 
-            'registered_count', 'comment_count', 'has_registered'
+            'registered_count', 'comment_count', 'has_registered', 'requires_check_out', 'hours_tag'
         )
 
     def to_representation(self, instance):
@@ -71,8 +71,8 @@ class EventSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"description": "活動簡介至少需要 15 個字。"})
             
         capacity = data.get('capacity', 0) if not self.instance else data.get('capacity', self.instance.capacity)
-        if capacity < 2 or capacity > 50:
-            raise serializers.ValidationError({"capacity": "活動人數限制必須在 2 到 50 人之間。"})
+        if capacity < 2 or capacity > 100:
+            raise serializers.ValidationError({"capacity": "活動人數限制必須在 2 到 100 人之間。"})
             
         # Max 3 upcoming events per user
         if not self.instance:

@@ -16,7 +16,9 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
     location: initialEvent?.location || '',
     capacity: initialEvent?.capacity ? String(initialEvent.capacity) : '',
     organizer_nickname: initialEvent?.organizer_nickname || userProfile?.nickname || '',
-    description: initialEvent?.description || ''
+    description: initialEvent?.description || '',
+    requires_check_out: initialEvent?.requires_check_out || False,
+    hours_tag: initialEvent?.hours_tag || ''
   });
   const [coverImage, setCoverImage] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState(initialEvent?.cover_image || null);
@@ -25,8 +27,11 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
   };
 
   const handleImageChange = (e) => {
@@ -59,8 +64,8 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
       return;
     }
 
-    if (!formData.capacity || parseInt(formData.capacity, 10) < 2 || parseInt(formData.capacity, 10) > 50) {
-      setError('人數上限必須在 2 到 50 人之間');
+    if (!formData.capacity || parseInt(formData.capacity, 10) < 2 || parseInt(formData.capacity, 10) > 100) {
+      setError('人數上限必須在 2 到 100 人之間');
       return;
     }
 
@@ -86,6 +91,10 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
       payload.append('end_time', endTime.toISOString());
       if (formData.capacity) {
         payload.append('capacity', parseInt(formData.capacity, 10));
+      }
+      payload.append('requires_check_out', formData.requires_check_out);
+      if (formData.hours_tag) {
+        payload.append('hours_tag', formData.hours_tag);
       }
       if (coverImage) {
         payload.append('cover_image', coverImage);
@@ -172,19 +181,13 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
               />
             </div>
             <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時長 *</label>
-              <select
-                name="durationMins" value={formData.durationMins} onChange={handleChange}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', appearance: 'none', opacity: initialEvent ? 0.6 : 1 }} required
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時長 (分鐘) *</label>
+              <input
+                type="number" name="durationMins" value={formData.durationMins} onChange={handleChange} min="10" max="600"
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', opacity: initialEvent ? 0.6 : 1 }} required
                 disabled={!!initialEvent}
-              >
-                <option value="60" style={{ color: '#000' }}>1 小時 (60 mins)</option>
-                <option value="90" style={{ color: '#000' }}>1.5 小時 (90 mins)</option>
-                <option value="120" style={{ color: '#000' }}>2 小時 (120 mins)</option>
-                <option value="150" style={{ color: '#000' }}>2.5 小時 (150 mins)</option>
-                <option value="180" style={{ color: '#000' }}>3 小時 (180 mins)</option>
-                <option value="240" style={{ color: '#000' }}>4 小時 (240 mins)</option>
-              </select>
+                placeholder="例如: 120"
+              />
             </div>
           </div>
 
@@ -202,7 +205,7 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
             <div className={styles.formGroup} style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>人數上限 *</label>
               <input
-                type="number" name="capacity" value={formData.capacity} onChange={handleChange} min="2" max="50" placeholder="2~50" required
+                type="number" name="capacity" value={formData.capacity} onChange={handleChange} min="2" max="100" placeholder="2~100" required
                 style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }}
               />
             </div>
@@ -226,6 +229,30 @@ function EventForm({ onClose, onEventAdded, initialEvent = null }) {
               name="description" value={formData.description} onChange={handleChange} required minLength="15"
               style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', outline: 'none', resize: 'vertical' }} placeholder="引導填寫「活動流程、選片理由、費用說明（如：低消一杯飲料）」" rows="4"
             />
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                <input 
+                  type="checkbox" 
+                  name="requires_check_out" 
+                  checked={formData.requires_check_out} 
+                  onChange={handleChange} 
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                需要強制簽退 (適用於時數計算)
+              </label>
+            </div>
+            {formData.requires_check_out && (
+              <div className={styles.formGroup} style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>時數標籤</label>
+                <input
+                  type="text" name="hours_tag" value={formData.hours_tag} onChange={handleChange}
+                  style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', outline: 'none' }} placeholder="例如：服務學習、通識講座"
+                />
+              </div>
+            )}
           </div>
 
           <button type="submit" className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: '8px', marginTop: '10px' }} disabled={isSubmitting}>

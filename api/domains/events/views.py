@@ -249,6 +249,8 @@ class EventViewSet(viewsets.ModelViewSet):
                 # Update to CHECKED_IN
                 reg.status = 'CHECKED_IN'
                 reg.checked_in_at = timezone.now()
+                if not event.requires_check_out:
+                    reg.is_completed = True
                 reg.save()
                 
                 # Award EXP
@@ -272,7 +274,8 @@ class EventViewSet(viewsets.ModelViewSet):
                     user=user,
                     registration_type='WALK_IN',
                     status='CHECKED_IN',
-                    checked_in_at=timezone.now()
+                    checked_in_at=timezone.now(),
+                    is_completed=not event.requires_check_out
                 )
                 
                 # Award EXP
@@ -285,6 +288,54 @@ class EventViewSet(viewsets.ModelViewSet):
                     'exp_awarded': 15,
                     'event': {'title': event.title, 'host_name': event.organizer_nickname}
                 }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def checkout(self, request, pk=None):
+        user = request.user
+        
+        with transaction.atomic():
+            try:
+                from django.db import connection
+                if connection.vendor in ['postgresql', 'mysql', 'oracle']:
+                    event = Event.objects.select_for_update().get(pk=pk)
+                else:
+                    event = Event.objects.get(pk=pk)
+            except Event.DoesNotExist:
+                return Response({'detail': '活動不存在'}, status=status.HTTP_404_NOT_FOUND)
+
+            if not event.requires_check_out:
+                return Response({'detail': '此活動不強制簽退'}, status=status.HTTP_400_BAD_REQUEST)
+
+            reg = EventRegistration.objects.filter(event=event, user=user).first()
+            if not reg or reg.status != 'CHECKED_IN':
+                return Response({'detail': '您尚未報到，無法簽退'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if reg.checked_out_at:
+                return Response({'detail': '您已經簽退過了'}, status=status.HTTP_200_OK)
+
+            if not event.end_time:
+                return Response({'detail': '活動未設定結束時間，無法計算簽退'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Valid check-out window: event.end_time +/- 30 mins
+            from datetime import timedelta
+            valid_start = event.end_time - timedelta(minutes=30)
+            valid_end = event.end_time + timedelta(minutes=30)
+            now = timezone.now()
+
+            if now < valid_start:
+                return Response({'detail': '時間未到，目前不在有效的簽退時間範圍內'}, status=status.HTTP_400_BAD_REQUEST)
+            if now > valid_end:
+                return Response({'detail': '已超時，目前不在有效的簽退時間範圍內'}, status=status.HTTP_400_BAD_REQUEST)
+
+            reg.checked_out_at = now
+            reg.is_completed = True
+            reg.save()
+            
+            return Response({
+                'success': True,
+                'checked_out_at': reg.checked_out_at,
+                'event': {'title': event.title}
+            }, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def attendance_summary(self, request, pk=None):
@@ -415,7 +466,14 @@ class EventViewSet(viewsets.ModelViewSet):
         response.write('\ufeff'.encode('utf8'))
         
         writer = csv.writer(response)
-        writer.writerow(['學號/ID', '姓名', '院系/職業', '報名途徑', '簽到狀態', '簽到時間'])
+        writer.writerow(['學號/ID', '姓名', '院系/職業', '報名途徑', '簽到狀態', '簽到時間', '簽退時間', '獲得時數(分鐘)', '時數標籤'])
+        
+        # Calculate event duration
+        event_duration_mins = 0
+        if event.end_time:
+            start = event.start_time or event.event_time
+            if start:
+                event_duration_mins = int((event.end_time - start).total_seconds() / 60)
         
         registrations = event.registrations.all().select_related('user', 'user__identity').order_by('-checked_in_at')
         for reg in registrations:
@@ -429,8 +487,11 @@ class EventViewSet(viewsets.ModelViewSet):
                 department = reg.user.outsider_identity.occupation
                 
             checked_in_time = reg.checked_in_at.strftime("%Y-%m-%d %H:%M:%S") if reg.checked_in_at else ""
+            checked_out_time = reg.checked_out_at.strftime("%Y-%m-%d %H:%M:%S") if getattr(reg, 'checked_out_at', None) else ""
             type_str = "線上預約" if reg.registration_type == "ONLINE" else "現場空降"
-            status_str = "已簽到" if reg.status == "CHECKED_IN" else ("未報到" if reg.status in ["REGISTERED", "NO_SHOW"] else reg.status)
+            status_str = "已完成" if reg.is_completed else ("已簽到" if reg.status == "CHECKED_IN" else ("未報到" if reg.status in ["REGISTERED", "NO_SHOW"] else reg.status))
+            
+            earned_hours = event_duration_mins if reg.is_completed else "不通過"
             
             writer.writerow([
                 getattr(reg.user, 'campus_id', '') or '',
@@ -438,7 +499,10 @@ class EventViewSet(viewsets.ModelViewSet):
                 department,
                 type_str,
                 status_str,
-                checked_in_time
+                checked_in_time,
+                checked_out_time,
+                earned_hours,
+                event.hours_tag or ''
             ])
             
         return response
