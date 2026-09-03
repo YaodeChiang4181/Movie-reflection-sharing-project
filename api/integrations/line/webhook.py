@@ -339,23 +339,21 @@ def handle_message(event):
                 return
                 
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
-            flex_carousel = get_review_carousel_flex(reviews, frontend_url)
             
-            messages = [FlexSendMessage(alt_text=f"🔍 「{keyword}」的搜尋結果", contents=flex_carousel)]
-            
+            # 根據是否有登入產生專屬的 frontend_url
             if user:
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
                 refresh_token = str(refresh)
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-                messages.append(FlexSendMessage(alt_text="上網站看看成果", contents=get_website_button_flex(search_link)))
             else:
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}"
-                messages.append(FlexSendMessage(alt_text="上網站看看成果", contents=get_website_button_flex(search_link)))
-                
-            line_bot_api.reply_message(event.reply_token, messages)
+
+            flex_carousel = get_review_carousel_flex(reviews, search_link)
+            
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text=f"🔍 「{keyword}」的搜尋結果", contents=flex_carousel))
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"系統查詢時發生錯誤：{str(e)}"))
@@ -377,23 +375,21 @@ def handle_message(event):
                 return
                 
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
-            flex_carousel = get_review_carousel_flex(reviews, frontend_url)
             
-            messages = [FlexSendMessage(alt_text=f"🔍 「{keyword}」的搜尋結果", contents=flex_carousel)]
-            
+            # 根據是否有登入產生專屬的 frontend_url
             if user:
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
                 refresh_token = str(refresh)
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-                messages.append(FlexSendMessage(alt_text="上網站看看成果", contents=get_website_button_flex(search_link)))
             else:
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}"
-                messages.append(FlexSendMessage(alt_text="上網站看看成果", contents=get_website_button_flex(search_link)))
-                
-            line_bot_api.reply_message(event.reply_token, messages)
+
+            flex_carousel = get_review_carousel_flex(reviews, search_link)
+            
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text=f"🔍 「{keyword}」的搜尋結果", contents=flex_carousel))
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"系統查詢時發生錯誤：{str(e)}"))
@@ -493,13 +489,9 @@ def handle_message(event):
         return
 
     if text == '片單漂流瓶':
-        flex = get_drift_bottle_menu_flex()
         frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
-        btn_flex = get_website_button_flex(frontend_url)
-        line_bot_api.reply_message(event.reply_token, [
-            FlexSendMessage(alt_text="片單漂流瓶", contents=flex),
-            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
-        ])
+        flex = get_drift_bottle_menu_flex(frontend_url)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="片單漂流瓶", contents=flex))
         return
 
     if text == '推薦電影':

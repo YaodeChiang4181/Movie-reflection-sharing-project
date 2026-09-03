@@ -180,7 +180,7 @@ def get_review_carousel_flex(reviews, frontend_url):
                     {
                         "type": "button",
                         "style": "link",
-                        "color": "#8B5CF6",
+                        "color": "#6C5CE7",
                         "height": "sm",
                         "action": {
                             "type": "uri",
@@ -423,12 +423,16 @@ def get_auto_login_flex(url):
         }
     }
 
-def get_speed_rate_genres_flex(genres_subset):
+def get_speed_rate_genres_flex(genres_subset, frontend_url):
     bubbles = []
     for genre_id, genre_name in genres_subset:
         bubble = {
             "type": "bubble",
             "size": "micro",
+            "styles": {
+                "body": { "backgroundColor": "#131722" },
+                "footer": { "backgroundColor": "#131722" }
+            },
             "body": {
                 "type": "box",
                 "layout": "vertical",
@@ -601,10 +605,18 @@ def get_speed_rate_movies_carousel_flex(movies_data, genre_id):
 
 
 
-def get_rules_flex():
+def get_rules_flex(frontend_url):
     return {
         "type": "bubble",
         "size": "giga",
+        "styles": {
+            "body": {
+                "backgroundColor": "#131722"
+            },
+            "footer": {
+                "backgroundColor": "#131722"
+            }
+        },
         "header": {
             "type": "box",
             "layout": "vertical",
@@ -624,7 +636,7 @@ def get_rules_flex():
                     "margin": "md"
                 }
             ],
-            "backgroundColor": "#8B5CF6",
+            "backgroundColor": "#6C5CE7",
             "paddingAll": "20px"
         },
         "body": {
@@ -640,20 +652,20 @@ def get_rules_flex():
                             "type": "text",
                             "text": "📝 發布心得 (快速格式)",
                             "weight": "bold",
-                            "color": "#8B5CF6",
+                            "color": "#6C5CE7",
                             "size": "md"
                         },
                         {
                             "type": "text",
                             "text": "#心得\n電影：奧德賽\n評分：5\n標籤：#動作片 (選填)\n心得：這部電影太好看了！\n(💡 心得為選填，無文字即為簡易評分貼文)",
-                            "color": "#555555",
+                            "color": "#94A3B8",
                             "size": "sm",
                             "wrap": True,
                             "margin": "sm"
                         }
                     ]
                 },
-                {"type": "separator", "margin": "lg"},
+                {"type": "separator", "margin": "lg", "color": "#334155"},
                 
                 # 設定專屬暱稱
                 {
@@ -664,13 +676,13 @@ def get_rules_flex():
                             "type": "text",
                             "text": "✏️ 設定專屬暱稱 (限一次)",
                             "weight": "bold",
-                            "color": "#8B5CF6",
+                            "color": "#6C5CE7",
                             "size": "md"
                         },
                         {
                             "type": "text",
                             "text": "#暱稱 你的暱稱\n※ 範例：#暱稱 影迷小明",
-                            "color": "#555555",
+                            "color": "#94A3B8",
                             "size": "sm",
                             "wrap": True,
                             "margin": "sm"
@@ -678,7 +690,7 @@ def get_rules_flex():
                     ],
                     "margin": "lg"
                 },
-                {"type": "separator", "margin": "lg"},
+                {"type": "separator", "margin": "lg", "color": "#334155"},
 
                 # 綁定網頁帳號
                 {
@@ -689,13 +701,13 @@ def get_rules_flex():
                             "type": "text",
                             "text": "🔗 綁定網頁/舊帳號",
                             "weight": "bold",
-                            "color": "#8B5CF6",
+                            "color": "#6C5CE7",
                             "size": "md"
                         },
                         {
                             "type": "text",
                             "text": "#綁定 帳號 密碼",
-                            "color": "#555555",
+                            "color": "#94A3B8",
                             "size": "sm",
                             "wrap": True,
                             "margin": "sm"
@@ -703,7 +715,7 @@ def get_rules_flex():
                     ],
                     "margin": "lg"
                 },
-                {"type": "separator", "margin": "lg"},
+                {"type": "separator", "margin": "lg", "color": "#334155"},
                 
                 # 急速評星
                 {
@@ -714,13 +726,13 @@ def get_rules_flex():
                             "type": "text",
                             "text": "⭐ 急速評星 (無限流抽片)",
                             "weight": "bold",
-                            "color": "#8B5CF6",
+                            "color": "#6C5CE7",
                             "size": "md"
                         },
                         {
                             "type": "text",
                             "text": "輸入「急速評星」即可從各大類型或「熱門電影」中抽片！\n✅ 一次給你三部隨機電影 (橫向滑動)\n✅ 打完分數自動再給你三部新片\n✅ 隨時點擊「🛑 結束評星」即可退出",
-                            "color": "#555555",
+                            "color": "#94A3B8",
                             "size": "sm",
                             "wrap": True,
                             "margin": "sm"
@@ -728,7 +740,7 @@ def get_rules_flex():
                     ],
                     "margin": "lg"
                 },
-                {"type": "separator", "margin": "lg"},
+                {"type": "separator", "margin": "lg", "color": "#334155"},
                 
                 # 其它好用指令
                 {
@@ -739,13 +751,13 @@ def get_rules_flex():
                             "type": "text",
                             "text": "💡 其它好用指令",
                             "weight": "bold",
-                            "color": "#8B5CF6",
+                            "color": "#6C5CE7",
                             "size": "md"
                         },
                         {
                             "type": "text",
                             "text": "🔍 搜尋電影評價：查 奧德賽\n📅 找活動：近期活動\n🤝 揪團看片：\n#揪團\n活動：看電影\n時間：2024-12-31 19:00\n地點：信義威秀\n描述：大家一起來看死侍",
-                            "color": "#555555",
+                            "color": "#94A3B8",
                             "size": "sm",
                             "wrap": True,
                             "margin": "sm"
@@ -759,14 +771,28 @@ def get_rules_flex():
         "footer": {
             "type": "box",
             "layout": "vertical",
+            "paddingAll": "md",
+            "spacing": "md",
             "contents": [
                 {
                     "type": "text",
                     "text": "💡 任何時候輸入「/規則」都能看到這張卡片喔！",
                     "size": "xs",
-                    "color": "#aaaaaa",
+                    "color": "#94A3B8",
                     "align": "center",
                     "wrap": True
+                },
+                {
+                    "type": "text",
+                    "text": "🌐 開啟網站探索全部成果 →",
+                    "color": "#818CF8",
+                    "size": "xs",
+                    "align": "center",
+                    "action": {
+                        "type": "uri",
+                        "label": "開啟網站",
+                        "uri": frontend_url
+                    }
                 }
             ]
         }
@@ -849,7 +875,7 @@ def get_speed_rate_score_flex(movie_title, genre_id):
         }
     }
 
-def get_drift_bottle_menu_flex():
+def get_drift_bottle_menu_flex(frontend_url):
     return {
         "type": "bubble",
         "size": "mega",
@@ -860,22 +886,32 @@ def get_drift_bottle_menu_flex():
             "aspectRatio": "20:13",
             "aspectMode": "cover"
         },
+        "styles": {
+            "body": {
+                "backgroundColor": "#131722"
+            },
+            "footer": {
+                "backgroundColor": "#131722"
+            }
+        },
         "body": {
             "type": "box",
             "layout": "vertical",
+            "paddingAll": "lg",
             "contents": [
                 {
                     "type": "text",
                     "text": "🌊 片單漂流瓶",
                     "weight": "bold",
-                    "size": "xl"
+                    "color": "#FFFFFF",
+                    "size": "lg"
                 },
                 {
                     "type": "text",
                     "text": "將你喜愛的電影裝進瓶中，或是撈起別人留下的推薦！",
                     "margin": "md",
-                    "size": "sm",
-                    "color": "#666666",
+                    "size": "xs",
+                    "color": "#94A3B8",
                     "wrap": True
                 }
             ]
@@ -884,6 +920,7 @@ def get_drift_bottle_menu_flex():
             "type": "box",
             "layout": "vertical",
             "spacing": "sm",
+            "paddingAll": "lg",
             "contents": [
                 {
                     "type": "button",
@@ -896,31 +933,66 @@ def get_drift_bottle_menu_flex():
                     }
                 },
                 {
-                    "type": "button",
-                    "style": "secondary",
-                    "color": "#F3F4F6",
+                    "type": "box",
+                    "layout": "vertical",
+                    "backgroundColor": "#242038",
+                    "cornerRadius": "md",
+                    "paddingAll": "sm",
                     "action": {
                         "type": "message",
                         "label": "來部推薦",
                         "text": "來部推薦"
+                    },
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "來部推薦",
+                            "color": "#C4B5FD",
+                            "size": "md",
+                            "align": "center",
+                            "weight": "bold",
+                            "margin": "sm"
+                        }
+                    ]
+                },
+                {
+                    "type": "separator",
+                    "margin": "lg",
+                    "color": "#334155"
+                },
+                {
+                    "type": "text",
+                    "text": "🌐 開啟網站探索全部成果 →",
+                    "color": "#818CF8",
+                    "size": "xs",
+                    "align": "center",
+                    "margin": "md",
+                    "action": {
+                        "type": "uri",
+                        "label": "開啟網站",
+                        "uri": frontend_url
                     }
                 }
             ]
         }
     }
 
-def get_drift_bottle_recommend_flex(bottle, nickname):
+def get_drift_bottle_recommend_flex(bottle, nickname, frontend_url):
     return {
         "type": "bubble",
         "size": "mega",
         "styles": {
             "body": {
-                "backgroundColor": "#FDFBF7"
+                "backgroundColor": "#131722"
+            },
+            "footer": {
+                "backgroundColor": "#131722"
             }
         },
         "body": {
             "type": "box",
             "layout": "vertical",
+            "paddingAll": "lg",
             "contents": [
                 {
                     "type": "box",
@@ -930,7 +1002,7 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
                             "type": "text",
                             "text": "🌊 你撈到了一個漂流瓶！",
                             "weight": "bold",
-                            "color": "#6C5CE7",
+                            "color": "#FFFFFF",
                             "size": "sm",
                             "flex": 1
                         },
@@ -948,6 +1020,7 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
                     "type": "text",
                     "text": bottle.movie_title,
                     "weight": "bold",
+                    "color": "#FFFFFF",
                     "size": "xxl",
                     "margin": "md",
                     "wrap": True
@@ -956,13 +1029,13 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
                     "type": "text",
                     "text": f"推薦人：{nickname}",
                     "size": "xs",
-                    "color": "#888888",
+                    "color": "#94A3B8",
                     "margin": "sm"
                 },
                 {
                     "type": "separator",
                     "margin": "xxl",
-                    "color": "#E5E7EB",
+                    "color": "#334155",
                     "style": "dashed"
                 },
                 {
@@ -974,15 +1047,15 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
                         {
                             "type": "text",
                             "text": "推薦留言：",
-                            "color": "#555555",
-                            "size": "sm"
+                            "color": "#94A3B8",
+                            "size": "xs"
                         },
                         {
                             "type": "text",
                             "text": bottle.message if bottle.message else "(推薦人沒有留下留言)",
                             "wrap": True,
                             "size": "md",
-                            "color": "#111111"
+                            "color": "#FFFFFF"
                         }
                     ]
                 }
@@ -992,16 +1065,34 @@ def get_drift_bottle_recommend_flex(bottle, nickname):
             "type": "box",
             "layout": "vertical",
             "spacing": "sm",
-            "backgroundColor": "#FDFBF7",
+            "paddingAll": "lg",
             "contents": [
                 {
                     "type": "button",
                     "style": "primary",
-                    "color": "#F2A900",
+                    "color": "#6C5CE7",
                     "action": {
                         "type": "message",
                         "label": "發送你的感謝！",
                         "text": f"回覆漂流瓶 #{bottle.id}"
+                    }
+                },
+                {
+                    "type": "separator",
+                    "margin": "lg",
+                    "color": "#334155"
+                },
+                {
+                    "type": "text",
+                    "text": "🌐 開啟網站探索全部成果 →",
+                    "color": "#818CF8",
+                    "size": "xs",
+                    "align": "center",
+                    "margin": "md",
+                    "action": {
+                        "type": "uri",
+                        "label": "開啟網站",
+                        "uri": frontend_url
                     }
                 }
             ]
