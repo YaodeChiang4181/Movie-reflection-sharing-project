@@ -184,8 +184,19 @@ function Home() {
                   </div>
                 )}
                 <div className="hero-content">
-                  <div className="hero-badge" style={{ background: '#F5A623', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                    <CalendarDays size={20} />
+                  <div className="hero-badge" style={{ 
+                    background: 'rgba(245, 158, 11, 0.16)', 
+                    color: '#FDE68A', 
+                    padding: '6px 12px', 
+                    borderRadius: '8px', 
+                    display: 'inline-flex', 
+                    alignItems: 'center',
+                    boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                    border: '1px solid rgba(251, 191, 36, 0.35)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)'
+                  }}>
+                    <CalendarDays size={20} color="#FBBF24" />
                     <span style={{ fontWeight: 600, marginLeft: '4px' }}>近期最熱門</span>
                   </div>
                   <h2>{item.title}</h2>
@@ -204,8 +215,19 @@ function Home() {
               >
                 <TmdbPoster title={item.title} className="hero-poster" />
                 <div className="hero-content">
-                  <div className="hero-badge" style={{ background: '#F5A623', color: '#111', padding: '6px 12px', borderRadius: '8px', display: 'inline-flex', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                    <Flame size={20} />
+                  <div className="hero-badge" style={{ 
+                    background: 'rgba(245, 158, 11, 0.16)', 
+                    color: '#FDE68A', 
+                    padding: '6px 12px', 
+                    borderRadius: '8px', 
+                    display: 'inline-flex', 
+                    alignItems: 'center',
+                    boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                    border: '1px solid rgba(251, 191, 36, 0.35)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)'
+                  }}>
+                    <Flame size={20} color="#FBBF24" />
                     <span style={{ fontWeight: 600, marginLeft: '4px' }}>近期最熱門</span>
                   </div>
                   <h2>{item.title}</h2>
