@@ -1063,20 +1063,62 @@ def get_bottle_reply_flex(bottle, sender_nickname, reply_message):
 def get_website_button_flex(url, label="上網站看看成果"):
     return {
         "type": "bubble",
-        "size": "micro",
+        "size": "kilo",
+        "styles": {
+            "body": {
+                "backgroundColor": "#131722"
+            },
+            "footer": {
+                "backgroundColor": "#131722"
+            }
+        },
         "body": {
+            "type": "box",
+            "layout": "vertical",
+            "paddingAll": "lg",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": "✨ 映後時光網頁版",
+                    "color": "#FFFFFF",
+                    "weight": "bold",
+                    "size": "18px"
+                },
+                {
+                    "type": "text",
+                    "text": "登入網站以查看完整內容，體驗更豐富的電影功能！",
+                    "color": "#94A3B8",
+                    "size": "13px",
+                    "margin": "md",
+                    "wrap": True
+                },
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "color": "#6C5CE7",
+                    "margin": "lg",
+                    "action": {
+                        "type": "uri",
+                        "label": label,
+                        "uri": url
+                    }
+                }
+            ]
+        },
+        "footer": {
             "type": "box",
             "layout": "vertical",
             "paddingAll": "md",
             "contents": [
                 {
-                    "type": "button",
-                    "style": "primary",
-                    "color": "#8B5CF6",
-                    "height": "sm",
+                    "type": "text",
+                    "text": "🌐 開啟網站探索全部成果 →",
+                    "color": "#818CF8",
+                    "size": "xs",
+                    "align": "center",
                     "action": {
                         "type": "uri",
-                        "label": label,
+                        "label": "開啟網站",
                         "uri": url
                     }
                 }
