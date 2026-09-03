@@ -77,13 +77,9 @@ def handle_message(event):
         display_name = "LINE User"
 
     if text in ['/', '/規則', '／', '／規則']:
-        flex_card = get_rules_flex()
         frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
-        btn_flex = get_website_button_flex(frontend_url)
-        line_bot_api.reply_message(event.reply_token, [
-            FlexSendMessage(alt_text="映後時光 Bot 指令規則", contents=flex_card),
-            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
-        ])
+        flex_card = get_rules_flex(frontend_url)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="映後時光 Bot 指令規則", contents=flex_card))
         return
 
     if text.startswith('#綁定') or text.startswith('＃綁定'):
@@ -566,13 +562,9 @@ def handle_message(event):
         except UserProfile.DoesNotExist:
             nickname = bottle.user.line_display_name or "匿名使用者"
             
-        flex = get_drift_bottle_recommend_flex(bottle, nickname)
         frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
-        btn_flex = get_website_button_flex(frontend_url)
-        line_bot_api.reply_message(event.reply_token, [
-            FlexSendMessage(alt_text="你撈到了一個漂流瓶", contents=flex),
-            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
-        ])
+        flex = get_drift_bottle_recommend_flex(bottle, nickname, frontend_url)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="你撈到了一個漂流瓶", contents=flex))
         return
 
     # --- Stateful Review Creation ---
@@ -685,13 +677,9 @@ def handle_message(event):
         random.shuffle(all_genres)
         genres_subset = all_genres[:10]
         
-        flex_carousel = get_speed_rate_genres_flex(genres_subset)
         frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
-        btn_flex = get_website_button_flex(frontend_url)
-        line_bot_api.reply_message(event.reply_token, [
-            FlexSendMessage(alt_text="選擇你想評分的電影類型", contents=flex_carousel),
-            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
-        ])
+        flex_carousel = get_speed_rate_genres_flex(genres_subset, frontend_url)
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="選擇你想評分的電影類型", contents=flex_carousel))
         return
         
     if text == '影迷名片':
@@ -899,13 +887,9 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="近期沒有活動喔！趕快來發起一個吧！"))
             return
             
-        flex_carousel = get_events_list_flex(events)
         frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
-        btn_flex = get_website_button_flex(f"{frontend_url}/events")
-        line_bot_api.reply_message(event.reply_token, [
-            FlexSendMessage(alt_text="📅 近期電影揪團", contents=flex_carousel),
-            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
-        ])
+        flex_carousel = get_events_list_flex(events, f"{frontend_url}/events")
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="📅 近期電影揪團", contents=flex_carousel))
         return
 
     if text == '影評推薦':
@@ -930,11 +914,7 @@ def handle_message(event):
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
             flex_carousel = get_review_carousel_flex(trending_reviews, frontend_url)
             
-            btn_flex = get_website_button_flex(frontend_url)
-            line_bot_api.reply_message(event.reply_token, [
-                FlexSendMessage(alt_text="✨ 影評推薦", contents=flex_carousel),
-                FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
-            ])
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="✨ 影評推薦", contents=flex_carousel))
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"載入熱門影評時發生錯誤：{str(e)}"))
