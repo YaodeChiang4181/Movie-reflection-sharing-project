@@ -23,7 +23,7 @@ from .flex_templates import (
     get_exp_feedback_flex, get_review_carousel_flex, get_events_list_flex, 
     get_event_success_flex, get_auto_login_flex, get_speed_rate_genres_flex, 
     get_speed_rate_movies_carousel_flex, get_rules_flex, get_speed_rate_score_flex,
-    get_drift_bottle_menu_flex, get_drift_bottle_recommend_flex
+    get_drift_bottle_menu_flex, get_drift_bottle_recommend_flex, get_website_button_flex
 )
 
 load_dotenv()
@@ -78,7 +78,12 @@ def handle_message(event):
 
     if text in ['/', '/規則', '／', '／規則']:
         flex_card = get_rules_flex()
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="映後時光 Bot 指令規則", contents=flex_card))
+        frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+        btn_flex = get_website_button_flex(frontend_url)
+        line_bot_api.reply_message(event.reply_token, [
+            FlexSendMessage(alt_text="映後時光 Bot 指令規則", contents=flex_card),
+            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+        ])
         return
 
     if text.startswith('#綁定') or text.startswith('＃綁定'):
@@ -143,7 +148,12 @@ def handle_message(event):
                 target_user.line_display_name = display_name
                 target_user.save()
                 
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"✅ 帳號綁定成功！歡迎回來，{target_user.username or target_user.campus_id}。"))
+                frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+                btn_flex = get_website_button_flex(frontend_url)
+                line_bot_api.reply_message(event.reply_token, [
+                    TextSendMessage(text=f"✅ 帳號綁定成功！歡迎回來，{target_user.username or target_user.campus_id}。"),
+                    FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+                ])
             else:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 帳號或密碼錯誤，請重新確認！"))
         else:
@@ -184,7 +194,12 @@ def handle_message(event):
             user.profile.nickname = new_nickname
             user.profile.save()
             
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"✅ 暱稱設定成功！以後大家都會看到你是「{new_nickname}」囉！"))
+            frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+            btn_flex = get_website_button_flex(frontend_url)
+            line_bot_api.reply_message(event.reply_token, [
+                TextSendMessage(text=f"✅ 暱稱設定成功！以後大家都會看到你是「{new_nickname}」囉！"),
+                FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+            ])
         else:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="暱稱設定格式錯誤，請參考範例 (中間要有空格，不需括號)：\n#暱稱 影迷小明"))
         return
@@ -299,7 +314,12 @@ def handle_message(event):
     if text in ['查', '快速查詢']:
         state_record.state = "WAITING_FOR_SEARCH_QUERY"
         state_record.save()
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="🔍 您欲查詢哪部電影呢？\n請直接輸入電影名稱："))
+        frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+        btn_flex = get_website_button_flex(frontend_url)
+        line_bot_api.reply_message(event.reply_token, [
+            TextSendMessage(text="🔍 您欲查詢哪部電影呢？\n請直接輸入電影名稱："),
+            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+        ])
         return
         
     if user_state == "WAITING_FOR_SEARCH_QUERY":
@@ -329,7 +349,11 @@ def handle_message(event):
                 refresh_token = str(refresh)
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-                messages.append(FlexSendMessage(alt_text="🔗 前往網頁版自動登入", contents=get_auto_login_flex(search_link)))
+                messages.append(FlexSendMessage(alt_text="上網站看看成果", contents=get_website_button_flex(search_link)))
+            else:
+                encoded_keyword = urllib.parse.quote(keyword)
+                search_link = f"{frontend_url}/search?q={encoded_keyword}"
+                messages.append(FlexSendMessage(alt_text="上網站看看成果", contents=get_website_button_flex(search_link)))
                 
             line_bot_api.reply_message(event.reply_token, messages)
         except Exception as e:
@@ -363,7 +387,11 @@ def handle_message(event):
                 refresh_token = str(refresh)
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
-                messages.append(FlexSendMessage(alt_text="🔗 前往網頁版自動登入", contents=get_auto_login_flex(search_link)))
+                messages.append(FlexSendMessage(alt_text="上網站看看成果", contents=get_website_button_flex(search_link)))
+            else:
+                encoded_keyword = urllib.parse.quote(keyword)
+                search_link = f"{frontend_url}/search?q={encoded_keyword}"
+                messages.append(FlexSendMessage(alt_text="上網站看看成果", contents=get_website_button_flex(search_link)))
                 
             line_bot_api.reply_message(event.reply_token, messages)
         except Exception as e:
@@ -466,7 +494,12 @@ def handle_message(event):
 
     if text == '片單漂流瓶':
         flex = get_drift_bottle_menu_flex()
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="片單漂流瓶", contents=flex))
+        frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+        btn_flex = get_website_button_flex(frontend_url)
+        line_bot_api.reply_message(event.reply_token, [
+            FlexSendMessage(alt_text="片單漂流瓶", contents=flex),
+            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+        ])
         return
 
     if text == '推薦電影':
@@ -475,7 +508,12 @@ def handle_message(event):
             return
         state_record.state = "WAITING_FOR_DRIFT_MOVIE_TITLE"
         state_record.save()
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="🌊 準備將你的推薦裝進瓶中！\n\n請輸入你要推薦的【電影名稱】：\n\n(回覆「取消」可中斷)"))
+        frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+        btn_flex = get_website_button_flex(frontend_url)
+        line_bot_api.reply_message(event.reply_token, [
+            TextSendMessage(text="🌊 準備將你的推薦裝進瓶中！\n\n請輸入你要推薦的【電影名稱】：\n\n(回覆「取消」可中斷)"),
+            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+        ])
         return
 
     if user_state == "WAITING_FOR_DRIFT_MOVIE_TITLE":
@@ -537,7 +575,12 @@ def handle_message(event):
             nickname = bottle.user.line_display_name or "匿名使用者"
             
         flex = get_drift_bottle_recommend_flex(bottle, nickname)
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="你撈到了一個漂流瓶", contents=flex))
+        frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+        btn_flex = get_website_button_flex(frontend_url)
+        line_bot_api.reply_message(event.reply_token, [
+            FlexSendMessage(alt_text="你撈到了一個漂流瓶", contents=flex),
+            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+        ])
         return
 
     # --- Stateful Review Creation ---
@@ -651,7 +694,12 @@ def handle_message(event):
         genres_subset = all_genres[:10]
         
         flex_carousel = get_speed_rate_genres_flex(genres_subset)
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="選擇你想評分的電影類型", contents=flex_carousel))
+        frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+        btn_flex = get_website_button_flex(frontend_url)
+        line_bot_api.reply_message(event.reply_token, [
+            FlexSendMessage(alt_text="選擇你想評分的電影類型", contents=flex_carousel),
+            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+        ])
         return
         
     if text == '影迷名片':
@@ -845,7 +893,12 @@ def handle_message(event):
                 ]
             }
         }
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="專屬影迷名片", contents=flex_card))
+        frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+        btn_flex = get_website_button_flex(frontend_url)
+        line_bot_api.reply_message(event.reply_token, [
+            FlexSendMessage(alt_text="專屬影迷名片", contents=flex_card),
+            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+        ])
         return
 
     if text == '近期活動':
@@ -855,7 +908,12 @@ def handle_message(event):
             return
             
         flex_carousel = get_events_list_flex(events)
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="📅 近期電影揪團", contents=flex_carousel))
+        frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
+        btn_flex = get_website_button_flex(f"{frontend_url}/events")
+        line_bot_api.reply_message(event.reply_token, [
+            FlexSendMessage(alt_text="📅 近期電影揪團", contents=flex_carousel),
+            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+        ])
         return
 
     if text == '影評推薦':
@@ -880,7 +938,11 @@ def handle_message(event):
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
             flex_carousel = get_review_carousel_flex(trending_reviews, frontend_url)
             
-            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="✨ 影評推薦", contents=flex_carousel))
+            btn_flex = get_website_button_flex(frontend_url)
+            line_bot_api.reply_message(event.reply_token, [
+                FlexSendMessage(alt_text="✨ 影評推薦", contents=flex_carousel),
+                FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+            ])
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"載入熱門影評時發生錯誤：{str(e)}"))

@@ -1059,3 +1059,27 @@ def get_bottle_reply_flex(bottle, sender_nickname, reply_message):
             ]
         }
     }
+
+def get_website_button_flex(url, label="上網站看看成果"):
+    return {
+        "type": "bubble",
+        "size": "micro",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "paddingAll": "md",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "color": "#8B5CF6",
+                    "height": "sm",
+                    "action": {
+                        "type": "uri",
+                        "label": label,
+                        "uri": url
+                    }
+                }
+            ]
+        }
+    }
