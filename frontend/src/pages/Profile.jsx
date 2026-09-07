@@ -46,6 +46,30 @@ function Profile() {
     }
   };
 
+  const handleEditNickname = async () => {
+    const currentNickname = userData?.nickname || '';
+    const newNickname = window.prompt('請輸入新的公開暱稱 (限 50 字內)\\n※ 每 5 分鐘限修改一次', currentNickname);
+    
+    if (newNickname === null || newNickname.trim() === '') return;
+    if (newNickname.trim() === currentNickname) return;
+    if (newNickname.trim().length > 50) {
+      alert('暱稱長度不能超過 50 個字元！');
+      return;
+    }
+
+    try {
+      const res = await api.patch('/auth/update-nickname/', {
+        nickname: newNickname.trim()
+      });
+      alert(res.data.message);
+      fetchUserData();
+    } catch (err) {
+      console.error('Failed to update nickname', err);
+      const errorMsg = err.response?.data?.error || '修改暱稱發生錯誤，請稍後再試。';
+      alert(errorMsg);
+    }
+  };
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
