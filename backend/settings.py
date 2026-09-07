@@ -226,3 +226,7 @@ else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'noreply@movieplatform.ncu.tw')
+
+# DDoS Protection: Payload Limits (Application Layer)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5 MB limit for request body
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 100    # Limit number of form fields to prevent hash collision DoS
