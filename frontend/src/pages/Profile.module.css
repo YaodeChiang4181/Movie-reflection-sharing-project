@@ -596,3 +596,18 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 600px) {
+  .inlineEditContainer {
+    width: 100%;
+    justify-content: space-between;
+    padding: 6px 12px;
+  }
+  
+  .inlineEditInput {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+    font-size: 1.2rem;
+  }
+}
