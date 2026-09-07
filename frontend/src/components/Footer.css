@@ -1,0 +1,35 @@
+.global-footer {
+  padding: 24px 0;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  margin-top: auto; /* push to bottom if flex layout */
+  text-align: center;
+}
+
+.global-footer .container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.global-footer span {
+  font-size: 1rem;
+}
+
+.gmail-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  padding: 8px;
+  transition: all var(--transition-normal);
+}
+
+.gmail-link:hover {
+  background-color: var(--accent-glow);
+  color: #fff;
+}

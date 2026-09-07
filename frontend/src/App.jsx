@@ -11,6 +11,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import ReviewForm from './pages/liff/ReviewForm';
 import ProfileCard from './pages/liff/ProfileCard';
 import CampaignScan from './pages/liff/CampaignScan';
+import Footer from './components/Footer';
+
 function App() {
   return (
     <BrowserRouter>
@@ -30,6 +32,7 @@ function App() {
           <Route path="/liff/campaign-scan" element={<CampaignScan />} />
         </Routes>
       </div>
+      <Footer />
     </BrowserRouter>
   );
 }
