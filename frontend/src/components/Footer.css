@@ -38,3 +38,10 @@
   background-color: #06C755;
   color: #fff;
 }
+
+/* Mobile bottom padding for tab bar clearance */
+@media (max-width: 768px) {
+  .global-footer {
+    padding-bottom: calc(24px + 70px); /* original padding + tab bar height */
+  }
+}
