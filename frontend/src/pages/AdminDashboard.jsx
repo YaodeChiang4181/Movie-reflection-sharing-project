@@ -414,6 +414,8 @@ function AdminDashboard() {
                         borderRadius: '12px',
                         fontSize: '0.8rem',
                         fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        display: 'inline-block',
                         background: user.user_type === '校內' ? 'rgba(34,197,94,0.15)' : 'rgba(251,191,36,0.15)',
                         color: user.user_type === '校內' ? '#22c55e' : '#fbbf24',
                         border: `1px solid ${user.user_type === '校內' ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.3)'}`
