@@ -165,7 +165,18 @@ function Home() {
       )}
 
       {/* 焦點橫幅輪播 (Hero Carousel) */}
-      {heroItems.length > 0 && (
+      {isLoading && heroItems.length === 0 ? (
+        <div style={{ marginBottom: '24px' }}>
+          <div className="glass hero-banner" style={{ marginBottom: '16px', display: 'flex', gap: '40px', alignItems: 'center' }}>
+            <div className="skeleton skeleton-poster" />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div className="skeleton skeleton-text" style={{ width: '120px', height: '36px', borderRadius: '8px', marginBottom: '16px' }} />
+              <div className="skeleton skeleton-title" style={{ width: '80%', height: '3rem', marginBottom: '24px' }} />
+              <div className="skeleton skeleton-text" style={{ width: '40%', height: '2rem' }} />
+            </div>
+          </div>
+        </div>
+      ) : heroItems.length > 0 && (
         <div style={{ marginBottom: '24px' }}>
           {(() => {
             const item = heroItems[currentHeroIndex];
@@ -299,7 +310,20 @@ function Home() {
         {/* 左側 70%：資訊流 */}
         <div>
           {isLoading ? (
-            <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
+            <div style={{ display: 'grid', gap: '16px' }}>
+              {[1, 2, 3, 4].map((n) => (
+                <div key={n} className="glass" style={{ padding: '16px 24px', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+                    <div className="skeleton skeleton-list-poster" />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <div className="skeleton skeleton-title" style={{ width: '50%', height: '1.5rem', marginBottom: '8px' }} />
+                      <div className="skeleton skeleton-text" style={{ width: '30%', height: '1rem', marginBottom: '0' }} />
+                    </div>
+                  </div>
+                  <div className="skeleton skeleton-text" style={{ width: '80px', height: '2rem', borderRadius: '20px', marginBottom: '0' }} />
+                </div>
+              ))}
+            </div>
           ) : feedItems.length === 0 ? (
             <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
               <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前沒有任何動態</h2>
