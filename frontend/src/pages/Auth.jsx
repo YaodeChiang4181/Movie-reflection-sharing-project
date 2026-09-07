@@ -47,6 +47,33 @@ function Auth() {
     return () => clearTimeout(timer);
   }, [cooldown]);
 
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code && !isLoggedIn && !localStorage.getItem('ncu_processing')) {
+      localStorage.setItem('ncu_processing', 'true');
+      const processNCULogin = async () => {
+        try {
+          const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+          window.history.replaceState({path: newUrl}, '', newUrl);
+          
+          const res = await api.post('/auth/ncu-login/', { 
+            code, 
+            redirect_uri: newUrl 
+          });
+          
+          localStorage.setItem('refresh_token', res.data.refresh);
+          login(res.data.access, res.data.user);
+        } catch (err) {
+          console.error('NCU login error:', err);
+          setError('中央大學 Portal 登入發生錯誤');
+        } finally {
+          localStorage.removeItem('ncu_processing');
+        }
+      };
+      processNCULogin();
+    }
+  }, [searchParams, isLoggedIn, login]);
+
   const handleSendVerification = async () => {
     const emailToVerify = role === 'student' ? formData.school_email : formData.email;
     if (!emailToVerify) {
@@ -205,6 +232,18 @@ function Auth() {
 
   const handleGoogleLogin = () => {
     googleLogin();
+  };
+
+  const handleNCULogin = () => {
+    const clientId = import.meta.env.VITE_NCU_CLIENT_ID;
+    if (!clientId) {
+      alert("NCU Client ID is missing.");
+      return;
+    }
+    const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    const scope = 'identifier chinese-name english-name student-id email';
+    const authUrl = `https://portal.ncu.edu.tw/oauth2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
+    window.location.href = authUrl;
   };
 
   return (
@@ -392,7 +431,7 @@ function Auth() {
               <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>或</span>
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }}></div>
             </div>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 onClick={handleLineLogin}
@@ -456,6 +495,35 @@ function Auth() {
                   <path fill="none" d="M0 0h48v48H0z"/>
                 </svg>
                 <span>{isLogin ? 'Gmail 登入' : 'Gmail 註冊 / 登入'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNCULogin}
+                style={{
+                  flex: '1 1 120px',
+                  backgroundColor: '#0F265C',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 3L2 12H5V20H19V12H22L12 3Z" fill="currentColor"/>
+                </svg>
+                <span>{isLogin ? 'NCU 登入' : 'NCU 註冊 / 登入'}</span>
               </button>
             </div>
           </div>

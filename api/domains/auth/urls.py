@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     RegisterView, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, 
-    SendVerificationView, VerifyEmailView, BindEmailView, LineLoginView, GoogleLoginView, MergeGhostAccountView,
+    SendVerificationView, VerifyEmailView, BindEmailView, LineLoginView, GoogleLoginView, NCULoginView, MergeGhostAccountView,
     RecalculateExpView, AdminStatsView, SyncUserExpView, UserAvatarUploadView,
     AdminInviteTokenView, ClaimBadgeView
 )
@@ -16,6 +16,7 @@ urlpatterns = [
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('line-login/', LineLoginView.as_view(), name='line_login'),
     path('google-login/', GoogleLoginView.as_view(), name='google_login'),
+    path('ncu-login/', NCULoginView.as_view(), name='ncu_login'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('send-verification/', SendVerificationView.as_view(), name='send_verification'),
     path('verify-email/', VerifyEmailView.as_view(), name='verify_email'),

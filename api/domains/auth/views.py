@@ -290,6 +290,106 @@ class GoogleLoginView(APIView):
             'user': UserMeSerializer(user).data
         })
 
+class NCULoginView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        import string
+        code = request.data.get('code')
+        redirect_uri = request.data.get('redirect_uri')
+        
+        if not code or not redirect_uri:
+            return Response({'error': '缺少 code 或 redirect_uri'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        client_id = os.environ.get('NCU_CLIENT_ID')
+        client_secret = os.environ.get('NCU_CLIENT_SECRET')
+        
+        if not client_id or not client_secret:
+            return Response({'error': 'NCU Client configuration missing'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        # 1. Exchange code for access_token
+        token_url = 'https://portal.ncu.edu.tw/oauth2/token'
+        
+        auth_str = f"{client_id}:{client_secret}"
+        import base64
+        b64_auth_str = base64.b64encode(auth_str.encode()).decode()
+        
+        headers = {
+            'Authorization': f'Basic {b64_auth_str}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        data = {
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': redirect_uri
+        }
+        
+        token_resp = requests.post(token_url, headers=headers, data=data)
+        
+        if token_resp.status_code != 200:
+            return Response({'error': f'Token exchange failed: {token_resp.text}'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        token_data = token_resp.json()
+        access_token = token_data.get('access_token')
+        
+        if not access_token:
+            return Response({'error': 'Could not get access_token from NCU'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # 2. Get user info
+        info_url = 'https://portal.ncu.edu.tw/apis/oauth/v1/info'
+        info_headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Accept': 'application/json'
+        }
+        
+        info_resp = requests.get(info_url, headers=info_headers)
+        
+        if info_resp.status_code != 200:
+            return Response({'error': 'Failed to get user info from NCU'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        profile_data = info_resp.json()
+        
+        student_id = profile_data.get('student-id')
+        identifier = profile_data.get('identifier')
+        chinese_name = profile_data.get('chinese-name', '')
+        email = profile_data.get('email', '')
+        
+        if not identifier:
+            return Response({'error': 'NCU profile missing identifier'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        campus_id = student_id if student_id else identifier
+        
+        # 3. Find or Create User
+        user = User.objects.filter(campus_id=campus_id).first()
+        
+        if not user:
+            user = User.objects.create(
+                campus_id=campus_id,
+                username=chinese_name or campus_id
+            )
+            
+            random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
+            from api.models import UserProfile
+            UserProfile.objects.create(user=user, nickname=random_nickname)
+            
+            if email:
+                user.email = email
+                user.email_verified = True
+                user.save(update_fields=['email', 'email_verified'])
+                
+        # Generate JWT for the user
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserMeSerializer(user).data
+        })
+
+
 class SyncUserExpView(APIView):
     permission_classes = [IsAuthenticated]
     
