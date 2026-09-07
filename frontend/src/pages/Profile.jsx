@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw, Camera, Calendar, Users, Edit2 } from 'lucide-react';
+import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw, Camera, Calendar, Users, Edit2, Check, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';
@@ -30,6 +30,10 @@ function Profile() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [editNicknameValue, setEditNicknameValue] = useState('');
+  const [isSavingNickname, setIsSavingNickname] = useState(false);
 
   const handleAvatarClick = () => {
     if (fileInputRef.current) {
@@ -221,10 +225,37 @@ function Profile() {
               <div className={styles.nameSection}>
                 <div className={styles.nameRow}>
                   <div className={styles.nicknameWrapper}>
-                    <h1 className={styles.nickname}>{userData?.nickname || 'NCU User'}</h1>
-                    <button className={styles.editNicknameBtn} onClick={handleEditNickname} title="修改暱稱">
-                      <Edit2 size={18} />
-                    </button>
+                    {isEditingNickname ? (
+                      <div className={styles.inlineEditContainer}>
+                        <input
+                          type="text"
+                          value={editNicknameValue}
+                          onChange={(e) => setEditNicknameValue(e.target.value)}
+                          className={styles.inlineEditInput}
+                          placeholder="新的暱稱..."
+                          autoFocus
+                          maxLength={50}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveNickname();
+                            if (e.key === 'Escape') handleCancelEditNickname();
+                          }}
+                          disabled={isSavingNickname}
+                        />
+                        <button className={`${styles.inlineActionBtn} ${styles.inlineSaveBtn}`} onClick={handleSaveNickname} disabled={isSavingNickname} title="儲存 (Enter)">
+                          {isSavingNickname ? <RefreshCw size={18} className={styles.spin} /> : <Check size={18} />}
+                        </button>
+                        <button className={`${styles.inlineActionBtn} ${styles.inlineCancelBtn}`} onClick={handleCancelEditNickname} disabled={isSavingNickname} title="取消 (Esc)">
+                          <X size={18} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <h1 className={styles.nickname}>{userData?.nickname || 'NCU User'}</h1>
+                        <button className={styles.editNicknameBtn} onClick={handleEditNickname} title="修改暱稱">
+                          <Edit2 size={18} />
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   {/* 身分標章 */}
