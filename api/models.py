@@ -49,6 +49,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     nickname = models.CharField(max_length=50, unique=True, verbose_name="登入者代碼")
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="大頭貼")
+    nickname_updated_at = models.DateTimeField(null=True, blank=True, verbose_name="上次修改暱稱時間")
     
     def __str__(self):
         return self.nickname

@@ -674,7 +674,7 @@ def get_rules_flex(frontend_url):
                     "contents": [
                         {
                             "type": "text",
-                            "text": "✏️ 設定專屬暱稱 (限一次)",
+                            "text": "✏️ 設定專屬暱稱 (每5分鐘可改)",
                             "weight": "bold",
                             "color": "#6C5CE7",
                             "size": "md"

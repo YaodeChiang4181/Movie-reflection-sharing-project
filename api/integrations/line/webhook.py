@@ -175,10 +175,6 @@ def handle_message(event):
             import unicodedata
             new_nickname = unicodedata.normalize('NFKC', parts[1].strip())
             
-            if not re.match(r'^User_[A-Za-z0-9]{6}$', user.profile.nickname):
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 您已經設定過專屬暱稱了，每位使用者只能設定一次喔！"))
-                return
-                
             if len(new_nickname) > 50:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 暱稱太長囉，請限制在 50 個字元以內！"))
                 return
@@ -187,7 +183,19 @@ def handle_message(event):
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"❌ 暱稱「{new_nickname}」已經被其他人使用囉，換一個試試看吧！"))
                 return
                 
+            if user.profile.nickname_updated_at:
+                from django.utils import timezone
+                time_diff = timezone.now() - user.profile.nickname_updated_at
+                if time_diff.total_seconds() < 300: # 5 minutes
+                    remaining = int(300 - time_diff.total_seconds())
+                    minutes = remaining // 60
+                    seconds = remaining % 60
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"❌ 更改太頻繁囉，請等候 {minutes} 分 {seconds} 秒後再試！"))
+                    return
+                    
+            from django.utils import timezone
             user.profile.nickname = new_nickname
+            user.profile.nickname_updated_at = timezone.now()
             user.profile.save()
             
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')

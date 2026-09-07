@@ -794,3 +794,43 @@ class ClaimBadgeView(APIView):
             response_data['user'] = UserMeSerializer(user).data
             
         return Response(response_data)
+
+class UpdateNicknameView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def patch(self, request):
+        from django.utils import timezone
+        
+        new_nickname = request.data.get('nickname')
+        if not new_nickname:
+            return Response({'error': 'Nickname is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        new_nickname = new_nickname.strip()
+        if len(new_nickname) > 50:
+            return Response({'error': 'Nickname must be less than 50 characters'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user = request.user
+        
+        # Check if nickname is the same
+        if user.profile.nickname == new_nickname:
+            return Response({'message': 'Nickname unchanged'}, status=status.HTTP_200_OK)
+            
+        # Check if nickname already exists
+        from api.models import UserProfile
+        if UserProfile.objects.filter(nickname=new_nickname).exclude(user=user).exists():
+            return Response({'error': '暱稱已經被其他人使用囉，換一個試試看吧！'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Check cooldown
+        if user.profile.nickname_updated_at:
+            time_diff = timezone.now() - user.profile.nickname_updated_at
+            if time_diff.total_seconds() < 300: # 5 minutes
+                remaining = int(300 - time_diff.total_seconds())
+                minutes = remaining // 60
+                seconds = remaining % 60
+                return Response({'error': f'更改太頻繁囉，請等候 {minutes} 分 {seconds} 秒後再試！'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        user.profile.nickname = new_nickname
+        user.profile.nickname_updated_at = timezone.now()
+        user.profile.save()
+        
+        return Response({'message': '暱稱修改成功！', 'nickname': new_nickname}, status=status.HTTP_200_OK)

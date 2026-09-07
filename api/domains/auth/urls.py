@@ -5,7 +5,7 @@ from .views import (
     RegisterView, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, 
     SendVerificationView, VerifyEmailView, BindEmailView, LineLoginView, GoogleLoginView, NCULoginView, MergeGhostAccountView,
     RecalculateExpView, AdminStatsView, SyncUserExpView, UserAvatarUploadView,
-    AdminInviteTokenView, ClaimBadgeView
+    AdminInviteTokenView, ClaimBadgeView, UpdateNicknameView
 )
 
 router = DefaultRouter()
@@ -23,6 +23,7 @@ urlpatterns = [
     path('bind-email/', BindEmailView.as_view(), name='bind_email'),
     path('sync-exp/', SyncUserExpView.as_view(), name='sync_exp'),
     path('avatar/', UserAvatarUploadView.as_view(), name='user_avatar_upload'),
+    path('update-nickname/', UpdateNicknameView.as_view(), name='update_nickname'),
     path('admin/merge-ghost/', MergeGhostAccountView.as_view(), name='admin_merge_ghost'),
     path('admin/recalculate-exp/', RecalculateExpView.as_view(), name='admin_recalculate_exp'),
     path('admin/stats/', AdminStatsView.as_view(), name='admin_stats'),

@@ -2,6 +2,7 @@ import urllib.request
 import urllib.parse
 import json
 import random
+import re
 from django.conf import settings
 from django.utils import timezone
 from django.core.cache import cache
@@ -29,42 +30,82 @@ GENRE_MAP = {
     37: "西部"
 }
 
-def fetch_movie_genres(movie_title):
+def _search_tmdb(movie_title_raw):
     """
-    Fetch up to 5 genre tags from TMDB for a given movie title.
-    Returns a list of strings (genre names).
+    Helper to search TMDB for a movie or TV show.
+    Handles year extraction and case-insensitive exact matching.
     """
     api_key = getattr(settings, 'TMDB_API_KEY', '')
     if not api_key:
-        return []
+        return None
+
+    # 1. 嘗試從標題中提取年份 (如 1997 或 2026)
+    year_match = re.search(r'\b(19\d{2}|20\d{2})\b', movie_title_raw)
+    year = None
+    search_query = movie_title_raw
+    if year_match:
+        year = year_match.group(1)
+        search_query = re.sub(r'\b' + year + r'\b', '', movie_title_raw).strip()
+        search_query = re.sub(r'[\(\)\[\]]', '', search_query).strip() 
+        
+    if not search_query:
+        search_query = movie_title_raw
 
     try:
-        query = urllib.parse.quote(movie_title)
-        url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&language=zh-TW&query={query}&page=1"
+        query = urllib.parse.quote(search_query)
+        # 使用 search/multi 來同時搜尋電影與影集 (miniseries)
+        url = f"https://api.themoviedb.org/3/search/multi?api_key={api_key}&language=zh-TW&query={query}&page=1"
         
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=5) as response:
             data = json.loads(response.read().decode('utf-8'))
             
-            if data.get('results') and len(data['results']) > 0:
-                best_match = data['results'][0]
-                for result in data['results']:
-                    if result.get('title') == movie_title or result.get('original_title') == movie_title:
-                        best_match = result
-                        break
+            if data.get('results'):
+                # 排除人物
+                valid_results = [r for r in data['results'] if r.get('media_type') in ['movie', 'tv']]
+                if not valid_results:
+                    return None
+                
+                # 先按 vote_count 排序，相同名稱時優先選評分人數較多的 (避免抓到假的、低知名度的項目)
+                valid_results.sort(key=lambda x: x.get('vote_count') or 0, reverse=True)
+                    
+                best_match = None
+                
+                if year:
+                    # 如果有指定年份，尋找年份相符的項目
+                    for result in valid_results:
+                        release_date = result.get('release_date') or result.get('first_air_date') or ''
+                        if release_date.startswith(year):
+                            best_match = result
+                            break
+                    if not best_match:
+                        best_match = valid_results[0]
+                else:
+                    # 尋找完全符合名稱的項目 (大小寫不拘)
+                    for result in valid_results:
+                        t1 = (result.get('title') or result.get('name') or '').upper()
+                        t2 = (result.get('original_title') or result.get('original_name') or '').upper()
+                        q_upper = search_query.upper()
+                        if t1 == q_upper or t2 == q_upper:
+                            best_match = result
+                            break
+                    if not best_match:
+                        best_match = valid_results[0]
                         
-                genre_ids = best_match.get('genre_ids', [])
-                
-                # Map genre IDs to names
-                genres = [GENRE_MAP[gid] for gid in genre_ids if gid in GENRE_MAP]
-                return genres[:5]
-                
+                return best_match
     except Exception as e:
-        # In case of any error (network, TMDB changes, etc), return empty list 
-        # so it doesn't break the review creation process
-        print(f"TMDB Fetch Error: {e}")
-        pass
-        
+        print(f"TMDB Search Error: {e}")
+    return None
+
+def fetch_movie_genres(movie_title):
+    """
+    Fetch up to 5 genre tags from TMDB for a given movie title.
+    Returns a list of strings (genre names).
+    """
+    best_match = _search_tmdb(movie_title)
+    if best_match:
+        genre_ids = best_match.get('genre_ids', [])
+        return [GENRE_MAP[gid] for gid in genre_ids if gid in GENRE_MAP][:5]
     return []
 
 def fetch_movie_metadata(movie_title):
@@ -72,41 +113,20 @@ def fetch_movie_metadata(movie_title):
     Fetch TMDB metadata (id, original_title, genres, poster) for a given movie title.
     Returns a dict or None.
     """
-    api_key = getattr(settings, 'TMDB_API_KEY', '')
-    if not api_key:
-        return None
-
-    try:
-        query = urllib.parse.quote(movie_title)
-        url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&language=zh-TW&query={query}&page=1"
+    best_match = _search_tmdb(movie_title)
+    if best_match:
+        genre_ids = best_match.get('genre_ids', [])
+        genres = [GENRE_MAP[gid] for gid in genre_ids if gid in GENRE_MAP][:5]
         
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode('utf-8'))
-            
-            if data.get('results') and len(data['results']) > 0:
-                best_match = data['results'][0]
-                for result in data['results']:
-                    if result.get('title') == movie_title or result.get('original_title') == movie_title:
-                        best_match = result
-                        break
-
-                genre_ids = best_match.get('genre_ids', [])
-                genres = [GENRE_MAP[gid] for gid in genre_ids if gid in GENRE_MAP][:5]
-                
-                poster_path = best_match.get('poster_path')
-                poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
-                
-                return {
-                    'tmdb_id': best_match.get('id'),
-                    'original_title': best_match.get('original_title'),
-                    'genres': genres,
-                    'poster_url': poster_url,
-                }
-    except Exception as e:
-        print(f"TMDB Fetch Metadata Error: {e}")
-        pass
+        poster_path = best_match.get('poster_path')
+        poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
         
+        return {
+            'tmdb_id': best_match.get('id'),
+            'original_title': best_match.get('original_title') or best_match.get('original_name'),
+            'genres': genres,
+            'poster_url': poster_url,
+        }
     return None
 
 def get_or_create_movie(movie_title):

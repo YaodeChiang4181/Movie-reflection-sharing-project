@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw, Camera, Calendar, Users } from 'lucide-react';
+import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw, Camera, Calendar, Users, Edit2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';
@@ -34,6 +34,15 @@ function Profile() {
   const handleAvatarClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const res = await api.get('users/me/');
+      setUserData(res.data);
+    } catch (err) {
+      console.error("Failed to fetch user data", err);
     }
   };
 
@@ -187,7 +196,12 @@ function Profile() {
 
               <div className={styles.nameSection}>
                 <div className={styles.nameRow}>
-                  <h1 className={styles.nickname}>{userData?.nickname || 'NCU User'}</h1>
+                  <div className={styles.nicknameWrapper}>
+                    <h1 className={styles.nickname}>{userData?.nickname || 'NCU User'}</h1>
+                    <button className={styles.editNicknameBtn} onClick={handleEditNickname} title="修改暱稱">
+                      <Edit2 size={18} />
+                    </button>
+                  </div>
 
                   {/* 身分標章 */}
                   <div className={styles.badgeTag} style={{ '--badge-color': badge.color }}>
