@@ -112,7 +112,18 @@ function Events() {
 
       <div className={styles.tracksContainer}>
         {isLoading ? (
-          <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            {[1, 2].map(section => (
+              <div key={section}>
+                <div className="skeleton skeleton-title" style={{ width: '150px', height: '2rem', marginBottom: '16px' }} />
+                <div style={{ display: 'flex', gap: '16px', overflowX: 'hidden' }}>
+                  {[1, 2, 3, 4].map(card => (
+                    <div key={card} className="skeleton skeleton-card" style={{ width: '280px', height: '360px', flexShrink: 0 }} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : !hasAnyEvents ? (
           <div className="glass" style={{ padding: '60px', textAlign: 'center', borderRadius: 'var(--radius-lg)' }}>
             <Ticket size={64} style={{ color: 'var(--accent-primary)', marginBottom: '20px', opacity: 0.8 }} />

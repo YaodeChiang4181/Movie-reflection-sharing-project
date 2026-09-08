@@ -181,8 +181,42 @@ function Profile() {
 
   if (isLoading) {
     return (
-      <div className={`container ${styles.pageWrapper}`} style={{ textAlign: 'center', paddingTop: '100px' }}>
-        <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
+      <div className={`container ${styles.pageWrapper}`} style={{ paddingTop: '80px', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        {/* Profile Card Skeleton */}
+        <div className="glass" style={{ padding: '40px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+            <div className="skeleton" style={{ width: '120px', height: '120px', borderRadius: '50%' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
+              <div className="skeleton skeleton-title" style={{ width: '200px', height: '2rem', margin: 0 }} />
+              <div className="skeleton skeleton-text" style={{ width: '150px', height: '1.2rem', margin: 0 }} />
+              <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+                <div className="skeleton skeleton-text" style={{ width: '80px', height: '2rem', borderRadius: 'var(--radius-pill)', margin: 0 }} />
+                <div className="skeleton skeleton-text" style={{ width: '80px', height: '2rem', borderRadius: 'var(--radius-pill)', margin: 0 }} />
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '24px', marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px' }}>
+            <div className="skeleton skeleton-text" style={{ width: '100px', height: '3rem', margin: 0 }} />
+            <div className="skeleton skeleton-text" style={{ width: '100px', height: '3rem', margin: 0 }} />
+            <div className="skeleton skeleton-text" style={{ width: '100px', height: '3rem', margin: 0 }} />
+          </div>
+        </div>
+        
+        {/* Tabs Skeleton */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+          <div className="skeleton skeleton-text" style={{ width: '120px', height: '3rem', borderRadius: 'var(--radius-pill)' }} />
+          <div className="skeleton skeleton-text" style={{ width: '120px', height: '3rem', borderRadius: 'var(--radius-pill)' }} />
+        </div>
+
+        {/* Reviews List Skeleton */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {[1, 2, 3].map(n => (
+            <div key={n} className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="skeleton skeleton-text" style={{ width: '150px', height: '1.2rem' }} />
+              <div className="skeleton skeleton-text" style={{ width: '100%', height: '4rem' }} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

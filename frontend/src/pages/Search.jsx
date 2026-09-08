@@ -168,7 +168,18 @@ function Search() {
       )}
 
       {isLoading ? (
-        <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>載入中...</p>
+        <div style={{ display: 'grid', gap: '24px' }}>
+          {[1, 2, 3].map(n => (
+            <div key={n} className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)', display: 'flex', gap: '24px' }}>
+              <div className="skeleton skeleton-poster" style={{ width: '80px', height: '120px' }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="skeleton skeleton-title" style={{ width: '40%', height: '1.5rem', margin: 0 }} />
+                <div className="skeleton skeleton-text" style={{ width: '20%', height: '1rem', margin: 0 }} />
+                <div className="skeleton skeleton-text" style={{ width: '30%', height: '1.5rem', borderRadius: 'var(--radius-pill)', marginTop: '8px' }} />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : hasSearched && results.length === 0 ? (
         <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
           <h2 style={{ color: 'var(--text-primary)' }}>未發現相關心得</h2>

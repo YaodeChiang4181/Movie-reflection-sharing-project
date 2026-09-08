@@ -84,8 +84,18 @@ function MovieDetail() {
 
   if (isLoading) {
     return (
-      <div className={`container ${styles.pageWrapper}`} style={{ textAlign: 'center', paddingTop: '100px' }}>
-        <p style={{ color: 'var(--text-secondary)' }}>載入中...</p>
+      <div className={`container ${styles.pageWrapper}`} style={{ paddingTop: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', minHeight: '100vh' }}>
+        <div className="skeleton skeleton-title" style={{ width: '300px', height: '3rem', margin: 0 }} />
+        <div className="skeleton skeleton-poster" style={{ width: '220px', height: '330px', borderRadius: '16px' }} />
+        <div className="skeleton skeleton-text" style={{ width: '200px', height: '1.5rem' }} />
+        <div style={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '32px' }}>
+          {[1, 2, 3].map(n => (
+            <div key={n} className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="skeleton skeleton-text" style={{ width: '150px', height: '1.2rem' }} />
+              <div className="skeleton skeleton-text" style={{ width: '100%', height: '4rem' }} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -176,7 +186,14 @@ function MovieDetail() {
             )}
 
             {isReviewsLoading ? (
-              <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '40px 0' }}>載入中...</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[1, 2, 3].map(n => (
+                  <div key={n} className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="skeleton skeleton-text" style={{ width: '150px', height: '1.2rem' }} />
+                    <div className="skeleton skeleton-text" style={{ width: '100%', height: '4rem' }} />
+                  </div>
+                ))}
+              </div>
             ) : reviews.length > 0 ? (
               <>
                 {/* 分為三區塊: 熱門、一般、簡易分數 */}
