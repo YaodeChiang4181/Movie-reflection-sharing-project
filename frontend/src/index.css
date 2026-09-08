@@ -1,18 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Monochromatic Amethyst Palette */
-  --bg-primary: #1A1625;
-  --bg-secondary: #2D263B;
-  --bg-tertiary: #3A314D;
+  /* Royal Velvet & Gold Palette */
+  --bg-primary: #140F2D;
+  --bg-secondary: #231B4D;
+  --bg-tertiary: #2F2466;
   
-  --text-primary: #E9D8FD;
-  --text-secondary: #C4B5FD;
-  --text-muted: #A78BFA;
+  --text-primary: #F8F7FF;
+  --text-secondary: #B8B0DA;
+  --text-muted: #796FA6;
   
-  --accent-primary: #9F7AEA; /* Amethyst Purple */
-  --accent-hover: #805AD5;
-  --accent-glow: rgba(159, 122, 234, 0.4);
+  --accent-primary: #F5A623; /* Gold */
+  --accent-hover: #E59610; /* Darker Gold */
+  --accent-glow: rgba(245, 166, 35, 0.4);
   
   --danger: #ef4444;
   --danger-hover: #dc2626;
@@ -43,7 +43,7 @@
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-primary);
-  background-image: radial-gradient(ellipse 100% 100% at top center, rgba(159, 122, 234, 0.45) 0%, transparent 100%);
+  background-image: radial-gradient(ellipse 100% 100% at top center, rgba(124, 58, 237, 0.45) 0%, transparent 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.6;
