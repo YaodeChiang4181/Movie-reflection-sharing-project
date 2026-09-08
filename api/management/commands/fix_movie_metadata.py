@@ -16,6 +16,14 @@ class Command(BaseCommand):
             meta = fetch_movie_metadata(movie.title)
             if meta:
                 needs_update = False
+                
+                # Check localized title
+                localized_title = meta.get('localized_title')
+                if localized_title and movie.title != localized_title:
+                    self.stdout.write(self.style.WARNING(f"  -> Updating title from '{movie.title}' to '{localized_title}'"))
+                    movie.title = localized_title
+                    needs_update = True
+                    
                 if movie.original_title != meta.get('original_title'):
                     self.stdout.write(self.style.WARNING(f"  -> Updating original_title from '{movie.original_title}' to '{meta.get('original_title')}'"))
                     movie.original_title = meta.get('original_title')

@@ -124,6 +124,7 @@ def fetch_movie_metadata(movie_title):
         return {
             'tmdb_id': best_match.get('id'),
             'original_title': best_match.get('original_title') or best_match.get('original_name'),
+            'localized_title': best_match.get('title') or best_match.get('name'),
             'genres': genres,
             'poster_url': poster_url,
         }
@@ -138,7 +139,12 @@ def get_or_create_movie(movie_title):
     tmdb_genres = tmdb_meta['genres'] if tmdb_meta else []
     
     movie_defaults = {'director': 'Unknown', 'release_year': timezone.now().year}
+    
+    final_title = movie_title
+    
     if tmdb_meta:
+        if tmdb_meta.get('localized_title'):
+            final_title = tmdb_meta['localized_title']
         if tmdb_meta.get('original_title'):
             movie_defaults['original_title'] = tmdb_meta['original_title']
         if tmdb_meta.get('tmdb_id'):
@@ -146,8 +152,23 @@ def get_or_create_movie(movie_title):
         if tmdb_meta.get('poster_url'):
             movie_defaults['poster_url'] = tmdb_meta['poster_url']
             
+    # Try to find existing movie by tmdb_id to avoid duplicates from different query inputs
+    if tmdb_meta and tmdb_meta.get('tmdb_id'):
+        movie = Movie.objects.filter(tmdb_id=tmdb_meta['tmdb_id']).first()
+        if movie:
+            updated = False
+            if movie.title != final_title:
+                movie.title = final_title
+                updated = True
+            if 'original_title' in movie_defaults and movie.original_title != movie_defaults['original_title']:
+                movie.original_title = movie_defaults['original_title']
+                updated = True
+            if updated:
+                movie.save(update_fields=['title', 'original_title'])
+            return movie, False, tmdb_genres
+            
     movie, created = Movie.objects.get_or_create(
-        title=movie_title,
+        title=final_title,
         defaults=movie_defaults
     )
     return movie, created, tmdb_genres
