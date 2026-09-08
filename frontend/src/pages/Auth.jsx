@@ -49,12 +49,13 @@ function Auth() {
 
   useEffect(() => {
     const code = searchParams.get('code');
-    const isNCU = searchParams.get('ncu') === '1';
+    const state = searchParams.get('state');
+    const isNCU = state === 'ncu';
     if (code && isNCU && !isLoggedIn && !localStorage.getItem('ncu_processing')) {
       localStorage.setItem('ncu_processing', 'true');
       const processNCULogin = async () => {
         try {
-          const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname + "?ncu=1";
+          const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
           const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
           window.history.replaceState({path: newUrl}, '', newUrl);
           
@@ -242,9 +243,9 @@ function Auth() {
       alert("NCU Client ID is missing.");
       return;
     }
-    const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname + "?ncu=1";
+    const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
     const scope = 'identifier chinese-name english-name student-id email';
-    const authUrl = `https://portal.ncu.edu.tw/oauth2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
+    const authUrl = `https://portal.ncu.edu.tw/oauth2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=ncu`;
     window.location.href = authUrl;
   };
 
