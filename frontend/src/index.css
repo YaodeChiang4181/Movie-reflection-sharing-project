@@ -1,18 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Premium Dark Mode Palette */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #141414;
-  --bg-tertiary: #1f1f1f;
+  /* Monochromatic Amethyst Palette */
+  --bg-primary: #1A1625;
+  --bg-secondary: #2D263B;
+  --bg-tertiary: #3A314D;
   
-  --text-primary: #f5f5f5;
-  --text-secondary: #a3a3a3;
-  --text-muted: #737373;
+  --text-primary: #E9D8FD;
+  --text-secondary: #C4B5FD;
+  --text-muted: #A78BFA;
   
-  --accent-primary: #8b5cf6; /* Vibrant Purple */
-  --accent-hover: #7c3aed;
-  --accent-glow: rgba(139, 92, 246, 0.4);
+  --accent-primary: #9F7AEA; /* Amethyst Purple */
+  --accent-hover: #805AD5;
+  --accent-glow: rgba(159, 122, 234, 0.4);
   
   --danger: #ef4444;
   --danger-hover: #dc2626;
@@ -43,7 +43,7 @@
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-primary);
-  background-image: radial-gradient(ellipse 100% 100% at top center, rgba(139, 92, 246, 0.45) 0%, transparent 100%);
+  background-image: radial-gradient(ellipse 100% 100% at top center, rgba(159, 122, 234, 0.45) 0%, transparent 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.6;
