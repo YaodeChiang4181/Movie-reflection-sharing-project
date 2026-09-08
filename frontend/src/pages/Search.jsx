@@ -29,6 +29,18 @@ function Search() {
 
   useEffect(() => {
     const fetchLatestTags = async () => {
+      const CACHE_KEY = 'recommended_tags';
+      const CACHE_TIME_KEY = 'recommended_tags_time';
+      const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
+      const cachedTags = localStorage.getItem(CACHE_KEY);
+      const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+
+      if (cachedTags && cachedTime && (Date.now() - parseInt(cachedTime) < CACHE_DURATION)) {
+        setRecommendedTags(JSON.parse(cachedTags));
+        return;
+      }
+
       try {
         const res = await api.get('reviews/');
         const reviewsList = res.data.results || res.data;
@@ -44,7 +56,10 @@ function Search() {
         
         const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
         if (sortedTags.length > 0) {
-          setRecommendedTags(sortedTags.slice(0, 4));
+          const topTags = sortedTags.slice(0, 4);
+          setRecommendedTags(topTags);
+          localStorage.setItem(CACHE_KEY, JSON.stringify(topTags));
+          localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
         }
       } catch (err) {
         console.error("Failed to fetch tags", err);
@@ -109,7 +124,7 @@ function Search() {
       minHeight: '100vh'
     }}>
       <header style={{ marginBottom: '40px', textAlign: 'center' }}>
-        <h1 style={{ marginBottom: '24px' }}>電影心得精準搜尋</h1>
+        <h1 style={{ marginBottom: '24px' }}>精準搜尋...</h1>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0', maxWidth: '600px', margin: '0 auto' }}>
           <input 
             type="text" 
