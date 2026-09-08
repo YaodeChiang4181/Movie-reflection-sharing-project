@@ -225,7 +225,17 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
               !activePartner ? (
                 // 對話列表
                 isLoading ? (
-                  <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>載入中...</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {[1, 2, 3].map(n => (
+                      <div key={n} style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <div className="skeleton skeleton-text" style={{ width: '100px', height: '1.2rem', margin: 0 }} />
+                           <div className="skeleton skeleton-text" style={{ width: '50px', height: '0.8rem', margin: 0 }} />
+                        </div>
+                        <div className="skeleton skeleton-text" style={{ width: '80%', height: '1rem', margin: 0 }} />
+                      </div>
+                    ))}
+                  </div>
                 ) : conversations.length === 0 ? (
                   <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>目前沒有對話紀錄</div>
                 ) : (
@@ -286,7 +296,20 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
             )}
 
             {activeTab === 'notifications' && !activePartner && (
-              notifications.length === 0 ? (
+              isLoading ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {[1, 2, 3].map(n => (
+                      <div key={n} style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', gap: '12px' }}>
+                         <div className="skeleton" style={{ width: '16px', height: '16px', borderRadius: '50%' }} />
+                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                             <div className="skeleton skeleton-text" style={{ width: '90%', height: '1rem', margin: 0 }} />
+                             <div className="skeleton skeleton-text" style={{ width: '50%', height: '1rem', margin: 0 }} />
+                             <div className="skeleton skeleton-text" style={{ width: '60px', height: '0.8rem', margin: 0 }} />
+                         </div>
+                      </div>
+                    ))}
+                  </div>
+              ) : notifications.length === 0 ? (
                 <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>目前沒有新通知</div>
               ) : (
                 notifications.map(notif => (
