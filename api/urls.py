@@ -32,6 +32,12 @@ def fix_tmdb(request):
         meta = fetch_movie_metadata(movie.title)
         if meta:
             needs_update = False
+            
+            localized_title = meta.get('localized_title')
+            if localized_title and movie.title != localized_title:
+                movie.title = localized_title
+                needs_update = True
+                
             if movie.original_title != meta.get('original_title'):
                 movie.original_title = meta.get('original_title')
                 needs_update = True
@@ -41,7 +47,7 @@ def fix_tmdb(request):
                 needs_update = True
 
             if needs_update:
-                movie.save()
+                movie.save(update_fields=['title', 'original_title', 'poster_url'])
                 updated_count += 1
 
     return HttpResponse(f"Fix complete! Updated {updated_count} movies.")
