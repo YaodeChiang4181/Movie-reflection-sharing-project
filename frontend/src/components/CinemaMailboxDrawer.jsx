@@ -273,8 +273,9 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
                         }}>
                           {msg.content}
                         </div>
-                        <div style={{ fontSize: '0.625rem', color: '#64748b', marginTop: '4px', textAlign: isMe ? 'right' : 'left' }}>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <div style={{ fontSize: '0.625rem', color: '#64748b', marginTop: '4px', textAlign: isMe ? 'right' : 'left', display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', gap: '4px' }}>
+                          {isMe && msg.is_read && <span style={{ color: '#a78bfa' }}>已讀</span>}
+                          <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       </div>
                     );
