@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,6 +29,9 @@ function Auth() {
   const navigate = useNavigate();
   const { login, isLoggedIn } = useAuth();
 
+  // useRef 取代 localStorage flag，避免跨頁面残留卡住
+  const ncuProcessingRef = useRef(false);
+
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const redirectPath = searchParams.get('redirect') || location.state?.from?.pathname || '/';
@@ -51,12 +54,14 @@ function Auth() {
     const code = searchParams.get('code');
     const state = searchParams.get('state');
     const isNCU = state === 'ncu';
-    if (code && isNCU && !isLoggedIn && !localStorage.getItem('ncu_processing')) {
-      localStorage.setItem('ncu_processing', 'true');
+    // 移除 !isLoggedIn 條件：舊 session 導致 isLoggedIn=true 時 NCU 流程不會被跳過
+    // 改用 useRef 避免 localStorage flag 跨頁面残留
+    if (code && isNCU && !ncuProcessingRef.current) {
+      ncuProcessingRef.current = true;
       const processNCULogin = async () => {
         try {
           const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
-          // 先記下要跳轉的目標，再清除 URL（清除後 searchParams 會變，不能在之後再讀）
+          // 先記下要跳轉的目標，再清除 URL
           const targetPath = searchParams.get('redirect') || '/';
           setSearchParams({}, { replace: true });
           
@@ -67,19 +72,18 @@ function Auth() {
           
           localStorage.setItem('refresh_token', res.data.refresh);
           login(res.data.access, res.data.user);
-          // 主動 navigate，不依賴 isLoggedIn effect（避免時序不穩定）
           navigate(targetPath, { replace: true });
         } catch (err) {
           console.error('NCU login error:', err);
           const errorMsg = err.response?.data?.error || '中央大學 Portal 登入發生錯誤';
           setError(errorMsg);
         } finally {
-          localStorage.removeItem('ncu_processing');
+          ncuProcessingRef.current = false;
         }
       };
       processNCULogin();
     }
-  }, [searchParams, isLoggedIn, login]);
+  }, [searchParams, login]);
 
   const handleSendVerification = async () => {
     const emailToVerify = role === 'student' ? formData.school_email : formData.email;
