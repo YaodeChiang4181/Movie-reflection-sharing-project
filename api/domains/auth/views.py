@@ -314,19 +314,26 @@ class NCULoginView(APIView):
         import base64
         b64_auth_str = base64.b64encode(auth_str.encode()).decode()
         
+        # RFC 6749 Section 2.3：credentials 只能用一種方式傳送
+        # 只用 Authorization Basic Header，不在 Body 重複送 client_id/client_secret
         headers = {
             'Authorization': f'Basic {b64_auth_str}',
             'Accept': 'application/json',
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         
+        # Body 只送必要的 OAuth2 參數
         data = {
             'grant_type': 'authorization_code',
             'code': code,
             'redirect_uri': redirect_uri,
-            'client_id': client_id,
-            'client_secret': client_secret
         }
+        
+        # DEBUG：印出實際送出的 redirect_uri，方便與 NCU Portal 後台設定比對
+        print(f"================ NCU TOKEN REQUEST ================")
+        print(f"redirect_uri sent to NCU: {redirect_uri!r}")
+        print(f"code prefix: {code[:20]}...")
+        print(f"===================================================")
         
         try:
             token_resp = requests.post(token_url, headers=headers, data=data, timeout=10)
