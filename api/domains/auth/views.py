@@ -335,6 +335,9 @@ class NCULoginView(APIView):
         access_token = token_data.get('access_token')
         
         if not access_token:
+            print(f"================ NCU TOKEN ERROR ================")
+            print(f"Payload from NCU: {token_data}")
+            print(f"=================================================")
             return Response({'error': f'Could not get access_token from NCU. Details: {token_data}'}, status=status.HTTP_400_BAD_REQUEST)
             
         # 2. Get user info
