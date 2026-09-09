@@ -323,7 +323,9 @@ class NCULoginView(APIView):
         data = {
             'grant_type': 'authorization_code',
             'code': code,
-            'redirect_uri': redirect_uri
+            'redirect_uri': redirect_uri,
+            'client_id': client_id,
+            'client_secret': client_secret
         }
         
         token_resp = requests.post(token_url, headers=headers, data=data)
