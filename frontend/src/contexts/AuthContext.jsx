@@ -145,6 +145,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user_profile');
     setIsLoggedIn(false);
     setUserProfile(null);
+    if (window.liff && typeof window.liff.isLoggedIn === 'function' && window.liff.isLoggedIn()) {
+      window.liff.logout();
+    }
   };
 
   return (
