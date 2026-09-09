@@ -325,9 +325,11 @@ class NCULoginView(APIView):
             'client_secret': client_secret,
         }
         
-        # DEBUG：印出實際送出的 redirect_uri，方便與 NCU Portal 後台設定比對
+        # DEBUG：印出實際送出的參數，方便確認環境變數是否正確
         print(f"================ NCU TOKEN REQUEST ================")
         print(f"redirect_uri sent to NCU: {redirect_uri!r}")
+        print(f"client_id (first 20 chars): {client_id[:20]!r}")
+        print(f"client_secret length: {len(client_secret)} chars, ends with: ...{client_secret[-4:]!r}")
         print(f"code prefix: {code[:20]}...")
         print(f"auth method: body-only (no Basic header)")
         print(f"===================================================")
@@ -336,6 +338,9 @@ class NCULoginView(APIView):
             token_resp = requests.post(token_url, headers=headers, data=data, timeout=10)
         except Exception as e:
             return Response({'error': f'Cannot connect to NCU Portal token endpoint: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
+        
+        print(f"NCU token endpoint HTTP status: {token_resp.status_code}")
+        print(f"NCU token response body: {token_resp.text[:200]}")
         
         if token_resp.status_code != 200:
             return Response({'error': f'Token exchange failed: {token_resp.status_code} - {token_resp.text}'}, status=status.HTTP_400_BAD_REQUEST)
