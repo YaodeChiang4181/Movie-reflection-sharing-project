@@ -394,10 +394,11 @@ class NCULoginView(APIView):
         
         # 3. Find or Create User（碰撞=直接綁定，這是正確行為）
         try:
+            from api.models import UserProfile, UserIdentity
             user = User.objects.filter(campus_id=campus_id).first()
             
             if not user:
-                # 新帳號：一次性建立，避免多次 save
+                # 新帳號：一次性建立完整的校內使用者資料
                 user = User.objects.create(
                     campus_id=campus_id,
                     username=display_name,
@@ -405,20 +406,56 @@ class NCULoginView(APIView):
                     email_verified=bool(email)
                 )
                 
+                # 建立公開暱稱（UserProfile）
                 random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
-                from api.models import UserProfile
                 UserProfile.objects.create(user=user, nickname=random_nickname)
                 
-                print(f"Created new NCU user: campus_id={campus_id}")
+                # 建立校內身分表（UserIdentity）- 與手動註冊格式一致
+                # real_name 優先中文姓名，其次英文姓名，最後 campus_id
+                real_name = (chinese_name or english_name or campus_id)[:50]
+                school_email_val = email or f"{campus_id}@cc.ncu.edu.tw"
+                try:
+                    UserIdentity.objects.get_or_create(
+                        user=user,
+                        defaults={
+                            'real_name': real_name,
+                            'department': '中央大學',
+                            'school_email': school_email_val
+                        }
+                    )
+                except Exception as identity_err:
+                    # school_email unique 衝突時，略過（不讓登入因此失敗）
+                    print(f"UserIdentity create skipped (possibly email conflict): {identity_err}")
+                
+                print(f"Created new NCU user: campus_id={campus_id}, identity created")
             else:
-                # 已有帳號（campus_id 碰撞=正常綁定）：若原本無 email 則補上
+                # 已有帳號（campus_id 碰撞=正常綁定）
                 update_fields = []
+                # 若原本無 email，補上
                 if not user.email and email:
                     user.email = email
                     user.email_verified = True
                     update_fields.extend(['email', 'email_verified'])
                 if update_fields:
                     user.save(update_fields=update_fields)
+                
+                # 若 UserIdentity 不存在，補建立
+                if not UserIdentity.objects.filter(user=user).exists():
+                    real_name = (chinese_name or english_name or campus_id)[:50]
+                    school_email_val = email or f"{campus_id}@cc.ncu.edu.tw"
+                    try:
+                        UserIdentity.objects.get_or_create(
+                            user=user,
+                            defaults={
+                                'real_name': real_name,
+                                'department': '中央大學',
+                                'school_email': school_email_val
+                            }
+                        )
+                    except Exception as identity_err:
+                        print(f"UserIdentity patch skipped (possibly email conflict): {identity_err}")
+                    print(f"Patched UserIdentity for existing user: campus_id={campus_id}")
+                
                 print(f"Found existing user campus_id={campus_id}, binding NCU login.")
                     
         except Exception as e:
