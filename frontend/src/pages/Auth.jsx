@@ -56,8 +56,7 @@ function Auth() {
       const processNCULogin = async () => {
         try {
           const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
-          const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-          window.history.replaceState({path: newUrl}, '', newUrl);
+          setSearchParams({}, { replace: true });
           
           const res = await api.post('/auth/ncu-login/', { 
             code, 
