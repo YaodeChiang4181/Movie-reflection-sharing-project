@@ -33,7 +33,7 @@ class FeedView(APIView):
             if feed_type == 'movies':
                 # For movies only, sort by popularity
                 movies = movies.annotate(
-                    normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & ~Q(reviews__content=""))
+                    normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & Q(reviews__content__gt=""))
                 ).order_by('-normal_review_count', '-review_count', '-id')[:100]
             else:
                 movies = movies.order_by('-latest_review_time')[:100]

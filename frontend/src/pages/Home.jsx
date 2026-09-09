@@ -95,12 +95,16 @@ function Home() {
   const fetchHeroItems = async () => {
     try {
       // Fetch upcoming events and top movies simultaneously
-      const [eventsRes, moviesRes] = await Promise.all([
+      const results = await Promise.allSettled([
         api.get(`events/?status=UPCOMING`),
         api.get(`movies/`) // This endpoint returns movies sorted by popularity
       ]);
-      const upcomingEvents = eventsRes.data.results || eventsRes.data || [];
-      const topMovies = moviesRes.data.results || moviesRes.data || [];
+      
+      const eventsRes = results[0].status === 'fulfilled' ? results[0].value : null;
+      const moviesRes = results[1].status === 'fulfilled' ? results[1].value : null;
+
+      const upcomingEvents = (eventsRes && (eventsRes.data.results || eventsRes.data)) || [];
+      const topMovies = (moviesRes && (moviesRes.data.results || moviesRes.data)) || [];
       
       const mixed = [];
       if (upcomingEvents.length > 0) mixed.push({...upcomingEvents[0], feed_type: 'EVENT'});

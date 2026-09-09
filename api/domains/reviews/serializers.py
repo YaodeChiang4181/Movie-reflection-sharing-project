@@ -79,7 +79,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             # Calculate top 20 movies (same logic as MovieViewSet)
             top_movies = Movie.objects.annotate(
                 review_count=Count('reviews', filter=Q(reviews__is_deleted=False)),
-                normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & ~Q(reviews__content=""))
+                normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & Q(reviews__content__gt=""))
             ).order_by('-normal_review_count', '-review_count', '-id')[:20]
             top_20_ids = list(top_movies.values_list('id', flat=True))
             cache.set(cache_key, top_20_ids, 60 * 10) # Cache for 10 mins

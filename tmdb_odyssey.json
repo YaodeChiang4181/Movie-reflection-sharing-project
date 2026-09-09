@@ -1,0 +1,72 @@
+[
+  {
+    "media_type": "movie",
+    "id": 1368337,
+    "title": "奧德賽",
+    "original_title": "The Odyssey",
+    "release_date": "2026-07-15"
+  },
+  {
+    "media_type": "movie",
+    "id": 1698863,
+    "title": "奧德塞",
+    "original_title": "The Odyssey",
+    "release_date": "2026-07-03"
+  },
+  {
+    "media_type": "tv",
+    "id": 9687,
+    "title": "The Odyssey",
+    "original_title": "The Odyssey",
+    "release_date": "1997-05-18"
+  },
+  {
+    "media_type": "tv",
+    "id": 11121,
+    "title": "The Odyssey",
+    "original_title": "The Odyssey",
+    "release_date": "1992-03-09"
+  },
+  {
+    "media_type": "tv",
+    "id": 45571,
+    "title": "電影的故事",
+    "original_title": "The Story of Film: An Odyssey",
+    "release_date": "2011-09-03"
+  },
+  {
+    "media_type": "movie",
+    "id": 493416,
+    "title": "奧德賽：戰神傳奇",
+    "original_title": "Troy: The Odyssey",
+    "release_date": "2017-10-15"
+  },
+  {
+    "media_type": "person",
+    "id": 5802081,
+    "title": "The Human Odyssey",
+    "original_title": "The Human Odyssey",
+    "release_date": null
+  },
+  {
+    "media_type": "movie",
+    "id": 219197,
+    "title": "The Odyssey",
+    "original_title": "The Odyssey",
+    "release_date": "1991-04-08"
+  },
+  {
+    "media_type": "movie",
+    "id": 113094,
+    "title": "超人力霸王迪卡：最終聖戰",
+    "original_title": "ウルトラマンティガ THE FINAL ODYSSEY",
+    "release_date": "2000-03-08"
+  },
+  {
+    "media_type": "movie",
+    "id": 1731494,
+    "title": "The Odyssey: The Making of an Epic",
+    "original_title": "The Odyssey: The Making of an Epic",
+    "release_date": "2026-07-14"
+  }
+]

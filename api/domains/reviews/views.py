@@ -16,7 +16,7 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.annotate(
         avg_rating=Avg('reviews__rating', filter=Q(reviews__is_deleted=False)),
         review_count=Count('reviews', filter=Q(reviews__is_deleted=False)),
-        normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & ~Q(reviews__content=""))
+        normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & Q(reviews__content__gt=""))
     ).filter(review_count__gt=0).order_by('-normal_review_count', '-review_count', '-id')
     serializer_class = MovieSerializer
     permission_classes = (AllowAny,)
@@ -352,7 +352,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             if top_20_ids is None:
                 top_movies = Movie.objects.annotate(
                     review_count=Count('reviews', filter=Q(reviews__is_deleted=False)),
-                    normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & ~Q(reviews__content=""))
+                    normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & Q(reviews__content__gt=""))
                 ).order_by('-normal_review_count', '-review_count', '-id')[:20]
                 top_20_ids = list(top_movies.values_list('id', flat=True))
                 cache.set(cache_key, top_20_ids, 60 * 10)
