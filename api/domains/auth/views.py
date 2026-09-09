@@ -310,29 +310,26 @@ class NCULoginView(APIView):
         # 1. Exchange code for access_token
         token_url = 'https://portal.ncu.edu.tw/oauth2/token'
         
-        auth_str = f"{client_id}:{client_secret}"
-        import base64
-        b64_auth_str = base64.b64encode(auth_str.encode()).decode()
-        
-        # RFC 6749 Section 2.3：credentials 只能用一種方式傳送
-        # 只用 Authorization Basic Header，不在 Body 重複送 client_id/client_secret
+        # 測試組合 3：只用 Body 送 credentials（不用 Basic Auth Header）
+        # NCU Portal 的 OAuth 實作可能只接受 body-based 認證
         headers = {
-            'Authorization': f'Basic {b64_auth_str}',
             'Accept': 'application/json',
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         
-        # Body 只送必要的 OAuth2 參數
         data = {
             'grant_type': 'authorization_code',
             'code': code,
             'redirect_uri': redirect_uri,
+            'client_id': client_id,
+            'client_secret': client_secret,
         }
         
         # DEBUG：印出實際送出的 redirect_uri，方便與 NCU Portal 後台設定比對
         print(f"================ NCU TOKEN REQUEST ================")
         print(f"redirect_uri sent to NCU: {redirect_uri!r}")
         print(f"code prefix: {code[:20]}...")
+        print(f"auth method: body-only (no Basic header)")
         print(f"===================================================")
         
         try:
