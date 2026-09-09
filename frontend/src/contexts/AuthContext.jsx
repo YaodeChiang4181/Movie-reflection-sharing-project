@@ -80,6 +80,7 @@ export const AuthProvider = ({ children }) => {
       if (token && savedUser) {
         setIsLoggedIn(true);
         setUserProfile(JSON.parse(savedUser));
+        setIsAuthLoading(false);  // 立即標記完成，讓頁面不被 loading 卡住
         // 背景非同步更新最新資料
         fetchUserProfile(token);
       } else {
@@ -137,6 +138,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user_profile', JSON.stringify(user));
     setIsLoggedIn(true);
     setUserProfile(user);
+    setIsAuthLoading(false);  // 確保 login() 後 loading 狀態一定歸 false
   };
 
   const logout = () => {

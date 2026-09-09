@@ -56,6 +56,8 @@ function Auth() {
       const processNCULogin = async () => {
         try {
           const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
+          // 先記下要跳轉的目標，再清除 URL（清除後 searchParams 會變，不能在之後再讀）
+          const targetPath = searchParams.get('redirect') || '/';
           setSearchParams({}, { replace: true });
           
           const res = await api.post('/auth/ncu-login/', { 
@@ -65,6 +67,8 @@ function Auth() {
           
           localStorage.setItem('refresh_token', res.data.refresh);
           login(res.data.access, res.data.user);
+          // 主動 navigate，不依賴 isLoggedIn effect（避免時序不穩定）
+          navigate(targetPath, { replace: true });
         } catch (err) {
           console.error('NCU login error:', err);
           const errorMsg = err.response?.data?.error || '中央大學 Portal 登入發生錯誤';
