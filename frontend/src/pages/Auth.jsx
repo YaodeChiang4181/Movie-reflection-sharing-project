@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -30,7 +30,7 @@ function Auth() {
   const { login, isLoggedIn } = useAuth();
 
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const [searchParams, setSearchParams] = useSearchParams();
   const redirectPath = searchParams.get('redirect') || location.state?.from?.pathname || '/';
 
   useEffect(() => {

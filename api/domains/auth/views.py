@@ -362,14 +362,21 @@ class NCULoginView(APIView):
             
         profile_data = info_resp.json()
         
+        # === DEBUG：印出 NCU 回傳的所有欄位，方便 Render log 追蹤 ===
+        print(f"================ NCU PROFILE DATA ================")
+        print(f"Raw profile data: {profile_data}")
+        print(f"===================================================")
+        
         student_id = profile_data.get('student-id')
-        identifier = profile_data.get('identifier')
+        identifier = profile_data.get('identifier', '')
         chinese_name = profile_data.get('chinese-name', '')
+        english_name = profile_data.get('english-name', '')
         email = profile_data.get('email', '')
         
         if not identifier:
-            return Response({'error': 'NCU profile missing identifier'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f'NCU profile missing identifier. Full data: {profile_data}'}, status=status.HTTP_400_BAD_REQUEST)
             
+        # 決定 campus_id：優先用 student-id（純學號），否則用 identifier（可能帶 @domain）
         campus_id = student_id if student_id else identifier
         
         # 清理 campus_id，避免 PostgreSQL 因超過 9 字元而報錯 (DataError)
@@ -380,25 +387,45 @@ class NCULoginView(APIView):
         if campus_id and len(campus_id) > 9:
             campus_id = campus_id[:9]
         
-        # 3. Find or Create User
+        # 保護 username 長度（AbstractUser 最多 150 字元）
+        display_name = (chinese_name or english_name or campus_id)[:150]
+        
+        print(f"Resolved campus_id: {campus_id!r}, display_name: {display_name!r}, email: {email!r}")
+        
+        # 3. Find or Create User（碰撞=直接綁定，這是正確行為）
         try:
             user = User.objects.filter(campus_id=campus_id).first()
             
             if not user:
+                # 新帳號：一次性建立，避免多次 save
                 user = User.objects.create(
                     campus_id=campus_id,
-                    username=chinese_name or campus_id
+                    username=display_name,
+                    email=email,
+                    email_verified=bool(email)
                 )
                 
                 random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
                 from api.models import UserProfile
                 UserProfile.objects.create(user=user, nickname=random_nickname)
                 
-                if email:
+                print(f"Created new NCU user: campus_id={campus_id}")
+            else:
+                # 已有帳號（campus_id 碰撞=正常綁定）：若原本無 email 則補上
+                update_fields = []
+                if not user.email and email:
                     user.email = email
                     user.email_verified = True
-                    user.save(update_fields=['email', 'email_verified'])
+                    update_fields.extend(['email', 'email_verified'])
+                if update_fields:
+                    user.save(update_fields=update_fields)
+                print(f"Found existing user campus_id={campus_id}, binding NCU login.")
+                    
         except Exception as e:
+            import traceback
+            print(f"================ NCU DB ERROR ================")
+            print(traceback.format_exc())
+            print(f"==============================================")
             return Response({'error': f'Database error while creating user: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
         # Generate JWT for the user
