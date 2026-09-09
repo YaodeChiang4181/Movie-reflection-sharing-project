@@ -67,7 +67,8 @@ function Auth() {
           login(res.data.access, res.data.user);
         } catch (err) {
           console.error('NCU login error:', err);
-          setError('中央大學 Portal 登入發生錯誤');
+          const errorMsg = err.response?.data?.error || '中央大學 Portal 登入發生錯誤';
+          setError(errorMsg);
         } finally {
           localStorage.removeItem('ncu_processing');
         }
