@@ -335,7 +335,7 @@ class NCULoginView(APIView):
         access_token = token_data.get('access_token')
         
         if not access_token:
-            return Response({'error': 'Could not get access_token from NCU'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f'Could not get access_token from NCU. Details: {token_data}'}, status=status.HTTP_400_BAD_REQUEST)
             
         # 2. Get user info
         info_url = 'https://portal.ncu.edu.tw/apis/oauth/v1/info'
