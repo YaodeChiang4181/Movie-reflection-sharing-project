@@ -366,6 +366,14 @@ class NCULoginView(APIView):
             
         campus_id = student_id if student_id else identifier
         
+        # 清理 campus_id，避免 PostgreSQL 因超過 9 字元而報錯 (DataError)
+        if campus_id and '@' in campus_id:
+            campus_id = campus_id.split('@')[0]
+            
+        # 若清除了 @ 之後仍然超過 9 個字元，進行截斷（極少數特例）
+        if campus_id and len(campus_id) > 9:
+            campus_id = campus_id[:9]
+        
         # 3. Find or Create User
         user = User.objects.filter(campus_id=campus_id).first()
         
