@@ -328,10 +328,13 @@ class NCULoginView(APIView):
             'client_secret': client_secret
         }
         
-        token_resp = requests.post(token_url, headers=headers, data=data)
+        try:
+            token_resp = requests.post(token_url, headers=headers, data=data, timeout=10)
+        except Exception as e:
+            return Response({'error': f'Cannot connect to NCU Portal token endpoint: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
         
         if token_resp.status_code != 200:
-            return Response({'error': f'Token exchange failed: {token_resp.text}'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f'Token exchange failed: {token_resp.status_code} - {token_resp.text}'}, status=status.HTTP_400_BAD_REQUEST)
             
         token_data = token_resp.json()
         access_token = token_data.get('access_token')
@@ -349,10 +352,13 @@ class NCULoginView(APIView):
             'Accept': 'application/json'
         }
         
-        info_resp = requests.get(info_url, headers=info_headers)
+        try:
+            info_resp = requests.get(info_url, headers=info_headers, timeout=10)
+        except Exception as e:
+            return Response({'error': f'Cannot connect to NCU Portal info endpoint: {str(e)}'}, status=status.HTTP_502_BAD_GATEWAY)
         
         if info_resp.status_code != 200:
-            return Response({'error': 'Failed to get user info from NCU'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f'Failed to get user info from NCU: {info_resp.status_code} - {info_resp.text}'}, status=status.HTTP_400_BAD_REQUEST)
             
         profile_data = info_resp.json()
         
@@ -375,23 +381,26 @@ class NCULoginView(APIView):
             campus_id = campus_id[:9]
         
         # 3. Find or Create User
-        user = User.objects.filter(campus_id=campus_id).first()
-        
-        if not user:
-            user = User.objects.create(
-                campus_id=campus_id,
-                username=chinese_name or campus_id
-            )
+        try:
+            user = User.objects.filter(campus_id=campus_id).first()
             
-            random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
-            from api.models import UserProfile
-            UserProfile.objects.create(user=user, nickname=random_nickname)
-            
-            if email:
-                user.email = email
-                user.email_verified = True
-                user.save(update_fields=['email', 'email_verified'])
+            if not user:
+                user = User.objects.create(
+                    campus_id=campus_id,
+                    username=chinese_name or campus_id
+                )
                 
+                random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
+                from api.models import UserProfile
+                UserProfile.objects.create(user=user, nickname=random_nickname)
+                
+                if email:
+                    user.email = email
+                    user.email_verified = True
+                    user.save(update_fields=['email', 'email_verified'])
+        except Exception as e:
+            return Response({'error': f'Database error while creating user: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
         # Generate JWT for the user
         from rest_framework_simplejwt.tokens import RefreshToken
         refresh = RefreshToken.for_user(user)
