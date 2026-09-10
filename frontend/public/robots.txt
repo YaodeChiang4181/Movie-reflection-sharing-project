@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://movie-reflection-sharing-project.vercel.app/sitemap.xml
