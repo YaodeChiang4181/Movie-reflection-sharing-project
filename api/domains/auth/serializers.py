@@ -125,12 +125,24 @@ class AdminUserSerializer(serializers.ModelSerializer):
         return obj.username or obj.campus_id or "Unknown"
 
     def get_real_name(self, obj):
-        if hasattr(obj, 'identity') and obj.identity:
-            return obj.identity.real_name
-        if hasattr(obj, 'outsider_identity') and obj.outsider_identity:
-            return obj.outsider_identity.real_name
-        if obj.line_display_name:
-            return f"{obj.line_display_name} (LINE)"
+        names = []
+        
+        # 1. 取得真實姓名 (UserIdentity / OutsiderIdentity)
+        if hasattr(obj, 'identity') and obj.identity and obj.identity.real_name:
+            names.append(obj.identity.real_name)
+        elif hasattr(obj, 'outsider_identity') and obj.outsider_identity and obj.outsider_identity.real_name:
+            names.append(obj.outsider_identity.real_name)
+        elif obj.line_display_name:
+            names.append(f"{obj.line_display_name} (LINE)")
+            
+        # 2. 取得 Portal 拿到的中文名字 (存放在 username)
+        if obj.username and obj.username != obj.campus_id and obj.username != 'Unknown':
+            # 避免與真實姓名完全重複時再顯示一次
+            if not names or obj.username not in names:
+                names.append(f"{obj.username} (Portal)")
+                
+        if names:
+            return " / ".join(names)
         return None
 
     def get_email(self, obj):

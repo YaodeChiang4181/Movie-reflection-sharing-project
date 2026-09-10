@@ -440,6 +440,12 @@ class NCULoginView(APIView):
             else:
                 # 已有帳號（campus_id 碰撞=正常綁定）
                 update_fields = []
+                
+                # 確保儲存最新的 portal 中文名字 (存於 username)
+                if user.username != display_name:
+                    user.username = display_name
+                    update_fields.append('username')
+                    
                 # 若原本無 email，補上
                 if not user.email and email:
                     user.email = email
