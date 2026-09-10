@@ -8,6 +8,7 @@ import ReviewForm from '../components/ReviewForm';
 import TmdbPoster from '../components/TmdbPoster';
 import ReviewModal from '../components/ReviewModal';
 import UserCardModal from '../components/UserCardModal';
+import SEO from '../components/SEO';
 
 function MovieDetail() {
   const { id } = useParams();
@@ -85,6 +86,7 @@ function MovieDetail() {
   if (isLoading) {
     return (
       <div className={`container ${styles.pageWrapper}`} style={{ paddingTop: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', minHeight: '100vh' }}>
+        <SEO title="載入中...｜映後時光" />
         <div className="skeleton skeleton-title" style={{ width: '300px', height: '3rem', margin: 0 }} />
         <div className="skeleton skeleton-poster" style={{ width: '220px', height: '330px', borderRadius: '16px' }} />
         <div className="skeleton skeleton-text" style={{ width: '200px', height: '1.5rem' }} />
@@ -109,6 +111,10 @@ function MovieDetail() {
 
   return (
     <div className={`container ${styles.pageWrapper}`}>
+      <SEO 
+        title={`${movie.title} 影評與心得｜映後時光`} 
+        description={`這是關於 ${movie.title} 的影評與心得分享。快來映後時光看看大家怎麼說，或者透過漂流瓶找到下一部好電影！`}
+      />
       <div>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

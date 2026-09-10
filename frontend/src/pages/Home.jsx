@@ -7,6 +7,7 @@ import SpeedRatingModal from '../components/SpeedRatingModal';
 import EventForm from '../components/EventForm';
 import FeedCard from '../components/FeedCard';
 import EventDetailModal from '../components/EventDetailModal';
+import SEO from '../components/SEO';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from '../components/EventFilterTabs.module.css';
@@ -139,6 +140,7 @@ function Home() {
 
   return (
     <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
+      <SEO />
       
       {isComposing && (
         <ReviewForm 
