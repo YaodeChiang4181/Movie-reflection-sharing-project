@@ -538,12 +538,15 @@ function Profile() {
       {showAllTagsModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999,
+          backgroundColor: 'rgba(0, 0, 0, 0.65)', zIndex: 9999,
+          backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
         }} onClick={() => setShowAllTagsModal(false)}>
           <div className="glass" style={{
             width: '100%', maxWidth: '500px', maxHeight: '80vh',
             borderRadius: 'var(--radius-lg)', padding: '24px',
+            backgroundColor: 'rgba(25, 25, 35, 0.85)',
+            boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
             display: 'flex', flexDirection: 'column'
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
