@@ -110,8 +110,8 @@ function UserCardModal({ campusId, onClose }) {
 
           {profile.top_tags && profile.top_tags.length > 0 && (
             <div className={styles.tagsWrapper}>
-              {profile.top_tags.map(tag => (
-                <span key={tag} className={styles.tag}>#{tag}</span>
+              {profile.top_tags.map((tag, index) => (
+                <span key={index} className={styles.tag}>#{tag}</span>
               ))}
             </div>
           )}
@@ -206,8 +206,14 @@ function UserCardModal({ campusId, onClose }) {
                   <div className={styles.recentHeader}>
                     <span className={styles.recentMovieTitle}>{review.movie_title}</span>
                     <span className={styles.recentRating}>
-                      {Array.from({ length: review.rating }).map((_, i) => '★').join('')}
-                      {Array.from({ length: 5 - review.rating }).map((_, i) => '☆').join('')} {review.rating.toFixed(1)}
+                      {review.rating > 0 ? (
+                        <>
+                          {Array.from({ length: review.rating }).map((_, i) => '★').join('')}
+                          {Array.from({ length: 5 - review.rating }).map((_, i) => '☆').join('')} {review.rating.toFixed(1)}
+                        </>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>無評分</span>
+                      )}
                     </span>
                   </div>
                   <div className={styles.recentContent}>
