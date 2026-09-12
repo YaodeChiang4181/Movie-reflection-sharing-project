@@ -95,9 +95,12 @@ class FollowViewSet(viewsets.ModelViewSet):
         
     def perform_create(self, serializer):
         from api.models import User
+        from rest_framework.exceptions import ValidationError
         following_id = self.request.data.get('following_id')
         if following_id:
             following = User.objects.get(campus_id=following_id)
+            if following == self.request.user:
+                raise ValidationError("You cannot follow yourself.")
             serializer.save(follower=self.request.user, following=following)
             
     @action(detail=False, methods=['delete'])
