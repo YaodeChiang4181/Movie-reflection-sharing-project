@@ -421,3 +421,21 @@ class ReviewViewSet(viewsets.ModelViewSet):
             response_data.append(new_item)
             
         return Response(response_data)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def fix_movie_tags(self, request):
+        from api.models import Review, Tag
+        count = 0
+        for review in Review.objects.all():
+            if review.movie:
+                tag, created = Tag.objects.get_or_create(
+                    name=review.movie.title,
+                    defaults={'is_system': True}
+                )
+                if not tag.is_system:
+                    tag.is_system = True
+                    tag.save(update_fields=['is_system'])
+                if not review.tags.filter(id=tag.id).exists():
+                    review.tags.add(tag)
+                count += 1
+        return Response({"message": f"Successfully fixed movie tags for {count} reviews."})

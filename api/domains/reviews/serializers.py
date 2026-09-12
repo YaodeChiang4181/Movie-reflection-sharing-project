@@ -127,6 +127,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         for genre in tmdb_genres:
             if genre not in tag_names:
                 tag_names.append(genre)
+        
+        # Ensure movie_title is always a tag
+        if movie_title not in tag_names:
+            tag_names.append(movie_title)
                 
         with transaction.atomic():
             movie_defaults = {'director': 'Unknown', 'release_year': timezone.now().year}
@@ -165,7 +169,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             review = Review.objects.create(**validated_data)
             
             for name in tag_names:
-                is_sys = name in (tmdb_genres if 'tmdb_genres' in locals() else [])
+                is_sys = name == movie_title or name in (tmdb_genres if 'tmdb_genres' in locals() else [])
                 tag, created = Tag.objects.get_or_create(
                     name=name,
                     defaults={'is_system': is_sys}
@@ -194,6 +198,8 @@ class ReviewSerializer(serializers.ModelSerializer):
                 for genre in tmdb_genres:
                     if genre not in tag_names:
                         tag_names.append(genre)
+                if movie_title not in tag_names:
+                    tag_names.append(movie_title)
 
         with transaction.atomic():
             if raw_movie_title:
@@ -221,7 +227,7 @@ class ReviewSerializer(serializers.ModelSerializer):
                 instance.tags.clear()
                 tmdb_genres = tmdb_meta['genres'] if ('tmdb_meta' in locals() and tmdb_meta) else []
                 for name in tag_names:
-                    is_sys = name in tmdb_genres
+                    is_sys = name == instance.movie.title or name in tmdb_genres
                     tag, created = Tag.objects.get_or_create(
                         name=name,
                         defaults={'is_system': is_sys}
