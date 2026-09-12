@@ -592,13 +592,6 @@
   color: #ef4444;
 }
 
-.inlineActionBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (max-width: 600px) {
-  .inlineEditContainer {
 
 .nicknameWrapper {
   display: flex;
@@ -679,6 +672,8 @@
 
 @media (max-width: 600px) {
   .inlineEditContainer {
+    flex-direction: column;
+    align-items: stretch;
     width: 100%;
     justify-content: space-between;
     padding: 6px 12px;
