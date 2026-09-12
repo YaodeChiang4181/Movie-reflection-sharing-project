@@ -8,38 +8,26 @@ function FeedCard({ item, onClick }) {
   if (item.feed_type === 'MOVIE') {
     return (
       <div 
-        className="glass hover-scale" 
-        style={{ padding: '20px', borderRadius: '16px', display: 'flex', gap: '16px', cursor: 'pointer' }}
+        className="posterCard" 
         onClick={onClick}
       >
-        <div style={{ flexShrink: 0, width: '100px' }}>
-          <TmdbPoster title={item.title} className="movie-list-poster" style={{ width: '100px', height: '150px', objectFit: 'cover', borderRadius: '8px' }} />
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>{item.title}</h3>
-            {item.original_title && (
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '8px' }}>
-                {item.original_title}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {item.tags && item.tags.map((tag, index) => (
-                <span key={tag.id || index} style={{ fontSize: '0.85rem', color: '#a78bfa', background: 'rgba(167,139,250,0.1)', padding: '2px 8px', borderRadius: '12px' }}>
-                  <Flame size={12} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} />
-                  {tag.name}
-                </span>
-              ))}
-            </div>
+        <div className="posterWrapper">
+          <TmdbPoster title={item.title} className="posterImg" />
+          <div className="posterOverlay">
+            <button className="overlayBtn">
+              <MessageCircle size={16} /> 查看電影
+            </button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              累積 {item.review_count || 0} 則深度影評
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#F5A623', fontWeight: 'bold' }}>
-              <Star size={16} fill="#F5A623" />
-              <span>{item.avg_rating ? item.avg_rating.toFixed(1) : '0.0'}</span>
-            </div>
+        </div>
+        <div className="posterInfo">
+          <div className="posterTitle">{item.title}</div>
+          <div className="posterMeta">
+            {item.avg_rating > 0 ? (
+              <span className="posterRating"><Star size={12} fill="currentColor" /> {item.avg_rating.toFixed(1)}/5</span>
+            ) : (
+              <span className="posterDate" style={{ color: 'var(--text-muted)' }}>無評分</span>
+            )}
+            <span className="posterDate">{item.review_count || 0} 則心得</span>
           </div>
         </div>
       </div>
@@ -47,48 +35,26 @@ function FeedCard({ item, onClick }) {
   } else if (item.feed_type === 'EVENT') {
     return (
       <div 
-        className="glass hover-scale" 
-        style={{ padding: '20px', borderRadius: '16px', display: 'flex', gap: '16px', cursor: 'pointer' }}
+        className="posterCard" 
         onClick={onClick}
       >
-        <div style={{ flexShrink: 0, width: '100px' }}>
+        <div className="posterWrapper">
           {item.cover_image ? (
-            <img src={item.cover_image} alt={item.title} style={{ width: '100px', height: '150px', objectFit: 'cover', borderRadius: '8px' }} />
+            <img src={item.cover_image} alt={item.title} className="posterImg" />
           ) : (
-            <div style={{ width: '100px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-              <Ticket size={32} opacity={0.5} />
-            </div>
+            <div className="posterPlaceholder"><Ticket size={32} /></div>
           )}
-        </div>
-        
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>{item.title}</h3>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>
-              <Users size={14} style={{ color: 'var(--text-secondary)' }} />
-              <span style={{ fontWeight: 400 }}>主辦：{item.user?.nickname || item.user?.campus_id}</span>
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.85rem', color: '#a78bfa', background: 'rgba(167,139,250,0.1)', padding: '2px 8px', borderRadius: '12px' }}>
-                <CalendarDays size={12} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} />
-                活動回顧
-              </span>
-            </div>
+          <div className="posterOverlay">
+            <button className="overlayBtn">
+              <CalendarDays size={16} /> 查看活動
+            </button>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: 'var(--text-secondary)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Users size={16} />
-                  <span style={{ fontSize: '0.9rem' }}>{item.registered_count} 人到場</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <MessageCircle size={16} />
-                  <span style={{ fontSize: '0.9rem' }}>{item.comment_count || 0} 則迴響</span>
-                </div>
-              </div>
+        </div>
+        <div className="posterInfo">
+          <div className="posterTitle">{item.title}</div>
+          <div className="posterMeta">
+            <span className="posterDate" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={12} /> {item.registered_count} 人</span>
+            <span className="posterDate">{item.comment_count || 0} 則迴響</span>
           </div>
         </div>
       </div>

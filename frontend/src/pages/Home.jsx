@@ -335,7 +335,7 @@ function Home() {
               <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前沒有任何動態</h2>
             </div>
           ) : (
-            <div style={{ display: 'grid', gap: '16px' }}>
+            <div className="posterGrid">
               {feedItems.map(item => (
                 <FeedCard key={`${item.feed_type}-${item.id}`} item={item} onClick={() => handleCardClick(item)} />
               ))}
