@@ -11,13 +11,14 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
   const [selectedMovie, setSelectedMovie] = useState(initialData?.movie || null);
   const [selectedTmdbId, setSelectedTmdbId] = useState(initialData?.movie?.tmdb_id || null);
   
-  const [tags, setTags] = useState(initialData?.tags?.map(t => t.name) || []);
+  const [tags, setTags] = useState(initialData?.tags?.filter(t => !t.is_system).map(t => t.name) || []);
   const [tagInputText, setTagInputText] = useState('');
   
   const [isSpoiler, setIsSpoiler] = useState(initialData?.is_spoiler || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [rating, setRating] = useState(initialData?.rating || 5);
+  const [rating, setRating] = useState(initialData?.rating || 0);
+  const [displayDate, setDisplayDate] = useState(initialData?.display_date ? initialData.display_date.substring(0, 10) : '');
   const [hoverRating, setHoverRating] = useState(0);
 
   const [searchResults, setSearchResults] = useState([]);
@@ -98,6 +99,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!movieTitle.trim() && !selectedMovie) return setError('請填寫或選擇電影名稱');
+    if (rating === 0 && !content.trim()) return setError('至少需選擇評星或填寫心得。');
 
     const movieTag = (selectedMovie ? selectedMovie.title : movieTitle).trim();
     let finalTags = [...tags];
@@ -112,9 +114,10 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
       const payload = {
         movie_title: movieTag,
         content: content,
-        rating: rating,
+        rating: rating > 0 ? rating : null,
         tag_names: finalTags,
-        is_spoiler: isSpoiler
+        is_spoiler: isSpoiler,
+        display_date: displayDate ? new Date(displayDate).toISOString() : null
       };
       
       if (selectedTmdbId) {
@@ -209,6 +212,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                     </div>
                     
                     <div className={styles.starRating}>
+                      <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginRight: '8px', display: 'flex', alignItems: 'center' }}>評分(選填):</span>
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
@@ -233,7 +237,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
             {/* Show standalone rating if movie is not selected yet */}
             {!selectedMovie && (
               <div className={styles.starRating} style={{ marginTop: '8px', paddingLeft: '4px' }}>
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginRight: '8px', display: 'flex', alignItems: 'center' }}>推薦指數:</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginRight: '8px', display: 'flex', alignItems: 'center' }}>評分(選填):</span>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
@@ -255,7 +259,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
             <textarea
               ref={textareaRef}
               className={styles.largeTextarea}
-              placeholder="分享你對這部電影最真實的感受..."
+              placeholder="分享你對這部電影最真實的感受... (純評分則可留白)"
               value={content}
               onChange={(e) => {
                 setContent(e.target.value);
@@ -301,20 +305,33 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
               </div>
             </div>
             
-            <label className={styles.spoilerToggleLabel}>
-              <div className={`${styles.toggleSwitch} ${isSpoiler ? styles.toggleOn : ''}`}>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className={styles.datePickerContainer}>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginRight: '8px' }}>發布日期:</span>
                 <input 
-                  type="checkbox" 
-                  checked={isSpoiler} 
-                  onChange={(e) => setIsSpoiler(e.target.checked)}
-                  hidden
+                  type="date"
+                  className={styles.dateInput}
+                  value={displayDate}
+                  onChange={(e) => setDisplayDate(e.target.value)}
+                  disabled={isSubmitting}
                 />
-                <div className={styles.toggleKnob}></div>
               </div>
-              <span className={isSpoiler ? styles.spoilerTextOn : styles.spoilerTextOff}>
-                <AlertTriangle size={16} /> 本文含有劇透 / 爆雷內容
-              </span>
-            </label>
+
+              <label className={styles.spoilerToggleLabel}>
+                <div className={`${styles.toggleSwitch} ${isSpoiler ? styles.toggleOn : ''}`}>
+                  <input 
+                    type="checkbox" 
+                    checked={isSpoiler} 
+                    onChange={(e) => setIsSpoiler(e.target.checked)}
+                    hidden
+                  />
+                  <div className={styles.toggleKnob}></div>
+                </div>
+                <span className={isSpoiler ? styles.spoilerTextOn : styles.spoilerTextOff}>
+                  <AlertTriangle size={16} /> 本文含有劇透 / 爆雷內容
+                </span>
+              </label>
+            </div>
           </div>
 
           {/* Step 5: Submit */}

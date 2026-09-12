@@ -157,10 +157,12 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
                 </h2>
               </div>
 
-              <div style={{ color: '#F59E0B', fontSize: '1.1rem', display: 'flex', gap: '4px', alignItems: 'center', marginBottom: '16px' }}>
-                {'★'.repeat(currentReview.rating)}{'☆'.repeat(5 - currentReview.rating)}
-                <span style={{ fontWeight: 'bold', marginLeft: '4px' }}>{currentReview.rating.toFixed(1)}</span>
-              </div>
+              {currentReview.rating !== null && currentReview.rating > 0 && (
+                <div style={{ color: '#F59E0B', fontSize: '1.1rem', display: 'flex', gap: '4px', alignItems: 'center', marginBottom: '16px' }}>
+                  {'★'.repeat(currentReview.rating)}{'☆'.repeat(5 - currentReview.rating)}
+                  <span style={{ fontWeight: 'bold', marginLeft: '4px' }}>{currentReview.rating.toFixed(1)}</span>
+                </div>
+              )}
 
               <div
                 style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
@@ -183,7 +185,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
                       Lv.{currentReview.user?.level || 1} {getBadge(currentReview.user?.level || 1).title}
                     </span>
                   </div>
-                  <span style={{ color: '#94A3B8', fontSize: '0.82rem' }}>{new Date(currentReview.created_at).toLocaleDateString('zh-TW')}</span>
+                  <span style={{ color: '#94A3B8', fontSize: '0.82rem' }}>{new Date(currentReview.effective_date || currentReview.created_at).toLocaleDateString('zh-TW')}</span>
                 </div>
               </div>
             </div>
@@ -273,8 +275,8 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
           {(() => {
             if (!currentReview.tags || currentReview.tags.length === 0) return null;
             
-            // 1. 過濾防雷標籤
-            let validTags = currentReview.tags.filter(t => !['無雷', '有雷', '含劇透'].includes(t.name));
+            // 1. 過濾防雷標籤與系統標籤
+            let validTags = currentReview.tags.filter(t => !['無雷', '有雷', '含劇透'].includes(t.name) && !t.is_system);
             
             // 2. 去重 (忽略大小寫與繁簡差異可由 Set 單純比對名稱，此處以 exact name 為主)
             const uniqueNames = new Set();

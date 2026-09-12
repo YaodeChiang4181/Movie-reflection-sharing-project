@@ -599,6 +599,86 @@
 
 @media (max-width: 600px) {
   .inlineEditContainer {
+
+.nicknameWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editNicknameBtn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.editNicknameBtn:hover {
+  color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.inlineEditContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.inlineEditInput {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  outline: none;
+  width: 150px;
+}
+
+.inlineActionBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.inlineSaveBtn {
+  color: var(--accent-primary);
+}
+.inlineSaveBtn:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.inlineCancelBtn {
+  color: var(--text-secondary);
+}
+.inlineCancelBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ef4444;
+}
+
+.inlineActionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .inlineEditContainer {
     width: 100%;
     justify-content: space-between;
     padding: 6px 12px;
@@ -610,4 +690,155 @@
     flex: 1;
     font-size: 1.2rem;
   }
+}
+
+/* 個人標籤紀錄與評分分佈 */
+.personalStatsContainer {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+.personalStatsBox {
+  flex: 1;
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.ratingChart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chartRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chartLabel {
+  width: 24px;
+  color: #F59E0B;
+  font-size: 0.85rem;
+  text-align: right;
+}
+.chartBarTrack {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.chartBarFill {
+  height: 100%;
+  background: #F59E0B;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.chartCount {
+  width: 20px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Poster Grid */
+.posterGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.posterCard {
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.posterCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+.posterWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: #000;
+}
+.posterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.posterPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.2);
+}
+.posterOverlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+.posterCard:hover .posterOverlay {
+  opacity: 1;
+}
+.overlayBtn {
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.posterInfo {
+  padding: 12px;
+}
+.posterTitle {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+.posterMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.posterRating {
+  color: #F59E0B;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.posterDate {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 901px) {
+  .posterGrid { grid-template-columns: repeat(4, 1fr); }
+  .personalStatsContainer { flex-direction: column; }
+}
+@media (max-width: 600px) {
+  .posterGrid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+}
+@media (max-width: 480px) {
+  .posterGrid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
 }

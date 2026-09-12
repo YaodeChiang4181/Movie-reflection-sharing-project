@@ -14,7 +14,7 @@ import random
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.annotate(
-        avg_rating=Avg('reviews__rating', filter=Q(reviews__is_deleted=False)),
+        avg_rating=Avg('reviews__rating', filter=Q(reviews__is_deleted=False, reviews__rating__isnull=False)),
         review_count=Count('reviews', filter=Q(reviews__is_deleted=False)),
         normal_review_count=Count('reviews', filter=Q(reviews__is_deleted=False) & Q(reviews__content__gt=""))
     ).filter(review_count__gt=0).order_by('-normal_review_count', '-review_count', '-id')

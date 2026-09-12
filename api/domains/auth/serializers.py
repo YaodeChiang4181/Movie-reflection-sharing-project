@@ -46,6 +46,9 @@ class UserMeSerializer(serializers.ModelSerializer):
     level = serializers.SerializerMethodField()
     exp = serializers.SerializerMethodField()
     common_tags = serializers.SerializerMethodField()
+    all_user_tags = serializers.SerializerMethodField()
+    rating_distribution = serializers.SerializerMethodField()
+    total_movies_reviewed = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
 
     hosted_events_count = serializers.SerializerMethodField()
@@ -53,7 +56,7 @@ class UserMeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'is_staff', 'avatar', 'email', 'email_verified', 'hosted_events_count', 'attended_events_count')
+        fields = ('id', 'campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'all_user_tags', 'rating_distribution', 'total_movies_reviewed', 'is_staff', 'avatar', 'email', 'email_verified', 'hosted_events_count', 'attended_events_count')
 
     def get_nickname(self, obj):
         if hasattr(obj, 'profile') and obj.profile:
@@ -99,6 +102,35 @@ class UserMeSerializer(serializers.ModelSerializer):
         ).order_by('-use_count')[:3]
         
         return [tag.name.replace('#', '') for tag in tags]
+
+    def get_all_user_tags(self, obj):
+        from django.db.models import Count
+        from api.models import Tag
+        tags = Tag.objects.filter(
+            reviews__user=obj,
+            reviews__is_deleted=False,
+            is_system=False
+        ).annotate(
+            use_count=Count('reviews')
+        ).order_by('-use_count')
+        return [{'name': t.name, 'count': t.use_count} for t in tags]
+
+    def get_rating_distribution(self, obj):
+        from django.db.models import Count
+        from api.models import Review
+        dist = Review.objects.filter(
+            user=obj, is_deleted=False, rating__isnull=False
+        ).values('rating').annotate(count=Count('id'))
+        result = {i: 0 for i in range(1, 6)}
+        for d in dist:
+            result[d['rating']] = d['count']
+        return result
+
+    def get_total_movies_reviewed(self, obj):
+        from api.models import Review
+        return Review.objects.filter(
+            user=obj, is_deleted=False
+        ).values('movie').distinct().count()
 
     def get_hosted_events_count(self, obj):
         from api.models import Event

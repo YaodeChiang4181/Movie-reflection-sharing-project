@@ -17,7 +17,7 @@ class MovieSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'is_system')
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -52,10 +52,22 @@ class ReviewSerializer(serializers.ModelSerializer):
     downvotes = serializers.IntegerField(read_only=True, required=False)
     user_voted = serializers.SerializerMethodField()
     comments_count = serializers.IntegerField(source='comments.count', read_only=True)
+    effective_date = serializers.SerializerMethodField()
+    display_date = serializers.DateTimeField(required=False, allow_null=True)
     
     class Meta:
         model = Review
-        fields = ('id', 'user', 'movie', 'movie_title', 'tmdb_id', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
+        fields = ('id', 'user', 'movie', 'movie_title', 'tmdb_id', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'display_date', 'effective_date', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
+
+    def get_effective_date(self, obj):
+        return obj.display_date or obj.created_at
+
+    def validate(self, data):
+        rating = data.get('rating')
+        content = data.get('content', '').strip()
+        if not rating and not content:
+            raise serializers.ValidationError("至少需要填寫評分或心得內容其中之一。")
+        return data
 
     def validate_content(self, value):
         import bleach
@@ -85,9 +97,9 @@ class ReviewSerializer(serializers.ModelSerializer):
             cache.set(cache_key, top_20_ids, 60 * 10) # Cache for 10 mins
             
         if instance.movie_id in top_20_ids:
-            data['tags'].extend([{'id': -1, 'name': '熱門討論'}, {'id': -2, 'name': '社群精選'}])
+            data['tags'].extend([{'id': -1, 'name': '熱門討論', 'is_system': True}, {'id': -2, 'name': '社群精選', 'is_system': True}])
         else:
-            data['tags'].extend([{'id': -3, 'name': '新鮮討論'}, {'id': -4, 'name': '冷門話題'}])
+            data['tags'].extend([{'id': -3, 'name': '新鮮討論', 'is_system': True}, {'id': -4, 'name': '冷門話題', 'is_system': True}])
             
         return data
 
@@ -153,7 +165,14 @@ class ReviewSerializer(serializers.ModelSerializer):
             review = Review.objects.create(**validated_data)
             
             for name in tag_names:
-                tag, created = Tag.objects.get_or_create(name=name)
+                is_sys = name in (tmdb_genres if 'tmdb_genres' in locals() else [])
+                tag, created = Tag.objects.get_or_create(
+                    name=name,
+                    defaults={'is_system': is_sys}
+                )
+                if not created and is_sys and not tag.is_system:
+                    tag.is_system = True
+                    tag.save(update_fields=['is_system'])
                 review.tags.add(tag)
                 
         return review
@@ -200,8 +219,16 @@ class ReviewSerializer(serializers.ModelSerializer):
 
             if tag_names is not None:
                 instance.tags.clear()
+                tmdb_genres = tmdb_meta['genres'] if ('tmdb_meta' in locals() and tmdb_meta) else []
                 for name in tag_names:
-                    tag, _ = Tag.objects.get_or_create(name=name)
+                    is_sys = name in tmdb_genres
+                    tag, created = Tag.objects.get_or_create(
+                        name=name,
+                        defaults={'is_system': is_sys}
+                    )
+                    if not created and is_sys and not tag.is_system:
+                        tag.is_system = True
+                        tag.save(update_fields=['is_system'])
                     instance.tags.add(tag)
 
         return instance

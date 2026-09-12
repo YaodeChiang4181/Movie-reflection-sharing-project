@@ -87,6 +87,7 @@ class Movie(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    is_system = models.BooleanField(default=False, verbose_name="系統自動標籤")
     
     def __str__(self):
         return self.name
@@ -100,15 +101,21 @@ class Review(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='reviews')
     event = models.ForeignKey('Event', on_delete=models.SET_NULL, null=True, blank=True, related_name='reviews')
     rating = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)]
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        null=True, blank=True,
+        verbose_name="評分（1-5，可為空）"
     )
-    content = models.TextField()
+    content = models.TextField(blank=True, default='')
     source = models.CharField(max_length=10, choices=REVIEW_SOURCES, default='web', verbose_name="來源")
     is_spoiler = models.BooleanField(default=False)
     tags = models.ManyToManyField(Tag, related_name='reviews', blank=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    display_date = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="顯示日期（用戶自訂）"
+    )
     
     def __str__(self):
         return f"{self.user.username} - {self.movie.title}"

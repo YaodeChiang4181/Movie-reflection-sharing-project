@@ -379,15 +379,11 @@ function Profile() {
             <div className={styles.statsGrid}>
               {(() => {
                 const stats = [
-                  { icon: Film, value: totalReviews, label: '已發布心得' },
+                  { icon: Film, value: userData?.total_movies_reviewed || totalReviews, label: '已評電影' },
                   { icon: ThumbsUp, value: totalVotes, label: '獲得推薦' },
-                  { icon: MessageSquare, value: commentedReviews.length, label: '留言互動' },
-                  { icon: Calendar, value: userData?.hosted_events_count || 0, label: '發起活動' },
-                  { icon: Users, value: userData?.attended_events_count || 0, label: '參與活動' }
+                  { icon: MessageSquare, value: commentedReviews.length, label: '留言互動' }
                 ];
                 return stats
-                  .sort((a, b) => b.value - a.value)
-                  .slice(0, 3)
                   .map((stat, idx) => (
                     <div key={idx} className={styles.statCard}>
                       <stat.icon size={20} className={styles.statCardIcon} />
@@ -397,6 +393,47 @@ function Profile() {
                   ));
               })()}
             </div>
+
+            {/* 個人標籤紀錄與評分分佈 */}
+            <div className={styles.personalStatsContainer}>
+              <div className={styles.personalStatsBox}>
+                <h4 style={{ color: 'var(--text-primary)', marginBottom: '12px', fontSize: '0.95rem' }}>個人標籤紀錄</h4>
+                <div className={styles.tagsList}>
+                  {userData?.all_user_tags?.length > 0 ? (
+                    userData.all_user_tags.map(tag => (
+                      <span 
+                        key={tag.name} 
+                        className={styles.commonTag}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/search?q=${encodeURIComponent(tag.name)}`); }}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        #{tag.name} <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>({tag.count})</span>
+                      </span>
+                    ))
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>尚無標籤紀錄</span>
+                  )}
+                </div>
+              </div>
+              <div className={styles.personalStatsBox}>
+                <h4 style={{ color: 'var(--text-primary)', marginBottom: '12px', fontSize: '0.95rem' }}>評分分佈</h4>
+                <div className={styles.ratingChart}>
+                  {[5, 4, 3, 2, 1].map(star => {
+                    const count = userData?.rating_distribution?.[star] || 0;
+                    const maxCount = Math.max(...Object.values(userData?.rating_distribution || {1:0}), 1);
+                    const width = `${(count / maxCount) * 100}%`;
+                    return (
+                      <div key={star} className={styles.chartRow}>
+                        <span className={styles.chartLabel}>{star}★</span>
+                        <div className={styles.chartBarTrack}>
+                          <div className={styles.chartBarFill} style={{ width: width }}></div>
+                        </div>
+                        <span className={styles.chartCount}>{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
           </div>
         </div>
       </div>
@@ -437,146 +474,40 @@ function Profile() {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            {(() => {
-              const isSpeedRating = (r) => !r.content || r.content === "來自急速評星的無內文評價" || r.tags?.some(tag => tag.name === '急速評星');
-
-              if (activeTab === 'commented') {
-                return (
-                  <div className={styles.reviewList}>
-                    {currentReviews.map(review => (
-                      <div key={review.id} className={styles.reviewCard} onClick={() => setSelectedReview(review)}>
-                        <div className={styles.reviewCardHeader}>
-                          <div>
-                            <h3 className={styles.reviewTitle}>{review.movie?.title || '未命名電影'}</h3>
-                            <span className={styles.reviewMeta}>
-                              {new Date(review.created_at).toLocaleDateString('zh-TW')}
-                              {` · 作者: ${review.user?.nickname}`}
-                            </span>
-                          </div>
-                          <div className={styles.reviewRating}>
-                            <Star size={14} fill="currentColor" /> {review.rating}/5
-                          </div>
-                        </div>
-                        {(!isSpeedRating(review) && review.content) && (
-                          <p className={styles.reviewContent}>{review.content}</p>
-                        )}
-                        {review.tags?.length > 0 && (
-                          <div className={styles.tags}>
-                            {review.tags.map(tag => (
-                              <span 
-                                key={tag.id} 
-                                className={styles.tag}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/search?q=${encodeURIComponent(tag.name)}`);
-                                }}
-                                style={{ cursor: 'pointer' }}
-                              >#{tag.name}</span>
-                            ))}
-                          </div>
-                        )}
-                        <div className={styles.reviewFooter}>
-                          <span><ThumbsUp size={14} /> {review.upvotes || 0}</span>
-                          <span><MessageSquare size={14} /> {review.comments_count || 0}</span>
-                        </div>
-                      </div>
-                    ))}
+          <div className="posterGrid">
+            {currentReviews.map(review => (
+              <div key={review.id} className="posterCard" onClick={() => {
+                  if (review.movie?.id) navigate(`/movies/${review.movie.id}`);
+              }}>
+                <div className="posterWrapper">
+                  {review.movie?.poster_url ? (
+                    <img src={review.movie.poster_url} alt="poster" className="posterImg" />
+                  ) : (
+                    <div className="posterPlaceholder"><Film size={32} /></div>
+                  )}
+                  <div className="posterOverlay">
+                    <button 
+                      className="overlayBtn" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedReview(review);
+                      }}
+                    >
+                      <MessageSquare size={16} /> 查看心得
+                    </button>
                   </div>
-                );
-              }
-
-              // 'my' tab: split into text and rating-only
-              const textReviews = currentReviews.filter(r => !isSpeedRating(r));
-              const ratingReviews = currentReviews.filter(r => isSpeedRating(r));
-
-              return (
-                <>
-                  {textReviews.length > 0 && (
-                    <div>
-                      <h3 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem', paddingLeft: '8px', borderLeft: '4px solid var(--accent-primary)' }}>我的影評貼文</h3>
-                      <div className={styles.reviewList}>
-                        {textReviews.map(review => (
-                          <div key={review.id} className={styles.reviewCard} onClick={() => setSelectedReview(review)}>
-                            <div className={styles.reviewCardHeader}>
-                              <div>
-                                <h3 className={styles.reviewTitle}>{review.movie?.title || '未命名電影'}</h3>
-                                <span className={styles.reviewMeta}>{new Date(review.created_at).toLocaleDateString('zh-TW')}</span>
-                              </div>
-                              <div className={styles.reviewRating}>
-                                <Star size={14} fill="currentColor" /> {review.rating}/5
-                              </div>
-                            </div>
-                            <p className={styles.reviewContent}>{review.content}</p>
-                            {review.tags?.length > 0 && (
-                              <div className={styles.tags}>
-                                {review.tags.map(tag => (
-                                  <span 
-                                    key={tag.id} 
-                                    className={styles.tag}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      navigate(`/search?q=${encodeURIComponent(tag.name)}`);
-                                    }}
-                                    style={{ cursor: 'pointer' }}
-                                  >#{tag.name}</span>
-                                ))}
-                              </div>
-                            )}
-                            <div className={styles.reviewFooter}>
-                              <span><ThumbsUp size={14} /> {review.upvotes || 0}</span>
-                              <span><MessageSquare size={14} /> {review.comments_count || 0}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {ratingReviews.length > 0 && (
-                    <div>
-                      <h3 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.2rem', paddingLeft: '8px', borderLeft: '4px solid #F5A623' }}>⭐️ 我的純評分紀錄</h3>
-                      <div className={styles.reviewList}>
-                        {ratingReviews.map(review => (
-                          <div key={review.id} className={styles.reviewCard} onClick={() => setSelectedReview(review)}>
-                            <div className={styles.reviewCardHeader}>
-                              <div>
-                                <h3 className={styles.reviewTitle}>{review.movie?.title || '未命名電影'}</h3>
-                                <span className={styles.reviewMeta}>{new Date(review.created_at).toLocaleDateString('zh-TW')}</span>
-                              </div>
-                              <div className={styles.reviewRating} style={{ color: '#F5A623' }}>
-                                <Star size={14} fill="currentColor" /> {review.rating}/5
-                              </div>
-                            </div>
-                            {/* Hide content for rating only */}
-                            {review.tags?.length > 0 && (
-                              <div className={styles.tags}>
-                                {review.tags.map(tag => (
-                                  <span 
-                                    key={tag.id} 
-                                    className={styles.tag}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigate(`/search?q=${encodeURIComponent(tag.name)}`);
-                                    }}
-                                    style={{ cursor: 'pointer' }}
-                                  >#{tag.name}</span>
-                                ))}
-                              </div>
-                            )}
-                            <div className={styles.reviewFooter}>
-                              <span><ThumbsUp size={14} /> {review.upvotes || 0}</span>
-                              <span><MessageSquare size={14} /> {review.comments_count || 0}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+                </div>
+                <div className="posterInfo">
+                  <div className="posterTitle">{review.movie?.title || '未命名電影'}</div>
+                  <div className="posterMeta">
+                    {review.rating !== null && review.rating > 0 && (
+                      <span className="posterRating"><Star size={12} fill="currentColor" /> {review.rating}/5</span>
+                    )}
+                    <span className="posterDate">{new Date(review.effective_date || review.created_at).toLocaleDateString('zh-TW')}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
