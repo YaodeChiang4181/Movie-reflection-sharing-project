@@ -114,7 +114,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         raw_movie_title = validated_data.pop('movie_title')
         movie_title = normalize_movie_title(raw_movie_title)
-        tag_names = validated_data.pop('tag_names', [])
+        raw_tag_names = validated_data.pop('tag_names', [])
+        tag_names = list(raw_tag_names) if raw_tag_names is not None else []
         tmdb_id = validated_data.pop('tmdb_id', None)
         
         # Fetch metadata using tmdb_id if provided, else fallback to title search
@@ -183,7 +184,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         raw_movie_title = validated_data.pop('movie_title', None)
-        tag_names = validated_data.pop('tag_names', None)
+        raw_tag_names = validated_data.pop('tag_names', None)
+        tag_names = list(raw_tag_names) if raw_tag_names is not None else None
         tmdb_id = validated_data.pop('tmdb_id', None)
 
         if raw_movie_title:
