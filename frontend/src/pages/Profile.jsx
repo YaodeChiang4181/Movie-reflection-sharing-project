@@ -34,6 +34,7 @@ function Profile() {
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [editNicknameValue, setEditNicknameValue] = useState('');
   const [isSavingNickname, setIsSavingNickname] = useState(false);
+  const [showAllTagsModal, setShowAllTagsModal] = useState(false);
 
   const handleAvatarClick = () => {
     if (fileInputRef.current) {
@@ -400,16 +401,26 @@ function Profile() {
                 <h4 style={{ color: 'var(--text-primary)', marginBottom: '12px', fontSize: '0.95rem' }}>個人標籤紀錄</h4>
                 <div className={styles.tagsList}>
                   {userData?.all_user_tags?.length > 0 ? (
-                    userData.all_user_tags.map(tag => (
-                      <span 
-                        key={tag.name} 
-                        className={styles.commonTag}
-                        onClick={(e) => { e.stopPropagation(); navigate(`/search?q=${encodeURIComponent(tag.name)}`); }}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        #{tag.name} <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>({tag.count})</span>
-                      </span>
-                    ))
+                    <>
+                      {userData.all_user_tags.slice(0, 10).map(tag => (
+                        <span 
+                          key={tag.name} 
+                          className={styles.commonTag}
+                          onClick={(e) => { e.stopPropagation(); navigate(`/search?q=${encodeURIComponent(tag.name)}`); }}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          #{tag.name} <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>({tag.count})</span>
+                        </span>
+                      ))}
+                      {userData.all_user_tags.length > 10 && (
+                        <button 
+                          className={styles.viewAllTagsBtn}
+                          onClick={(e) => { e.stopPropagation(); setShowAllTagsModal(true); }}
+                        >
+                          查看全部 ({userData.all_user_tags.length})
+                        </button>
+                      )}
+                    </>
                   ) : (
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>尚無標籤紀錄</span>
                   )}
@@ -521,6 +532,47 @@ function Profile() {
           onReviewUpdated={handleReviewUpdated}
           onReviewDeleted={handleReviewDeleted}
         />
+      )}
+
+      {/* All Tags Modal */}
+      {showAllTagsModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }} onClick={() => setShowAllTagsModal(false)}>
+          <div className="glass" style={{
+            width: '100%', maxWidth: '500px', maxHeight: '80vh',
+            borderRadius: 'var(--radius-lg)', padding: '24px',
+            display: 'flex', flexDirection: 'column'
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0 }}>個人標籤紀錄</h3>
+              <button onClick={() => setShowAllTagsModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ overflowY: 'auto', flex: 1, paddingRight: '8px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <style>{`.tags-modal-scroll::-webkit-scrollbar { display: none; }`}</style>
+              <div className={`tags-modal-scroll ${styles.tagsList}`}>
+                {userData.all_user_tags.map(tag => (
+                  <span 
+                    key={tag.name} 
+                    className={styles.commonTag}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setShowAllTagsModal(false); 
+                      navigate(`/search?q=${encodeURIComponent(tag.name)}`); 
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    #{tag.name} <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>({tag.count})</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

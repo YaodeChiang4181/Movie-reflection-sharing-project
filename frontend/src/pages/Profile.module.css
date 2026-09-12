@@ -738,3 +738,18 @@
 @media (max-width: 901px) {
   .personalStatsContainer { flex-direction: column; }
 }
+
+.viewAllTagsBtn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-secondary);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.viewAllTagsBtn:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+}
