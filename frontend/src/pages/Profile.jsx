@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, ThumbsUp, MessageSquare, Award, Star, TrendingUp, RefreshCw, Camera, Calendar, Users, Edit2, Check, X } from 'lucide-react';
+import { Film, ThumbsUp, MessageSquare, Star, TrendingUp, RefreshCw, Camera, Edit2, Check, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';

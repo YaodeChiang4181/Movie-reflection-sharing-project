@@ -3,7 +3,6 @@ import { Search as SearchIcon, MessageCircle, Film, Star } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ReviewModal from '../components/ReviewModal';
 import api from '../api/axios';
-import { useAuth } from '../contexts/AuthContext';
 
 function Search() {
   const [query, setQuery] = useState('');
@@ -14,7 +13,6 @@ function Search() {
   const navigate = useNavigate();
   const location = useLocation();
   const [recommendedTags, setRecommendedTags] = useState(['🔥 動作', '😂 喜劇', '🚀 科幻', '🎬 劇情']);
-  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     const fetchLatestTags = async () => {

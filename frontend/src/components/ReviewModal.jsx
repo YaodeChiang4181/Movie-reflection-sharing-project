@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ThumbsUp, ThumbsDown, MessageCircle, MoreVertical, Edit2, Trash2, Send } from 'lucide-react';
+import { X, ThumbsUp, ThumbsDown, MessageCircle, Edit2, Trash2, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
