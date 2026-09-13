@@ -19,7 +19,7 @@ def cleanup_duplicates(apps, schema_editor):
         user_id = dup['user']
         movie_id = dup['movie']
         
-        user_reviews = Review.objects.filter(user_id=user_id, movie_id=movie_id, is_deleted=False).order_by('-created_at')
+        user_reviews = Review.objects.filter(user_id=user_id, movie_id=movie_id, is_deleted=False).order_by('-upvotes', 'created_at')
         
         rapid_reviews = []
         normal_reviews = []
@@ -31,9 +31,9 @@ def cleanup_duplicates(apps, schema_editor):
             else:
                 normal_reviews.append(review)
                 
-        # 保留最新的一般心得，刪除舊的
+        # 保留最熱門、或較舊的一般心得，刪除其他的
         if len(normal_reviews) > 1:
-            # 第一個是最新的 (因為我們用了 -created_at)
+            # 第一個是保留的 (因為我們用了 -upvotes, created_at)
             for review_to_delete in normal_reviews[1:]:
                 # 完全刪除或是標記為 is_deleted=True
                 review_to_delete.delete()
