@@ -105,8 +105,9 @@ function MovieDetail() {
   if (!movie) return null;
 
   // Calculate average rating
-  const avgRating = reviews.length > 0 
-    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+  const ratedReviews = reviews.filter(r => r.rating !== null && r.rating > 0);
+  const avgRating = ratedReviews.length > 0 
+    ? (ratedReviews.reduce((acc, r) => acc + r.rating, 0) / ratedReviews.length).toFixed(1)
     : 0;
 
   return (
