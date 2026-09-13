@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
-from api.models import User, DailyDigestLog, DirectMessage, Event, Follow
+from api.models import User, DailyDigestLog, DirectMessage, Event, Follow, Notification
 
 class Command(BaseCommand):
     help = 'Aggregates unread messages and new events, and sends a daily digest via Email or logs as in-app.'
@@ -40,7 +40,15 @@ class Command(BaseCommand):
             
             events_count = new_events.count()
             
-            if unread_count == 0 and events_count == 0:
+            # Get unread notifications
+            unread_notifications = Notification.objects.filter(
+                user=user,
+                is_read=False,
+                created_at__gte=yesterday
+            )
+            notifications_count = unread_notifications.count()
+            
+            if unread_count == 0 and events_count == 0 and notifications_count == 0:
                 continue
                 
             # Channel Routing
@@ -99,6 +107,26 @@ class Command(BaseCommand):
           </a>
         </div>
 """
+                html_notifications = ""
+                plain_notifications = ""
+                if notifications_count > 0:
+                    html_notifications += f"""
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+          <span style="display: inline-block; background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; margin-bottom: 8px;">🔔 未讀系統通知 ({notifications_count} 則)</span>
+"""
+                    for notif in unread_notifications[:5]:
+                        plain_notifications += f"  - {notif.title}\n"
+                        html_notifications += f"""
+          <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+            <p style="font-size: 13px; color: #e2e8f0; margin: 0;">{notif.title}</p>
+          </div>
+"""
+                    html_notifications += f"""
+          <a href="{os.environ.get('FRONTEND_URL', 'http://localhost:5173')}/" style="display: block; text-align: center; background: rgba(255,255,255,0.1); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 10px 16px; border-radius: 8px; margin-top: 12px;">
+            前往通知中心查看 →
+          </a>
+        </div>
+"""
                 
                 # Dynamic Subject
                 if events_count > 0:
@@ -112,7 +140,9 @@ class Command(BaseCommand):
                     body += f"💬 您有 {unread_count} 則未讀私訊：\n{plain_dms}\n"
                 if plain_events:
                     body += f"🎬 您追蹤的對象有 {events_count} 個新活動：\n{plain_events}\n"
-                body += "請登入系統查看完整內容！\n"
+                if plain_notifications:
+                    body += f"🔔 您有 {notifications_count} 則未讀系統通知：\n{plain_notifications}\n"
+                body += f"請登入系統查看完整內容！\n網站連結: {os.environ.get('FRONTEND_URL', 'http://localhost:5173')}\n"
                 
                 # HTML body
                 html_body = f"""
@@ -131,8 +161,12 @@ class Command(BaseCommand):
 
         {html_events}
         {html_dms}
+        {html_notifications}
 
         <!-- Footer -->
+        <a href="{os.environ.get('FRONTEND_URL', 'http://localhost:5173')}" style="display: block; text-align: center; background: #3b82f6; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 8px; margin: 24px 0;">
+          🌐 進入映後時光首頁
+        </a>
         <p style="font-size: 11px; color: #64748b; text-align: center; margin: 0;">
           若不想收到每日結算信，可隨時前往平台個人設定關閉通知。
         </p>
