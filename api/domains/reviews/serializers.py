@@ -149,6 +149,24 @@ class ReviewSerializer(serializers.ModelSerializer):
             )
             validated_data['movie'] = movie
             
+            user = validated_data.get('user')
+            if user:
+                is_rapid_rating = "急速評星" in tag_names
+                
+                existing_reviews = Review.objects.filter(user=user, movie=movie)
+                
+                from django.db.models import Q
+                rapid_condition = Q(tags__name="急速評星")
+                
+                has_rapid = existing_reviews.filter(rapid_condition).exists()
+                has_normal = existing_reviews.exclude(rapid_condition).exists()
+                
+                if is_rapid_rating and has_rapid:
+                    raise serializers.ValidationError("您已經針對此電影送出過急速評星。")
+                elif not is_rapid_rating and has_normal:
+                    raise serializers.ValidationError("您已經針對此電影撰寫過一般心得。")
+                    
+            
             review = Review.objects.create(**validated_data)
             
             for name in tag_names:
