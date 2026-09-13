@@ -600,7 +600,7 @@ class RecalculateExpView(APIView):
     
     def post(self, request):
         try:
-            from api.models import User, Review, Comment, Vote, UserExperience, Event
+            from api.models import User, Review, Comment, Vote, UserExperience, Event, EventComment, EventRegistration
             from api.domains.gamification.services import add_user_experience
             from django.db import transaction
             
@@ -618,11 +618,22 @@ class RecalculateExpView(APIView):
                     events_count = Event.objects.filter(user=user).count()
                     total_exp += (events_count * 25)
                     
-                    reviews_count = Review.objects.filter(user=user, is_deleted=False).count()
-                    total_exp += (reviews_count * 25)
+                    # 區分一般心得與急速評星
+                    user_reviews = Review.objects.filter(user=user, is_deleted=False)
+                    for r in user_reviews:
+                        if r.tags.filter(name="急速評星").exists():
+                            total_exp += 10
+                        else:
+                            total_exp += 25
                     
                     comments_count = Comment.objects.filter(user=user).count()
                     total_exp += (comments_count * 10)
+                    
+                    event_comments_count = EventComment.objects.filter(user=user).count()
+                    total_exp += (event_comments_count * 10)
+                    
+                    event_checkins_count = EventRegistration.objects.filter(user=user, status='CHECKED_IN').count()
+                    total_exp += (event_checkins_count * 15)
                     
                     likes_received = Vote.objects.filter(review__user=user, vote_type=1).count()
                     total_exp += (likes_received * 1)
