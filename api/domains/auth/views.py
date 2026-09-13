@@ -204,7 +204,8 @@ class LineLoginView(APIView):
                 campus_id=campus_id,
                 line_user_id=line_user_id,
                 line_display_name=display_name,
-                username=display_name
+                username=display_name,
+                daily_digest_enabled=False
             )
             random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
             from api.models import UserProfile
@@ -255,11 +256,19 @@ class GoogleLoginView(APIView):
             if student_identity:
                 user = student_identity.user
                 user.google_user_id = google_user_id
-                user.save(update_fields=['google_user_id'])
+                if not user.email:
+                    user.email = email
+                    user.email_verified = True
+                    user.daily_digest_enabled = True
+                user.save(update_fields=['google_user_id', 'email', 'email_verified', 'daily_digest_enabled'])
             elif outsider_identity:
                 user = outsider_identity.user
                 user.google_user_id = google_user_id
-                user.save(update_fields=['google_user_id'])
+                if not user.email:
+                    user.email = email
+                    user.email_verified = True
+                    user.daily_digest_enabled = True
+                user.save(update_fields=['google_user_id', 'email', 'email_verified', 'daily_digest_enabled'])
             else:
                 # 3. 兩者都沒有，創建新的 Google 輕量帳號
                 import string
@@ -274,7 +283,10 @@ class GoogleLoginView(APIView):
                 user = User.objects.create(
                     campus_id=campus_id,
                     google_user_id=google_user_id,
-                    username=display_name
+                    username=display_name,
+                    email=email,
+                    email_verified=True,
+                    daily_digest_enabled=True
                 )
                 random_nickname = f"User_{''.join(random.choices(string.ascii_letters + string.digits, k=6))}"
                 from api.models import UserProfile
@@ -412,7 +424,8 @@ class NCULoginView(APIView):
                     campus_id=campus_id,
                     username=display_name,
                     email=email,
-                    email_verified=bool(email)
+                    email_verified=bool(email),
+                    daily_digest_enabled=bool(email)
                 )
                 
                 # 建立公開暱稱（UserProfile）
@@ -450,7 +463,8 @@ class NCULoginView(APIView):
                 if not user.email and email:
                     user.email = email
                     user.email_verified = True
-                    update_fields.extend(['email', 'email_verified'])
+                    user.daily_digest_enabled = True
+                    update_fields.extend(['email', 'email_verified', 'daily_digest_enabled'])
                 if update_fields:
                     user.save(update_fields=update_fields)
                 
