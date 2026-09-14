@@ -427,14 +427,21 @@ function Home() {
         </div>
       </div>
 
-      <ReviewForm isOpen={isComposing} onClose={() => setIsComposing(false)} />
-      <EventForm isOpen={isEventComposing} onClose={() => setIsEventComposing(false)} />
+      {isComposing && (
+        <ReviewForm onClose={() => setIsComposing(false)} />
+      )}
+      
+      {isEventComposing && (
+        <EventForm onClose={() => setIsEventComposing(false)} />
+      )}
       
       {isSpeedRatingOpen && (
         <SpeedRatingModal onClose={() => setIsSpeedRatingOpen(false)} />
       )}
       
-      <DriftBottleModal isOpen={isDriftBottleOpen} onClose={() => setIsDriftBottleOpen(false)} />
+      {isDriftBottleOpen && (
+        <DriftBottleModal onClose={() => setIsDriftBottleOpen(false)} />
+      )}
       
       {selectedEvent && (
         <EventDetailModal
