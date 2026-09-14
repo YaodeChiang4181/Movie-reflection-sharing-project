@@ -21,26 +21,23 @@ export const AuthProvider = ({ children }) => {
     };
     window.addEventListener('auth:logout', handleLogout);
 
-    // 檢查 URL 中是否有 auto-login token (例如來自 LINE Bot 的跳轉)
+    // 檢查 URL 中是否有 auto-login code (來自 LINE Bot 等)
     const urlParams = new URLSearchParams(window.location.search);
-    const urlToken = urlParams.get('token');
-    const urlRefresh = urlParams.get('refresh');
+    const authCode = urlParams.get('auth_code');
     
-    if (urlToken) {
-      // 為了畫面乾淨且防止 token 外洩，把 URL 上的 token 參數移除
-      urlParams.delete('token');
-      if (urlRefresh) {
-        urlParams.delete('refresh');
-        localStorage.setItem('refresh_token', urlRefresh);
-      }
+    // 一次性清理舊的 localStorage Token (因改版廢棄)
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+
+    if (authCode) {
+      // 為了畫面乾淨，把 URL 上的 auth_code 參數移除
+      urlParams.delete('auth_code');
       const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
       window.history.replaceState({}, document.title, newUrl);
       
-      api.get('/users/me/', { headers: { Authorization: `Bearer ${urlToken}` } })
+      api.post('/auth/exchange-code/', { code: authCode })
         .then(res => {
-          const currentToken = localStorage.getItem('access_token') || urlToken;
-          login(currentToken, res.data);
-          setIsAuthLoading(false);
+          login(res.data.user);
         })
         .catch(err => {
           console.error("Auto login failed", err);
@@ -59,9 +56,7 @@ export const AuthProvider = ({ children }) => {
             const accessToken = window.liff.getAccessToken();
             if (accessToken) {
               const res = await api.post('/auth/line-login/', { access_token: accessToken });
-              localStorage.setItem('refresh_token', res.data.refresh);
-              login(res.data.access, res.data.user);
-              setIsAuthLoading(false);
+              login(res.data.user);
               return;
             }
           }
@@ -72,18 +67,18 @@ export const AuthProvider = ({ children }) => {
       checkLocalToken();
     }
 
-    function checkLocalToken() {
-      // 檢查 localStorage 中是否有 token
-      const token = localStorage.getItem('access_token');
+    async function checkLocalToken() {
       const savedUser = localStorage.getItem('user_profile');
       
-      if (token && savedUser) {
-        setIsLoggedIn(true);
-        setUserProfile(JSON.parse(savedUser));
-        setIsAuthLoading(false);  // 立即標記完成，讓頁面不被 loading 卡住
-        // 背景非同步更新最新資料
-        fetchUserProfile(token);
-      } else {
+      // 就算 localStorage 沒存 user_profile，也可能存在 HttpOnly Cookie，所以主動向後端確認
+      try {
+        const res = await api.get('/users/me/');
+        login(res.data);
+      } catch (err) {
+        // 如果連線失敗或 Cookie 真的無效 (401)，則視為未登入
+        setIsLoggedIn(false);
+        setUserProfile(null);
+        localStorage.removeItem('user_profile');
         setIsAuthLoading(false);
       }
     }
@@ -119,11 +114,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const fetchUserProfile = async (token = null) => {
-    const activeToken = token || localStorage.getItem('access_token');
-    if (!activeToken) return;
+  const fetchUserProfile = async () => {
     try {
-      const res = await api.get('/users/me/', { headers: { Authorization: `Bearer ${activeToken}` } });
+      const res = await api.get('/users/me/');
       setUserProfile(res.data);
       localStorage.setItem('user_profile', JSON.stringify(res.data));
     } catch (err) {
@@ -133,17 +126,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = (token, user) => {
-    localStorage.setItem('access_token', token);
+  const login = (user) => {
+    // 不再儲存 Token！Cookie 由後端控制
     localStorage.setItem('user_profile', JSON.stringify(user));
     setIsLoggedIn(true);
     setUserProfile(user);
     setIsAuthLoading(false);  // 確保 login() 後 loading 狀態一定歸 false
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout/');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
     localStorage.removeItem('user_profile');
     setIsLoggedIn(false);
     setUserProfile(null);

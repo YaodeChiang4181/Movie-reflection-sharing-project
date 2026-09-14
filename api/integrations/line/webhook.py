@@ -346,11 +346,14 @@ def handle_message(event):
             
             # 根據是否有登入產生專屬的 frontend_url
             if user:
-                refresh = RefreshToken.for_user(user)
-                access_token = str(refresh.access_token)
-                refresh_token = str(refresh)
+                from api.models import AuthCode
+                import secrets
+                
+                code = secrets.token_urlsafe(32)
+                AuthCode.objects.create(code=code, user=user)
+                
                 encoded_keyword = urllib.parse.quote(keyword)
-                search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
+                search_link = f"{frontend_url}/search?q={encoded_keyword}&auth_code={code}"
             else:
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}"
@@ -382,11 +385,14 @@ def handle_message(event):
             
             # 根據是否有登入產生專屬的 frontend_url
             if user:
-                refresh = RefreshToken.for_user(user)
-                access_token = str(refresh.access_token)
-                refresh_token = str(refresh)
+                from api.models import AuthCode
+                import secrets
+                
+                code = secrets.token_urlsafe(32)
+                AuthCode.objects.create(code=code, user=user)
+                
                 encoded_keyword = urllib.parse.quote(keyword)
-                search_link = f"{frontend_url}/search?q={encoded_keyword}&token={access_token}&refresh={refresh_token}"
+                search_link = f"{frontend_url}/search?q={encoded_keyword}&auth_code={code}"
             else:
                 encoded_keyword = urllib.parse.quote(keyword)
                 search_link = f"{frontend_url}/search?q={encoded_keyword}"

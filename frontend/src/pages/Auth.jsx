@@ -70,8 +70,7 @@ function Auth() {
             redirect_uri: redirectUri 
           });
           
-          localStorage.setItem('refresh_token', res.data.refresh);
-          login(res.data.access, res.data.user);
+          login(res.data.user);
           navigate(targetPath, { replace: true });
         } catch (err) {
           console.error('NCU login error:', err);
@@ -142,8 +141,7 @@ function Auth() {
         const response = await api.post('auth/login/', loginData);
         
         // CustomTokenObtainPairSerializer 會回傳 access, refresh 與 user 資訊
-        login(response.data.access, response.data.user);
-        localStorage.setItem('refresh_token', response.data.refresh);
+        login(response.data.user);
         
         navigate(redirectPath, { replace: true }); // 登入後回到上一頁或首頁
       } else {
@@ -208,8 +206,7 @@ function Auth() {
           try {
             const accessToken = window.liff.getAccessToken();
             const res = await api.post('/auth/line-login/', { access_token: accessToken });
-            localStorage.setItem('refresh_token', res.data.refresh);
-            login(res.data.access, res.data.user);
+            login(res.data.user);
           } catch (apiErr) {
             console.error('Token 交換失敗，強制重新登入 LINE', apiErr);
             window.liff.logout();
@@ -229,8 +226,7 @@ function Auth() {
     onSuccess: async (tokenResponse) => {
       try {
         const res = await api.post('/auth/google-login/', { access_token: tokenResponse.access_token });
-        localStorage.setItem('refresh_token', res.data.refresh);
-        login(res.data.access, res.data.user);
+        login(res.data.user);
       } catch (err) {
         console.error('Google login error:', err);
         setError('Gmail 登入發生錯誤或伺服器無回應');

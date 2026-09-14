@@ -12,11 +12,20 @@ import requests
 from django.core.mail import send_mail
 from api.models import EmailVerification
 from .serializers import RegisterSerializer, CustomTokenObtainPairSerializer, UserMeSerializer, AdminUserSerializer
+from .cookie_utils import set_jwt_cookies, clear_jwt_cookies
 
 User = get_user_model()
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            access = response.data.pop('access', None)
+            refresh = response.data.pop('refresh', None)
+            set_jwt_cookies(response, access, refresh)
+        return response
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -215,11 +224,11 @@ class LineLoginView(APIView):
         from rest_framework_simplejwt.tokens import RefreshToken
         refresh = RefreshToken.for_user(user)
         
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
+        response = Response({
             'user': UserMeSerializer(user).data
         })
+        set_jwt_cookies(response, refresh.access_token, refresh)
+        return response
 
 class GoogleLoginView(APIView):
     permission_classes = (AllowAny,)
@@ -296,11 +305,11 @@ class GoogleLoginView(APIView):
         from rest_framework_simplejwt.tokens import RefreshToken
         refresh = RefreshToken.for_user(user)
         
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
+        response = Response({
             'user': UserMeSerializer(user).data
         })
+        set_jwt_cookies(response, refresh.access_token, refresh)
+        return response
 
 class NCULoginView(APIView):
     permission_classes = (AllowAny,)
@@ -498,11 +507,11 @@ class NCULoginView(APIView):
         from rest_framework_simplejwt.tokens import RefreshToken
         refresh = RefreshToken.for_user(user)
         
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
+        response = Response({
             'user': UserMeSerializer(user).data
         })
+        set_jwt_cookies(response, refresh.access_token, refresh)
+        return response
 
 
 class SyncUserExpView(APIView):
@@ -913,11 +922,10 @@ class ClaimBadgeView(APIView):
         if is_new_user:
             from rest_framework_simplejwt.tokens import RefreshToken
             refresh = RefreshToken.for_user(user)
-            response_data['tokens'] = {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token)
-            }
             response_data['user'] = UserMeSerializer(user).data
+            response = Response(response_data)
+            set_jwt_cookies(response, refresh.access_token, refresh)
+            return response
             
         return Response(response_data)
 
@@ -960,3 +968,61 @@ class UpdateNicknameView(APIView):
         user.profile.save()
         
         return Response({'message': '暱稱修改成功！', 'nickname': new_nickname}, status=status.HTTP_200_OK)
+
+class CookieTokenRefreshView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        from django.conf import settings
+        refresh_token = request.COOKIES.get(settings.JWT_REFRESH_COOKIE_NAME)
+        if not refresh_token:
+            return Response({'error': 'No refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken(refresh_token)
+            response = Response({'message': 'Token refreshed'})
+            set_jwt_cookies(response, refresh.access_token)
+            return response
+        except Exception:
+            response = Response({'error': 'Invalid refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
+            clear_jwt_cookies(response)
+            return response
+
+class LogoutView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        response = Response({'message': 'Logged out'})
+        clear_jwt_cookies(response)
+        return response
+
+class ExchangeAuthCodeView(APIView):
+    permission_classes = (AllowAny,)
+    
+    def post(self, request):
+        from api.models import AuthCode
+        from django.utils import timezone
+        from datetime import timedelta
+        from rest_framework_simplejwt.tokens import RefreshToken
+        
+        code = request.data.get('code')
+        if not code:
+            return Response({'error': 'Missing code'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        auth_code = AuthCode.objects.filter(
+            code=code, 
+            is_used=False,
+            created_at__gte=timezone.now() - timedelta(minutes=5)
+        ).first()
+        
+        if not auth_code:
+            return Response({'error': 'Invalid or expired code'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        auth_code.is_used = True
+        auth_code.save()
+        
+        refresh = RefreshToken.for_user(auth_code.user)
+        response = Response({'user': UserMeSerializer(auth_code.user).data})
+        set_jwt_cookies(response, refresh.access_token, refresh)
+        return response

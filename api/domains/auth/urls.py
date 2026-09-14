@@ -5,7 +5,8 @@ from .views import (
     RegisterView, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, 
     SendVerificationView, VerifyEmailView, BindEmailView, LineLoginView, GoogleLoginView, NCULoginView, MergeGhostAccountView,
     RecalculateExpView, AdminStatsView, SyncUserExpView, UserAvatarUploadView,
-    AdminInviteTokenView, ClaimBadgeView, UpdateNicknameView
+    RecalculateExpView, AdminStatsView, SyncUserExpView, UserAvatarUploadView,
+    AdminInviteTokenView, ClaimBadgeView, UpdateNicknameView, CookieTokenRefreshView, LogoutView, ExchangeAuthCodeView
 )
 
 router = DefaultRouter()
@@ -14,10 +15,12 @@ router.register(r'admin/users', AdminUserViewSet, basename='admin-user')
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='auth_register'),
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('logout/', LogoutView.as_view(), name='logout'),
     path('line-login/', LineLoginView.as_view(), name='line_login'),
     path('google-login/', GoogleLoginView.as_view(), name='google_login'),
     path('ncu-login/', NCULoginView.as_view(), name='ncu_login'),
-    path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('exchange-code/', ExchangeAuthCodeView.as_view(), name='exchange_code'),
+    path('refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
     path('send-verification/', SendVerificationView.as_view(), name='send_verification'),
     path('verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('bind-email/', BindEmailView.as_view(), name='bind_email'),

@@ -366,3 +366,14 @@ class DailyDigestLog(models.Model):
     def __str__(self):
         return f"{self.user} - {self.digest_date} - {self.delivery_status}"
 
+class AuthCode(models.Model):
+    code = models.CharField(max_length=64, unique=True, verbose_name="一次性授權碼")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='auth_codes')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+    
+    class Meta:
+        indexes = [models.Index(fields=['code'])]
+        
+    def __str__(self):
+        return f"AuthCode for {self.user.campus_id} (used: {self.is_used})"

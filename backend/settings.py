@@ -185,6 +185,7 @@ AUTH_USER_MODEL = 'api.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'api.domains.auth.cookie_authentication.CookieJWTAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
@@ -215,9 +216,21 @@ FRONTEND_URL = os.environ.get('FRONTEND_URL')
 if FRONTEND_URL:
     CORS_ALLOWED_ORIGINS.append(FRONTEND_URL.rstrip('/'))
 
+CORS_ALLOW_CREDENTIALS = True
+
+# Cookie-based JWT Settings
+JWT_COOKIE_NAME = 'access_token'
+JWT_REFRESH_COOKIE_NAME = 'refresh_token'
+JWT_COOKIE_HTTPONLY = True
+JWT_COOKIE_SECURE = not DEBUG
+JWT_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'
+JWT_COOKIE_DOMAIN = None
+
 SIMPLE_JWT = {
     'USER_ID_FIELD': 'campus_id',
     'USER_ID_CLAIM': 'user_id',
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
 # Email Configuration (OTP Verification & Daily Digest)
