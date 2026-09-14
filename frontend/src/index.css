@@ -151,7 +151,7 @@ button {
   display: grid;
   grid-template-columns: 1fr 320px;
   gap: 32px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .home-action-panel {
@@ -160,7 +160,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  height: 100%;
+  height: calc(100vh - 130px);
+  min-height: 480px;
 }
 
 @media (max-width: 900px) {

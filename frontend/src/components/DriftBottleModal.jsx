@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Anchor, Search, Send, Map } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Anchor, Search, Send, Map, Loader2, Image as ImageIcon } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './DriftBottleModal.module.css';
+import reviewStyles from './ReviewForm.module.css';
 
 function DriftBottleModal({ onClose }) {
   const [activeTab, setActiveTab] = useState('pick'); // 'pick' | 'drop'
@@ -17,8 +18,57 @@ function DriftBottleModal({ onClose }) {
   const [movieTitle, setMovieTitle] = useState('');
   const [message, setMessage] = useState('');
   const [dropSuccess, setDropSuccess] = useState(false);
+
+  // Search State
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchTimeout = useRef(null);
+  const dropdownRef = useRef(null);
   
   const { user } = useAuth();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleMovieTitleChange = (e) => {
+    const val = e.target.value;
+    setMovieTitle(val);
+    
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+    
+    if (val.trim()) {
+      searchTimeout.current = setTimeout(async () => {
+        setIsSearching(true);
+        try {
+          const res = await api.get(`movies/search_tmdb/?q=${encodeURIComponent(val)}`);
+          setSearchResults(res.data);
+          setShowDropdown(true);
+        } catch (err) {
+          console.error('Search error', err);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 500);
+    } else {
+      setSearchResults([]);
+      setShowDropdown(false);
+    }
+  };
+
+  const handleSelectMovie = (movie) => {
+    setMovieTitle(movie.title);
+    setShowDropdown(false);
+  };
 
   const handlePick = async () => {
     setIsPicking(true);
@@ -162,16 +212,37 @@ function DriftBottleModal({ onClose }) {
                   
                   <div className={styles.formGroup}>
                     <label>推薦電影名稱 <span className={styles.required}>*</span></label>
-                    <div className={styles.inputWrapper}>
-                      <Search className={styles.inputIcon} size={18} />
-                      <input 
-                        type="text" 
-                        value={movieTitle}
-                        onChange={e => setMovieTitle(e.target.value)}
-                        placeholder="請輸入電影名稱..."
-                        required
-                        className={styles.textInput}
-                      />
+                    <div className={reviewStyles.autocompleteContainer} ref={dropdownRef}>
+                      <div className={reviewStyles.inputWrapper}>
+                        <Search className={reviewStyles.inputIconLeft} size={18} />
+                        <input 
+                          type="text" 
+                          value={movieTitle}
+                          onChange={handleMovieTitleChange}
+                          placeholder="輸入電影名稱搜尋..."
+                          required
+                          className={`${reviewStyles.customInput} ${reviewStyles.searchInput}`}
+                          disabled={isDropping}
+                        />
+                        {isSearching && <Loader2 className={reviewStyles.searchIcon} size={18} />}
+                      </div>
+                      {showDropdown && searchResults.length > 0 && (
+                        <div className={reviewStyles.dropdownMenu}>
+                          {searchResults.map((movie) => (
+                            <div key={movie.tmdb_id} className={reviewStyles.dropdownItem} onClick={() => handleSelectMovie(movie)}>
+                              {movie.poster_url ? (
+                                <img src={movie.poster_url} alt="poster" className={reviewStyles.dropdownPoster} />
+                              ) : (
+                                <div className={reviewStyles.dropdownPosterPlaceholder}><ImageIcon size={16}/></div>
+                              )}
+                              <div className={reviewStyles.dropdownInfo}>
+                                <div className={reviewStyles.dropdownTitle}>{movie.title}</div>
+                                <div className={reviewStyles.dropdownMeta}>{movie.original_title} ({movie.year})</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
