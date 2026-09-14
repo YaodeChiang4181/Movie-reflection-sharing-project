@@ -416,7 +416,12 @@ function Home() {
             onClick={handleDriftClick}
           >
             <div className="action-card-icon">
-              <span style={{ fontSize: '32px' }}>🌊</span>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15.3 15.3a2.5 2.5 0 0 1-3.5 0l-2.6-2.6a2.5 2.5 0 0 1 0-3.5l4-4a2.5 2.5 0 0 1 3.5 0l2.6 2.6a2.5 2.5 0 0 1 0 3.5Z" />
+                <path d="M19.4 6.6l-4-4" />
+                <path d="M4.6 19.4l4-4" />
+                <path d="M2 22s4-2 7-2 5 2 8 2 7-2 7-2" />
+              </svg>
             </div>
             <div className="action-card-text">
               <h2>片單漂流瓶</h2>

@@ -151,7 +151,7 @@ button {
   display: grid;
   grid-template-columns: 1fr 320px;
   gap: 32px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .home-action-panel {
@@ -160,6 +160,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  height: 100%;
 }
 
 @media (max-width: 900px) {
@@ -358,8 +359,10 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   text-align: center;
+  flex: 1;
 }
 
 .action-card-compose {
