@@ -98,6 +98,9 @@ urlpatterns = [
     # Domain: Notifications & Mailbox
     path('', include('api.domains.notifications.urls')),
     
+    # Domain: Drift Bottle
+    path('drift-bottles/', include('api.domains.drift_bottle.urls')),
+    
     # Integrations: LINE Webhook
     path('line/', include('api.integrations.line.urls')),
     

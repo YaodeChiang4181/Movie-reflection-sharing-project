@@ -7,6 +7,7 @@ import SpeedRatingModal from '../components/SpeedRatingModal';
 import EventForm from '../components/EventForm';
 import FeedCard from '../components/FeedCard';
 import EventDetailModal from '../components/EventDetailModal';
+import DriftBottleModal from '../components/DriftBottleModal';
 import SEO from '../components/SEO';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,6 +17,7 @@ function Home() {
   const [isComposing, setIsComposing] = useState(false);
   const [isEventComposing, setIsEventComposing] = useState(false);
   const [isSpeedRatingOpen, setIsSpeedRatingOpen] = useState(false);
+  const [isDriftBottleOpen, setIsDriftBottleOpen] = useState(false);
   
   const [feedItems, setFeedItems] = useState([]);
   const [feedType, setFeedType] = useState('all'); // 'all', 'movies', 'events'
@@ -137,6 +139,15 @@ function Home() {
       setSelectedEvent(item);
     }
   };
+  const handleDriftClick = () => {
+    if (!isLoggedIn) {
+      alert('請先登入後再使用片單漂流瓶！');
+      navigate('/auth');
+      return;
+    }
+    setIsDriftBottleOpen(true);
+  };
+
 
   return (
     <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
@@ -400,8 +411,32 @@ function Home() {
             </div>
           </div>
 
+          <div 
+            className="glass hover-scale action-card action-card-drift"
+            onClick={handleDriftClick}
+          >
+            <div className="action-card-icon">
+              <span style={{ fontSize: '32px' }}>🌊</span>
+            </div>
+            <div className="action-card-text">
+              <h2>片單漂流瓶</h2>
+              <p>推薦好片或撈起驚喜推薦</p>
+            </div>
+          </div>
+
         </div>
       </div>
+
+      <ReviewForm isOpen={isComposing} onClose={() => setIsComposing(false)} />
+      <EventForm isOpen={isEventComposing} onClose={() => setIsEventComposing(false)} />
+      <SpeedRatingModal isOpen={isSpeedRatingOpen} onClose={() => setIsSpeedRatingOpen(false)} />
+      <DriftBottleModal isOpen={isDriftBottleOpen} onClose={() => setIsDriftBottleOpen(false)} />
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </div>
   );
 }
