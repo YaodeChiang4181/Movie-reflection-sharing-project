@@ -26,10 +26,13 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-5v=*5@t(v5m5v2z=#h8ko8+$sf%61emzg3na^%i1*)w@d9q@^o')
-
-# SECURITY WARNING: don't run with debug turned on in production!
+SECRET_KEY_ENV = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+if not DEBUG and not SECRET_KEY_ENV:
+    raise Exception("Critical Security Error: SECRET_KEY environment variable is not set in production.")
+
+SECRET_KEY = SECRET_KEY_ENV or 'django-insecure-5v=*5@t(v5m5v2z=#h8ko8+$sf%61emzg3na^%i1*)w@d9q@^o'
 
 ALLOWED_HOSTS = ['*']
 # Render specific configuration
@@ -199,14 +202,18 @@ REST_FRAMEWORK = {
     }
 }
 
-# 階段四：CORS 設定 (上雲端後為了方便測試先全開，或是加入 Vercel URL)
-CORS_ALLOW_ALL_ORIGINS = os.environ.get('RENDER') != '' # 在 Render 上時允許所有前端請求
+# CORS Security Settings
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+
+FRONTEND_URL = os.environ.get('FRONTEND_URL')
+if FRONTEND_URL:
+    CORS_ALLOWED_ORIGINS.append(FRONTEND_URL.rstrip('/'))
 
 SIMPLE_JWT = {
     'USER_ID_FIELD': 'campus_id',
@@ -230,3 +237,15 @@ DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'noreply@movieplatform.nc
 # DDoS Protection: Payload Limits (Application Layer)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5 MB limit for request body
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 100    # Limit number of form fields to prevent hash collision DoS
+
+# Security Headers (Production)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
