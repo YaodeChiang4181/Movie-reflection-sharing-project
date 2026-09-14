@@ -83,14 +83,16 @@ function DriftBottleModal({ onClose }) {
           <button 
             className={`${styles.tabBtn} ${activeTab === 'pick' ? styles.activeTab : ''}`}
             onClick={() => { setActiveTab('pick'); resetState(); }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            🌊 撈瓶子
+            <Search size={18} style={{ marginRight: '6px' }} /> 撈瓶子
           </button>
           <button 
             className={`${styles.tabBtn} ${activeTab === 'drop' ? styles.activeTab : ''}`}
             onClick={() => { setActiveTab('drop'); resetState(); }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            🍾 丟瓶子
+            <Send size={18} style={{ marginRight: '6px' }} /> 丟瓶子
           </button>
         </div>
 
