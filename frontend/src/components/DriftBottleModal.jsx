@@ -4,7 +4,7 @@ import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './DriftBottleModal.module.css';
 
-function DriftBottleModal({ isOpen, onClose }) {
+function DriftBottleModal({ onClose }) {
   const [activeTab, setActiveTab] = useState('pick'); // 'pick' | 'drop'
   const [isPicking, setIsPicking] = useState(false);
   const [isDropping, setIsDropping] = useState(false);
@@ -19,8 +19,6 @@ function DriftBottleModal({ isOpen, onClose }) {
   const [dropSuccess, setDropSuccess] = useState(false);
   
   const { user } = useAuth();
-
-  if (!isOpen) return null;
 
   const handlePick = async () => {
     setIsPicking(true);
