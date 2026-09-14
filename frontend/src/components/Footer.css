@@ -5,6 +5,8 @@
   color: var(--text-secondary);
   margin-top: auto; /* push to bottom if flex layout */
   text-align: center;
+  position: relative;
+  z-index: 100;
 }
 
 .global-footer .container {
