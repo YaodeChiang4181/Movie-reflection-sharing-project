@@ -151,9 +151,10 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
             review_count=Count('reviews', filter=Q(reviews__is_deleted=False)),
         )
 
-        # Auto-backfill poster_url for movies missing it
+        # Auto-backfill poster_url for movies missing it (or forced refresh)
+        refresh_posters = request.query_params.get('refresh_posters') == 'true'
         for movie in movies_qs:
-            if not movie.poster_url:
+            if not movie.poster_url or refresh_posters:
                 try:
                     meta = fetch_movie_metadata(movie.title)
                     if meta and meta.get('poster_url'):

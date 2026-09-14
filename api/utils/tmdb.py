@@ -119,10 +119,26 @@ def fetch_movie_metadata(movie_title):
         genres = [GENRE_MAP[gid] for gid in genre_ids if gid in GENRE_MAP][:5]
         
         poster_path = best_match.get('poster_path')
+        tmdb_id = best_match.get('id')
+        media_type = best_match.get('media_type', 'movie')
+        
+        # 嘗試優先取得 zh-TW 或 en 的海報，避免出現簡體中文海報
+        api_key = getattr(settings, 'TMDB_API_KEY', '')
+        if api_key and tmdb_id:
+            try:
+                url = f"https://api.themoviedb.org/3/{media_type}/{tmdb_id}/images?api_key={api_key}&include_image_language=zh-TW,en,null"
+                req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                with urllib.request.urlopen(req, timeout=3) as response:
+                    data = json.loads(response.read().decode('utf-8'))
+                    if data.get('posters') and len(data['posters']) > 0:
+                        poster_path = data['posters'][0]['file_path']
+            except Exception as e:
+                print(f"TMDB Images Fetch Error: {e}")
+
         poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
         
         return {
-            'tmdb_id': best_match.get('id'),
+            'tmdb_id': tmdb_id,
             'original_title': best_match.get('original_title') or best_match.get('original_name'),
             'localized_title': best_match.get('title') or best_match.get('name'),
             'genres': genres,
