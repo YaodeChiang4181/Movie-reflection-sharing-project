@@ -75,7 +75,7 @@ function DriftBottleModal({ onClose }) {
     setPickError('');
     setPickedBottle(null);
     try {
-      const response = await api.get('/api/drift-bottles/pick/');
+      const response = await api.get('drift-bottles/pick/');
       setPickedBottle(response.data);
     } catch (err) {
       setPickError(err.response?.data?.error || '撈取失敗，請稍後再試。');
@@ -93,7 +93,7 @@ function DriftBottleModal({ onClose }) {
     
     setIsDropping(true);
     try {
-      await api.post('/api/drift-bottles/', {
+      await api.post('drift-bottles/', {
         movie_title: movieTitle,
         message: message
       });
