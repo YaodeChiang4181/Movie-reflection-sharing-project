@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-// 建立 Axios 實體，自動讀取 Vite 環境變數
-let baseURL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/';
-if (!baseURL.endsWith('/')) {
-  baseURL += '/';
-}
+// 透過 Vercel Rewrite 或 Vite Proxy 將請求轉發至後端，以解決跨網域 Cookie 被阻擋的問題
+const baseURL = '/api/';
 
 const api = axios.create({
   baseURL: baseURL,
