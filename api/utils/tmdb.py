@@ -341,10 +341,10 @@ def fetch_movie_metadata_by_id(tmdb_id):
     return None
 
 
-def fetch_tmdb_popular_pool(pool_size=10):
+def fetch_tmdb_popular_pool(pool_size=50):
     """
     Fetch and cache a pool of popular movies from TMDB.
-    Uses Django Cache with key 'tmdb_speed_pool', TTL = 30 minutes.
+    Uses Django Cache with key 'tmdb_speed_pool', TTL = 2 hours.
     Returns a list of dicts with 'tmdb_id', 'title' (zh-TW), 'original_title', 'poster_url'.
     """
     CACHE_KEY = 'tmdb_speed_pool'
@@ -357,10 +357,10 @@ def fetch_tmdb_popular_pool(pool_size=10):
         return []
 
     try:
-        # Fetch from 2 random pages to get a more diverse pool
+        # Fetch from 5 random pages to get a more diverse pool
         all_movies = []
-        for _ in range(2):
-            page = random.randint(1, 10)
+        for _ in range(5):
+            page = random.randint(1, 15)
             url = (
                 f"https://api.themoviedb.org/3/movie/popular"
                 f"?api_key={api_key}&language=zh-TW&page={page}"
@@ -395,8 +395,8 @@ def fetch_tmdb_popular_pool(pool_size=10):
         random.shuffle(unique)
         pool = unique[:pool_size]
 
-        # Cache for 30 minutes
-        cache.set(CACHE_KEY, pool, timeout=1800)
+        # Cache for 2 hours (7200 seconds)
+        cache.set(CACHE_KEY, pool, timeout=7200)
         return pool
 
     except Exception as e:

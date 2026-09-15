@@ -65,18 +65,23 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         count = int(request.query_params.get('count', 10))
         count = min(count, 20)  # cap at 20
 
-        # Base query for local movies
-        local_movies_qs = Movie.objects.annotate(
-            active_review_count=Count('reviews', filter=Q(reviews__is_deleted=False))
-        ).filter(active_review_count__gt=0)
+        # Cache local active movies for 10 minutes
+        local_movies_cache_key = 'speed_rating_local_active_movies'
+        local_movies_all = cache.get(local_movies_cache_key)
         
+        if local_movies_all is None:
+            local_movies_all = list(Movie.objects.annotate(
+                active_review_count=Count('reviews', filter=Q(reviews__is_deleted=False))
+            ).filter(active_review_count__gt=0).values_list('id', flat=True))
+            cache.set(local_movies_cache_key, local_movies_all, timeout=600)
+
+        # Gather user reviewed IDs to exclude
         user_reviewed_movie_ids = set()
         user_reviewed_tmdb_ids = set()
         
         if request.user.is_authenticated:
             # Gather IDs of movies already RAPID reviewed by this user
             user_reviewed_movie_ids = set(Review.objects.filter(user=request.user, tags__name="急速評星").values_list('movie_id', flat=True))
-            local_movies_qs = local_movies_qs.exclude(id__in=user_reviewed_movie_ids)
             
             # Gather their tmdb_ids to also filter from the TMDB pool
             user_reviewed_tmdb_ids = set(
@@ -85,10 +90,10 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                 .values_list('tmdb_id', flat=True)
             )
 
-        local_movies = list(local_movies_qs.values_list('id', flat=True))
+        local_movies = [m_id for m_id in local_movies_all if m_id not in user_reviewed_movie_ids]
 
         # Get TMDB pool from cache
-        tmdb_pool = fetch_tmdb_popular_pool(pool_size=10)
+        tmdb_pool = fetch_tmdb_popular_pool(pool_size=50)
         
         # Filter out TMDB movies already reviewed by user
         if request.user.is_authenticated and tmdb_pool:
