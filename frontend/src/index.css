@@ -162,6 +162,8 @@ button {
   gap: 24px;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px; /* 給 hover 放大與陰影留空間，防止超出邊界被截斷 */
 }
 
 /* Hide scrollbar for the sticky panel for a cleaner look */
@@ -363,14 +365,14 @@ button {
 
 /* Action Cards Layout */
 .action-card {
-  padding: 32px;
+  padding: 24px; /* 從 32px 縮小一點 */
   border-radius: var(--radius-lg);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 12px; /* 從 16px 縮小 */
   text-align: center;
   flex: 1;
 }
