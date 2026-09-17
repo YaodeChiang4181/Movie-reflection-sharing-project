@@ -242,10 +242,12 @@ function Home() {
                 className="glass hover-scale hero-banner" 
                 onClick={() => navigate(`/movies/${item.id}`)}
                 style={{ marginBottom: '16px', position: 'relative' }}
-                onMouseEnter={() => setHeroHovered(true)}
-                onMouseLeave={() => setHeroHovered(false)}
               >
-                <div style={{ position: 'relative', flexShrink: 0 }}>
+                <div 
+                  style={{ position: 'relative', flexShrink: 0 }}
+                  onMouseEnter={() => setHeroHovered(true)}
+                  onMouseLeave={() => setHeroHovered(false)}
+                >
                   <TmdbPoster title={item.title} className="hero-poster" />
                   {heroHovered && item.feed_type === 'MOVIE' && (
                     <div style={{ position: 'absolute', bottom: '-8px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
