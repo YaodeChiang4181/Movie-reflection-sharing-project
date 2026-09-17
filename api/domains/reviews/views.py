@@ -8,7 +8,7 @@ from django.db.models.functions import Length, Replace
 from django.core.cache import cache
 from api.models import Movie, Review, Vote, Comment
 from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
-from api.utils.tmdb import search_tmdb_movies, fetch_tmdb_popular_pool, fetch_movie_metadata
+from api.utils.tmdb import search_tmdb_movies, fetch_tmdb_popular_pool, fetch_movie_metadata, fetch_watch_providers
 from api.domains.gamification.services import add_user_experience
 import random
 
@@ -47,6 +47,15 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                 
         serializer = self.get_serializer(related_movies, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def watch_providers(self, request, pk=None):
+        """取得該電影在串流平台的上架資訊（由 TMDB Watch Providers API 提供）"""
+        movie = self.get_object()
+        if not movie.tmdb_id:
+            return Response({'detail': '此電影尚無 TMDB 資料，無法查詢串流平台。'}, status=status.HTTP_404_NOT_FOUND)
+        data = fetch_watch_providers(movie.tmdb_id)
+        return Response(data)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def search_tmdb(self, request):

@@ -8,6 +8,7 @@ import EventForm from '../components/EventForm';
 import FeedCard from '../components/FeedCard';
 import EventDetailModal from '../components/EventDetailModal';
 import DriftBottleModal from '../components/DriftBottleModal';
+import WatchProviderOverlay from '../components/WatchProviderOverlay';
 import SEO from '../components/SEO';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,6 +27,7 @@ function Home() {
   const [heroItems, setHeroItems] = useState([]);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [heroHovered, setHeroHovered] = useState(false);
   
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
@@ -239,9 +241,18 @@ function Home() {
               <div 
                 className="glass hover-scale hero-banner" 
                 onClick={() => navigate(`/movies/${item.id}`)}
-                style={{ marginBottom: '16px' }}
+                style={{ marginBottom: '16px', position: 'relative' }}
+                onMouseEnter={() => setHeroHovered(true)}
+                onMouseLeave={() => setHeroHovered(false)}
               >
-                <TmdbPoster title={item.title} className="hero-poster" />
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <TmdbPoster title={item.title} className="hero-poster" />
+                  {heroHovered && item.feed_type === 'MOVIE' && (
+                    <div style={{ position: 'absolute', bottom: '-8px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+                      <WatchProviderOverlay movieId={item.id} isVisible={heroHovered} variant="overlay" />
+                    </div>
+                  )}
+                </div>
                 <div className="hero-content">
                   <div className="hero-badge" style={{ 
                     background: 'rgba(245, 158, 11, 0.16)', 

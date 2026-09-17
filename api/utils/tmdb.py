@@ -402,3 +402,68 @@ def fetch_tmdb_popular_pool(pool_size=50):
     except Exception as e:
         print(f"TMDB Popular Pool Fetch Error: {e}")
         return []
+
+
+def fetch_watch_providers(tmdb_id, media_type='movie', region='TW'):
+    """
+    Fetch streaming/watch providers for a movie or TV show from TMDB.
+    Uses the /watch/providers endpoint powered by JustWatch data.
+    Results are cached for 24 hours.
+    
+    Returns a dict:
+    {
+        "link": "https://...",  # JustWatch page for this title in the region
+        "flatrate": [{"provider_name": "Netflix", "logo_url": "https://..."}],
+        "rent": [...],
+        "buy": [...]
+    }
+    Or empty dict if no data available.
+    """
+    if not tmdb_id:
+        return {}
+
+    cache_key = f"watch_providers_{media_type}_{tmdb_id}_{region}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    if not api_key:
+        return {}
+
+    try:
+        url = f"https://api.themoviedb.org/3/{media_type}/{tmdb_id}/watch/providers?api_key={api_key}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+
+        region_data = data.get('results', {}).get(region, {})
+        if not region_data:
+            result = {}
+            cache.set(cache_key, result, timeout=86400)
+            return result
+
+        def _format_providers(providers_list):
+            return [
+                {
+                    'provider_name': p.get('provider_name', ''),
+                    'logo_url': f"https://image.tmdb.org/t/p/original{p['logo_path']}" if p.get('logo_path') else None,
+                    'provider_id': p.get('provider_id'),
+                }
+                for p in (providers_list or [])
+            ]
+
+        result = {
+            'link': region_data.get('link', ''),
+            'flatrate': _format_providers(region_data.get('flatrate')),
+            'rent': _format_providers(region_data.get('rent')),
+            'buy': _format_providers(region_data.get('buy')),
+        }
+
+        # Cache for 24 hours
+        cache.set(cache_key, result, timeout=86400)
+        return result
+
+    except Exception as e:
+        print(f"TMDB Watch Providers Fetch Error: {e}")
+        return {}

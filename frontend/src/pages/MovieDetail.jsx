@@ -8,6 +8,7 @@ import ReviewForm from '../components/ReviewForm';
 import TmdbPoster from '../components/TmdbPoster';
 import ReviewModal from '../components/ReviewModal';
 import UserCardModal from '../components/UserCardModal';
+import WatchProviderOverlay from '../components/WatchProviderOverlay';
 import SEO from '../components/SEO';
 
 function MovieDetail() {
@@ -147,11 +148,12 @@ function MovieDetail() {
             )}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '32px 0' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0' }}>
             <TmdbPoster 
               title={movie.title} 
               style={{ width: '220px', height: '330px', borderRadius: '16px', boxShadow: '0 12px 32px rgba(0,0,0,0.4)' }} 
             />
+            <WatchProviderOverlay movieId={movie.id} variant="inline" />
           </div>
 
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
