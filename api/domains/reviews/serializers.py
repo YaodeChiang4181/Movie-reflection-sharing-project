@@ -59,14 +59,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ('id', 'user', 'movie', 'movie_title', 'tmdb_id', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'display_date', 'effective_date', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        filtered_tags = []
-        for tag in data.get('tags', []):
-            if not tag.get('is_system') or tag.get('name') == instance.movie.title:
-                filtered_tags.append(tag)
-        data['tags'] = filtered_tags
-        return data
+
 
     def get_effective_date(self, obj):
         return obj.display_date or obj.created_at
@@ -86,6 +79,14 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        
+        # Filter out system tags (except movie title)
+        filtered_tags = []
+        for tag in data.get('tags', []):
+            if not tag.get('is_system') or tag.get('name') == instance.movie.title:
+                filtered_tags.append(tag)
+        data['tags'] = filtered_tags
+
         if not data.get('user'):
             data['user'] = {'campus_id': 'ghost', 'nickname': '已註銷的使用者'}
             
