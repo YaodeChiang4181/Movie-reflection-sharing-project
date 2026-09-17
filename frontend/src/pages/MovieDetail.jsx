@@ -25,6 +25,7 @@ function MovieDetail() {
   const [isComposing, setIsComposing] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
   const [selectedUserCampusId, setSelectedUserCampusId] = useState(null);
+  const [posterHovered, setPosterHovered] = useState(false);
 
   const handleComposeClick = () => {
     if (!isLoggedIn) {
@@ -148,12 +149,22 @@ function MovieDetail() {
             )}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0' }}>
-            <TmdbPoster 
-              title={movie.title} 
-              style={{ width: '220px', height: '330px', borderRadius: '16px', boxShadow: '0 12px 32px rgba(0,0,0,0.4)' }} 
-            />
-            <WatchProviderOverlay movieId={movie.id} variant="inline" />
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '32px 0' }}>
+            <div 
+              style={{ position: 'relative', display: 'inline-block' }}
+              onMouseEnter={() => setPosterHovered(true)}
+              onMouseLeave={() => setPosterHovered(false)}
+            >
+              <TmdbPoster 
+                title={movie.title} 
+                style={{ width: '220px', height: '330px', borderRadius: '16px', boxShadow: '0 12px 32px rgba(0,0,0,0.4)', transition: 'transform 0.3s ease' }} 
+              />
+              {posterHovered && (
+                <div style={{ position: 'absolute', bottom: '-8px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+                  <WatchProviderOverlay movieId={movie.id} isVisible={posterHovered} variant="overlay" />
+                </div>
+              )}
+            </div>
           </div>
 
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
