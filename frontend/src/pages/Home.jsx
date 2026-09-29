@@ -202,9 +202,8 @@ function Home() {
             if (!item) return null;
             return item.feed_type === 'EVENT' ? (
               <div 
-                className="glass hover-scale hero-banner" 
+                className="hero-banner" 
                 onClick={() => setSelectedEvent(item)}
-                style={{ marginBottom: '16px' }}
               >
                 {item.cover_image ? (
                   <img src={item.cover_image} alt={item.title} className="hero-poster" style={{ objectFit: 'cover' }} />
@@ -213,21 +212,9 @@ function Home() {
                     <Ticket size={48} opacity={0.5} />
                   </div>
                 )}
-                <div className="hero-content">
-                  <div className="hero-badge" style={{ 
-                    background: 'rgba(245, 158, 11, 0.16)', 
-                    color: '#FDE68A', 
-                    padding: '6px 12px', 
-                    borderRadius: '8px', 
-                    display: 'inline-flex', 
-                    alignItems: 'center',
-                    boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.15)',
-                    border: '1px solid rgba(251, 191, 36, 0.35)',
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)'
-                  }}>
-                    <CalendarDays size={20} color="#FBBF24" />
-                    <span style={{ fontWeight: 600, marginLeft: '4px' }}>近期最熱門</span>
+                <div className="hero-content" style={{ flex: 1 }}>
+                  <div className="hero-badge">
+                    № 01　近期最熱門
                   </div>
                   <h2>{item.title}</h2>
                   <div className="hero-stats">
@@ -236,12 +223,18 @@ function Home() {
                     </span>
                   </div>
                 </div>
+                <div style={{ marginLeft: 'auto', maxWidth: '280px', flexShrink: 0, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, lineHeight: 0.5, marginTop: '20px' }}>“</div>
+                  <div style={{ fontSize: '1.25rem', color: 'var(--text-primary)', fontStyle: 'italic', letterSpacing: '1px' }}>
+                    {item.quote || "一起走進戲院，共享這段難忘的放映時光。"}
+                  </div>
+                </div>
               </div>
             ) : (
               <div 
-                className="glass hover-scale hero-banner" 
+                className="hero-banner" 
                 onClick={() => navigate(`/movies/${item.id}`)}
-                style={{ marginBottom: '16px', position: 'relative' }}
+                style={{ position: 'relative' }}
               >
                 <div 
                   style={{ position: 'relative', flexShrink: 0 }}
@@ -255,21 +248,9 @@ function Home() {
                     </div>
                   )}
                 </div>
-                <div className="hero-content">
-                  <div className="hero-badge" style={{ 
-                    background: 'rgba(245, 158, 11, 0.16)', 
-                    color: '#FDE68A', 
-                    padding: '6px 12px', 
-                    borderRadius: '8px', 
-                    display: 'inline-flex', 
-                    alignItems: 'center',
-                    boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.15)',
-                    border: '1px solid rgba(251, 191, 36, 0.35)',
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)'
-                  }}>
-                    <Flame size={20} color="#FBBF24" />
-                    <span style={{ fontWeight: 600, marginLeft: '4px' }}>近期最熱門</span>
+                <div className="hero-content" style={{ flex: 1 }}>
+                  <div className="hero-badge">
+                    № 01　近期最熱門
                   </div>
                   <h2>{item.title}</h2>
                   {item.original_title && (
@@ -280,12 +261,17 @@ function Home() {
                   {!item.original_title && <div style={{ marginBottom: '20px' }}></div>}
                   <div className="hero-stats">
                     <div className="hero-rating">
-                      <Star size={24} fill="#F5A623" />
-                      <span>{item.avg_rating ? item.avg_rating.toFixed(1) : '0.0'}</span>
+                      【{item.avg_rating ? item.avg_rating.toFixed(1) : '0.0'}/5】
                     </div>
                     <span className="hero-review-count">
                       累積 {item.review_count || 0} 篇深度影評
                     </span>
+                  </div>
+                </div>
+                <div style={{ marginLeft: 'auto', maxWidth: '280px', flexShrink: 0, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, lineHeight: 0.5, marginTop: '20px' }}>“</div>
+                  <div style={{ fontSize: '1.25rem', color: 'var(--text-primary)', fontStyle: 'italic', letterSpacing: '1px' }}>
+                    {item.quote || "一部值得再三回味的傑作，後勁無窮。"}
                   </div>
                 </div>
               </div>
