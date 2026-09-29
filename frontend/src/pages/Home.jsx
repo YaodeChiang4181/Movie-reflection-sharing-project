@@ -279,12 +279,9 @@ function Home() {
                   )}
                   {!item.original_title && <div style={{ marginBottom: '20px' }}></div>}
                   <div className="hero-stats">
-                    <div className="hero-rating">
-                      【{item.avg_rating ? item.avg_rating.toFixed(1) : '0.0'}/5】
+                    <div className="hero-rating" style={{ color: 'var(--text-secondary)' }}>
+                      {item.avg_rating > 0 ? `${item.avg_rating.toFixed(1)} \u00A0\u00A0 ${item.review_count || 0} 則心得` : `無評分 \u00A0\u00A0 ${item.review_count || 0} 則心得`}
                     </div>
-                    <span className="hero-review-count">
-                      {item.review_count || 0} 個人寫下他的想法
-                    </span>
                   </div>
                 </div>
                 <div style={{ flex: 1, minWidth: '200px', maxWidth: '400px', marginLeft: '10%', marginRight: '15%', textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -414,58 +411,34 @@ function Home() {
 
         {/* 右側 30%：功能操作面板 */}
         <div className="home-action-panel">
-
-          <div
-            className="glass hover-scale action-card action-card-compose"
-            onClick={handleComposeClick}
-          >
-            <div className="action-card-icon">
-              <Edit3 size={32} />
+          <div className="editorial-action-block">
+            <div className="editorial-header">映後</div>
+            <div className="editorial-content">
+              <p>這部電影，</p>
+              <p>你看完想說什麼？</p>
             </div>
-            <div className="action-card-text">
-              <h2>發布心得</h2>
-              <p>撰寫完整影評，分享您的觀影感動</p>
-            </div>
-          </div>
-
-          <div
-            className="glass hover-scale action-card action-card-speed"
-            onClick={() => {
+            
+            <button className="editorial-btn" onClick={handleComposeClick}>
+              [ 寫下觀後感 ]
+            </button>
+            
+            <div className="editorial-or">或</div>
+            
+            <button className="editorial-btn" onClick={() => {
               if (!isLoggedIn) {
                 alert('請先登入才能使用急速評星。');
                 navigate('/auth');
                 return;
               }
               setIsSpeedRatingOpen(true);
-            }}
-          >
-            <div className="action-card-icon">
-              <FastForward size={32} />
-            </div>
-            <div className="action-card-text">
-              <h2>急速評星</h2>
-              <p>極簡輪播介面，一鍵快速給分</p>
-            </div>
+            }}>
+              [ ★ 快速評星 ]
+            </button>
+            
+            <button className="editorial-btn-secondary" onClick={handleDriftClick} style={{ marginTop: '32px' }}>
+              尋找影迷漂流瓶
+            </button>
           </div>
-
-          <div
-            className="glass hover-scale action-card action-card-drift"
-            onClick={handleDriftClick}
-          >
-            <div className="action-card-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15.3 15.3a2.5 2.5 0 0 1-3.5 0l-2.6-2.6a2.5 2.5 0 0 1 0-3.5l4-4a2.5 2.5 0 0 1 3.5 0l2.6 2.6a2.5 2.5 0 0 1 0 3.5Z" />
-                <path d="M19.4 6.6l-4-4" />
-                <path d="M4.6 19.4l4-4" />
-                <path d="M2 22s4-2 7-2 5 2 8 2 7-2 7-2" />
-              </svg>
-            </div>
-            <div className="action-card-text">
-              <h2>片單漂流瓶</h2>
-              <p>推薦好片或撈起驚喜推薦</p>
-            </div>
-          </div>
-
         </div>
       </div>
 

@@ -366,80 +366,86 @@ button {
   }
 }
 
-/* Action Cards Layout */
-.action-card {
-  padding: 24px; /* 從 32px 縮小一點 */
-  border-radius: var(--radius-lg);
-  cursor: pointer;
+/* Action Panel - Editorial Style */
+.home-action-panel {
+  flex: 0 0 30%;
+  display: flex;
+  flex-direction: column;
+}
+
+.editorial-action-block {
+  padding: 40px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 12px; /* 從 16px 縮小 */
-  text-align: center;
-  flex: 1;
 }
 
-.action-card-compose {
-  background: linear-gradient(135deg, rgba(224, 160, 58, 0.15) 0%, rgba(20, 20, 20, 0.4) 100%);
+.editorial-header {
+  font-size: 0.9rem;
+  letter-spacing: 4px;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  text-transform: uppercase;
 }
 
-.action-card-speed {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(20, 20, 20, 0.6) 100%);
-  border-color: rgba(16, 185, 129, 0.3);
+.editorial-content {
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+  margin-bottom: 32px;
+  font-weight: 500;
 }
 
-.action-card-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.editorial-content p {
+  margin: 0;
 }
 
-.action-card-compose .action-card-icon {
-  background-color: rgba(224, 160, 58, 0.15);
+.editorial-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  padding: 12px 24px;
+  transition: color 0.2s;
+  font-family: 'Space Mono', monospace;
+}
+
+.editorial-btn:hover {
   color: var(--accent-primary);
 }
 
-.action-card-speed .action-card-icon {
-  background-color: rgba(16, 185, 129, 0.15);
-  color: #10B981;
-  box-shadow: 0 0 20px rgba(16,185,129,0.2);
+.editorial-or {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 16px 0;
 }
 
-.action-card-text h2 {
-  margin: 0 0 8px 0;
-  font-size: 1.4rem;
+.editorial-btn-secondary {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s;
 }
 
-.action-card-text p {
-  margin: 0;
+.editorial-btn-secondary:hover {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  border-bottom: 1px solid var(--text-secondary);
 }
 
 @media (max-width: 900px) {
-  .action-card {
-    padding: 16px;
-    flex: 1;
-    gap: 12px;
-  }
-  .action-card-icon {
-    width: 48px;
-    height: 48px;
-  }
-  .action-card-icon svg {
-    width: 24px;
-    height: 24px;
-  }
-  .action-card-text h2 {
-    font-size: 1.1rem;
-    margin-bottom: 4px;
-  }
-  .action-card-text p {
-    display: none;
+  .home-action-panel {
+    flex: 1 1 100%;
+    margin-top: 40px;
   }
 }
 
@@ -535,23 +541,23 @@ button {
   gap: 20px;
 }
 .posterCard {
-  background: rgba(255,255,255,0.02);
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.05);
-  overflow: hidden;
+  background: transparent;
+  border-radius: 0;
+  border: none;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s;
 }
 .posterCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  border-color: rgba(224, 160, 58, 0.3);
 }
 .posterWrapper {
   position: relative;
   width: 100%;
   aspect-ratio: 2/3;
   background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 .posterImg {
   width: 100%;
