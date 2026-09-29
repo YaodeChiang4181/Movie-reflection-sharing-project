@@ -131,14 +131,14 @@
 }
 
 .customInput:focus {
-  border-color: #6C5CE7;
+  border-color: #e0a03a;
   box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.2);
 }
 
 .searchIcon {
   position: absolute;
   right: 16px;
-  color: #6C5CE7;
+  color: #e0a03a;
   animation: spin 1s linear infinite;
 }
 
@@ -303,7 +303,7 @@
   color: rgba(255,255,255,0.3);
 }
 .largeTextarea:focus {
-  border-color: #6C5CE7;
+  border-color: #e0a03a;
   box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.2);
 }
 
@@ -372,7 +372,7 @@
   transition: all 0.2s;
 }
 .tagInputWrapper:focus-within {
-  border-color: #6C5CE7;
+  border-color: #e0a03a;
   background: rgba(108, 92, 231, 0.1);
 }
 
@@ -501,7 +501,7 @@
 }
 
 .submitBtn {
-  background: #6C5CE7;
+  background: #e0a03a;
   color: white;
   border: none;
   padding: 14px 32px;

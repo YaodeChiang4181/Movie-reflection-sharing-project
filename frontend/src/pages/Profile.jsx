@@ -9,7 +9,7 @@ import styles from './Profile.module.css';
 // 根據等級取得身分標章
 function getBadge(level) {
   if (level >= 10) return { title: '資深影評', color: '#F59E0B' };
-  if (level >= 8) return { title: '黃金觀影人', color: '#8B5CF6' };
+  if (level >= 8) return { title: '黃金觀影人', color: '#e0a03a' };
   if (level >= 5) return { title: '白銀觀影人', color: '#3B82F6' };
   if (level >= 3) return { title: '青銅觀影人', color: '#10B981' };
   if (level >= 2) return { title: '唉呦不錯呦', color: '#10B981' };

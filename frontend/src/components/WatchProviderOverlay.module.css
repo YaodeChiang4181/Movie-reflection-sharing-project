@@ -65,8 +65,8 @@
 
 .providerIcon:hover {
   transform: scale(1.15);
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
-  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 12px rgba(224, 160, 58, 0.5);
+  border-color: rgba(224, 160, 58, 0.6);
 }
 
 /* 統一按鈕 */
@@ -76,9 +76,9 @@
   justify-content: center;
   gap: 6px;
   padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(139, 92, 246, 0.4));
+  background: linear-gradient(135deg, rgba(224, 160, 58, 0.25), rgba(224, 160, 58, 0.4));
   color: #e0d4fc;
-  border: 1px solid rgba(139, 92, 246, 0.4);
+  border: 1px solid rgba(224, 160, 58, 0.4);
   border-radius: 10px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -89,8 +89,8 @@
 }
 
 .watchLink:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(139, 92, 246, 0.55));
-  box-shadow: 0 0 16px rgba(139, 92, 246, 0.35);
+  background: linear-gradient(135deg, rgba(224, 160, 58, 0.35), rgba(224, 160, 58, 0.55));
+  box-shadow: 0 0 16px rgba(224, 160, 58, 0.35);
   transform: translateY(-1px);
 }
 
@@ -117,7 +117,7 @@
   width: 14px;
   height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.15);
-  border-top-color: rgba(139, 92, 246, 0.7);
+  border-top-color: rgba(224, 160, 58, 0.7);
   border-radius: 50%;
   animation: watchSpin 0.8s linear infinite;
 }
@@ -181,8 +181,8 @@
 }
 
 .inlineProviderItem:hover .inlineProviderIcon {
-  box-shadow: 0 0 14px rgba(139, 92, 246, 0.5);
-  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 14px rgba(224, 160, 58, 0.5);
+  border-color: rgba(224, 160, 58, 0.5);
 }
 
 .inlineProviderName {
@@ -201,9 +201,9 @@
   justify-content: center;
   gap: 6px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.35));
+  background: linear-gradient(135deg, rgba(224, 160, 58, 0.2), rgba(224, 160, 58, 0.35));
   color: #e0d4fc;
-  border: 1px solid rgba(139, 92, 246, 0.35);
+  border: 1px solid rgba(224, 160, 58, 0.35);
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -214,8 +214,8 @@
 }
 
 .inlineWatchLink:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.5));
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, rgba(224, 160, 58, 0.3), rgba(224, 160, 58, 0.5));
+  box-shadow: 0 0 20px rgba(224, 160, 58, 0.3);
   transform: translateY(-1px);
 }
 

@@ -7,7 +7,7 @@ import ReviewForm from './ReviewForm';
 import UserCardModal from './UserCardModal';
 
 function getBadge(level) {
-  if (level >= 10) return { title: '影評達人', emoji: '', color: '#8B5CF6' };
+  if (level >= 10) return { title: '影評達人', emoji: '', color: '#e0a03a' };
   if (level >= 8) return { title: '黃金觀影人', emoji: '', color: '' }
   if (level >= 5) return { title: '白銀觀影人', emoji: '', color: '#CD7F32' };
   if (level >= 3) return { title: '青銅觀影人', emoji: '', color: '' }
@@ -171,7 +171,7 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
                   if (currentReview.user?.campus_id) setSelectedUserCampusId(currentReview.user.campus_id);
                 }}
               >
-                <div className="clickable-avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#FFF', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
+                <div className="clickable-avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #e0a03a, #c98c2e)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#FFF', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
                   {currentReview.user?.avatar ? (
                     <img src={currentReview.user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
@@ -325,9 +325,9 @@ function ReviewModal({ review, onClose, onReviewUpdated, onReviewDeleted }) {
               onClick={() => handleVote(1)}
               style={{
                 ...voteBtnStyle,
-                borderColor: currentReview.user_voted === 1 ? '#8E52F5' : 'rgba(255, 255, 255, 0.15)',
+                borderColor: currentReview.user_voted === 1 ? '#e0a03a' : 'rgba(255, 255, 255, 0.15)',
                 background: currentReview.user_voted === 1 ? 'rgba(142, 82, 245, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                color: currentReview.user_voted === 1 ? '#8E52F5' : '#CBD5E1'
+                color: currentReview.user_voted === 1 ? '#e0a03a' : '#CBD5E1'
               }}
             >
               <ThumbsUp size={18} />
@@ -430,9 +430,9 @@ const closeBtnStyle = {
 };
 
 const tagStyle = {
-  backgroundColor: 'rgba(139, 92, 246, 0.12)',
-  border: '1px solid rgba(139, 92, 246, 0.25)',
-  color: '#DDD6FE',
+  backgroundColor: 'rgba(224, 160, 58, 0.12)',
+  border: '1px solid rgba(224, 160, 58, 0.25)',
+  color: 'var(--text-primary)',
   padding: '4px 12px',
   borderRadius: '20px',
   fontSize: '0.9rem'

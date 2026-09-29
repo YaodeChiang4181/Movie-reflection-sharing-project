@@ -42,8 +42,8 @@ export default function ProgressiveBindingBanner({ onClick, isBound }) {
       style={{
         margin: '0 16px 16px 16px',
         padding: '12px 16px',
-        background: 'linear-gradient(90deg, rgba(168,85,247,0.15) 0%, rgba(236,72,153,0.15) 100%)',
-        border: '1px solid rgba(168,85,247,0.3)',
+        background: 'linear-gradient(90deg, rgba(224, 160, 58,0.15) 0%, rgba(236,72,153,0.15) 100%)',
+        border: '1px solid rgba(224, 160, 58,0.3)',
         borderRadius: '16px',
         cursor: 'pointer',
         display: 'flex',
@@ -54,7 +54,7 @@ export default function ProgressiveBindingBanner({ onClick, isBound }) {
       }}
       onMouseOver={(e) => {
         e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 6px 16px rgba(168,85,247,0.2)';
+        e.currentTarget.style.boxShadow = '0 6px 16px rgba(224, 160, 58,0.2)';
       }}
       onMouseOut={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
@@ -65,7 +65,7 @@ export default function ProgressiveBindingBanner({ onClick, isBound }) {
         <div style={{
           width: '32px',
           height: '32px',
-          background: 'rgba(168,85,247,0.2)',
+          background: 'rgba(224, 160, 58,0.2)',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',

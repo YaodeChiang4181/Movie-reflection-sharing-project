@@ -56,7 +56,7 @@ function AttendanceDashboard({ event, onClose, inline = false }) {
   const content = (
     <div className={inline ? '' : `glass ${styles.modal}`} onClick={e => e.stopPropagation()} style={inline ? { height: '100%', overflow: 'visible', padding: '0' } : {}}>
       <div className={styles.header}>
-        <h2><BarChart2 size={24} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '8px', color: '#a78bfa' }} />{event.title} - 數據看板</h2>
+        <h2><BarChart2 size={24} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '8px', color: '#e0a03a' }} />{event.title} - 數據看板</h2>
         {!inline && (
           <div style={{ display: 'flex', gap: '12px' }}>
             <button className={styles.closeBtn} onClick={onClose}>

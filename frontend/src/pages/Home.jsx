@@ -223,10 +223,18 @@ function Home() {
                     </span>
                   </div>
                 </div>
-                <div style={{ marginLeft: 'auto', maxWidth: '280px', flexShrink: 0, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ flex: 1, minWidth: '200px', marginLeft: 'auto', textAlign: 'left', display: 'flex', flexDirection: 'column', containerType: 'inline-size' }}>
                   <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, lineHeight: 0.5, marginTop: '20px' }}>“</div>
-                  <div style={{ fontSize: '1.25rem', color: 'var(--text-primary)', fontStyle: 'italic', letterSpacing: '1px' }}>
-                    {item.quote || "一起走進戲院，共享這段難忘的放映時光。"}
+                  <div style={{ 
+                    fontSize: `min(2rem, calc(100cqw / ${(item.tagline || item.quote || "一起走進戲院，共享這段難忘的放映時光。").length + 1}))`,
+                    color: 'var(--text-primary)', 
+                    fontStyle: 'italic', 
+                    letterSpacing: '2px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {item.tagline || item.quote || "一起走進戲院，共享這段難忘的放映時光。"}
                   </div>
                 </div>
               </div>
@@ -268,10 +276,18 @@ function Home() {
                     </span>
                   </div>
                 </div>
-                <div style={{ marginLeft: 'auto', maxWidth: '280px', flexShrink: 0, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ flex: 1, minWidth: '200px', marginLeft: 'auto', textAlign: 'left', display: 'flex', flexDirection: 'column', containerType: 'inline-size' }}>
                   <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, lineHeight: 0.5, marginTop: '20px' }}>“</div>
-                  <div style={{ fontSize: '1.25rem', color: 'var(--text-primary)', fontStyle: 'italic', letterSpacing: '1px' }}>
-                    {item.quote || "一部值得再三回味的傑作，後勁無窮。"}
+                  <div style={{ 
+                    fontSize: `min(2rem, calc(100cqw / ${(item.tagline || item.quote || "一部值得再三回味的傑作，後勁無窮。").length + 1}))`,
+                    color: 'var(--text-primary)', 
+                    fontStyle: 'italic', 
+                    letterSpacing: '2px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {item.tagline || item.quote || "一部值得再三回味的傑作，後勁無窮。"}
                   </div>
                 </div>
               </div>

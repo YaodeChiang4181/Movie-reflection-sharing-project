@@ -108,8 +108,8 @@
 
 .pulse {
   animation: statsPulse 1s ease-in-out;
-  background: rgba(168, 85, 247, 0.3);
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  background: rgba(224, 160, 58, 0.3);
+  box-shadow: 0 0 20px rgba(224, 160, 58, 0.5);
 }
 
 @keyframes statsPulse {
@@ -186,7 +186,7 @@
 }
 
 .btnPrimary {
-  background: #6C5CE7;
+  background: #e0a03a;
   color: white;
   border: none;
   border-radius: 12px;

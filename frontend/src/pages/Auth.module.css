@@ -62,7 +62,7 @@
 
 .inputGroup input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 0 2px rgba(224, 160, 58, 0.2);
 }
 
 .submitBtn {

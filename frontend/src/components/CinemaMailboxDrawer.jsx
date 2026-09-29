@@ -189,7 +189,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', paddingBottom: activePartner ? '16px' : '4px', borderBottom: activePartner ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {activePartner ? (
-              <button onClick={() => setActivePartner(null)} style={{ background: 'none', border: 'none', color: '#a78bfa', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <button onClick={() => setActivePartner(null)} style={{ background: 'none', border: 'none', color: '#e0a03a', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                 <ArrowLeft size={20} />
               </button>
             ) : (
@@ -247,7 +247,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
                         padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.05)', 
                         borderRadius: '12px', cursor: 'pointer', transition: 'border 0.2s'
                       }}
-                      onMouseOver={(e) => e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)'}
+                      onMouseOver={(e) => e.currentTarget.style.borderColor = 'rgba(224, 160, 58,0.3)'}
                       onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -284,7 +284,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
                           {msg.content}
                         </div>
                         <div style={{ fontSize: '0.625rem', color: '#64748b', marginTop: '4px', textAlign: isMe ? 'right' : 'left', display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', gap: '4px' }}>
-                          {isMe && msg.is_read && <span style={{ color: '#a78bfa' }}>已讀</span>}
+                          {isMe && msg.is_read && <span style={{ color: '#e0a03a' }}>已讀</span>}
                           <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       </div>
@@ -321,7 +321,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
                       borderRadius: '12px', cursor: notif.target_url ? 'pointer' : 'default', transition: 'border 0.2s',
                       opacity: notif.is_read ? 0.7 : 1
                     }}
-                    onMouseOver={(e) => notif.target_url && (e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)')}
+                    onMouseOver={(e) => notif.target_url && (e.currentTarget.style.borderColor = 'rgba(224, 160, 58,0.3)')}
                     onMouseOut={(e) => notif.target_url && (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)')}
                   >
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
