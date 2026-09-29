@@ -797,7 +797,7 @@ def handle_message(event):
                                 "type": "box",
                                 "layout": "horizontal",
                                 "contents": [
-                                    {"type": "text", "text": f"⭐ Lv. {level}", "size": "md", "color": "#8B5CF6", "weight": "bold", "flex": 3},
+                                    {"type": "text", "text": f"Lv. {level}", "size": "md", "color": "#8B5CF6", "weight": "bold", "flex": 3},
                                     {"type": "text", "text": f"EXP {current_exp}/{exp_needed}", "size": "sm", "color": "#888888", "align": "end", "flex": 5}
                                 ]
                             },

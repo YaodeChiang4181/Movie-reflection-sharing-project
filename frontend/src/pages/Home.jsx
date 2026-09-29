@@ -19,16 +19,16 @@ function Home() {
   const [isEventComposing, setIsEventComposing] = useState(false);
   const [isSpeedRatingOpen, setIsSpeedRatingOpen] = useState(false);
   const [isDriftBottleOpen, setIsDriftBottleOpen] = useState(false);
-  
+
   const [feedItems, setFeedItems] = useState([]);
   const [feedType, setFeedType] = useState('all'); // 'all', 'movies', 'events'
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [heroItems, setHeroItems] = useState([]);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [heroHovered, setHeroHovered] = useState(false);
-  
+
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
@@ -57,7 +57,7 @@ function Home() {
 
     window.addEventListener('open-review-form', handleOpenReviewForm);
     window.addEventListener('open-event-form', handleOpenEventForm);
-    
+
     return () => {
       window.removeEventListener('open-review-form', handleOpenReviewForm);
       window.removeEventListener('open-event-form', handleOpenEventForm);
@@ -104,21 +104,21 @@ function Home() {
         api.get(`events/?status=UPCOMING`),
         api.get(`movies/`) // This endpoint returns movies sorted by popularity
       ]);
-      
+
       const eventsRes = results[0].status === 'fulfilled' ? results[0].value : null;
       const moviesRes = results[1].status === 'fulfilled' ? results[1].value : null;
 
       const upcomingEvents = (eventsRes && (eventsRes.data.results || eventsRes.data)) || [];
       const topMovies = (moviesRes && (moviesRes.data.results || moviesRes.data)) || [];
-      
+
       const mixed = [];
-      if (upcomingEvents.length > 0) mixed.push({...upcomingEvents[0], feed_type: 'EVENT'});
-      if (upcomingEvents.length > 1) mixed.push({...upcomingEvents[1], feed_type: 'EVENT'});
-      if (topMovies.length > 0) mixed.push({...topMovies[0], feed_type: 'MOVIE'});
-      if (topMovies.length > 1) mixed.push({...topMovies[1], feed_type: 'MOVIE'});
-      if (upcomingEvents.length > 2) mixed.push({...upcomingEvents[2], feed_type: 'EVENT'});
-      if (topMovies.length > 2) mixed.push({...topMovies[2], feed_type: 'MOVIE'});
-      
+      if (upcomingEvents.length > 0) mixed.push({ ...upcomingEvents[0], feed_type: 'EVENT' });
+      if (upcomingEvents.length > 1) mixed.push({ ...upcomingEvents[1], feed_type: 'EVENT' });
+      if (topMovies.length > 0) mixed.push({ ...topMovies[0], feed_type: 'MOVIE' });
+      if (topMovies.length > 1) mixed.push({ ...topMovies[1], feed_type: 'MOVIE' });
+      if (upcomingEvents.length > 2) mixed.push({ ...upcomingEvents[2], feed_type: 'EVENT' });
+      if (topMovies.length > 2) mixed.push({ ...topMovies[2], feed_type: 'MOVIE' });
+
       setHeroItems(mixed.slice(0, 5));
     } catch (err) {
       console.error("Failed to fetch hero items", err);
@@ -154,30 +154,30 @@ function Home() {
   return (
     <div className="container" style={{ paddingTop: '80px', paddingBottom: '60px' }}>
       <SEO />
-      
+
       {isComposing && (
-        <ReviewForm 
-          onClose={() => setIsComposing(false)} 
-          onReviewAdded={fetchFeed} 
+        <ReviewForm
+          onClose={() => setIsComposing(false)}
+          onReviewAdded={fetchFeed}
         />
       )}
-      
+
       {isEventComposing && (
-        <EventForm 
-          onClose={() => setIsEventComposing(false)} 
-          onEventAdded={() => { fetchFeed(); fetchHeroItems(); }} 
+        <EventForm
+          onClose={() => setIsEventComposing(false)}
+          onEventAdded={() => { fetchFeed(); fetchHeroItems(); }}
         />
       )}
 
       {isSpeedRatingOpen && (
-        <SpeedRatingModal 
-          onClose={() => setIsSpeedRatingOpen(false)} 
+        <SpeedRatingModal
+          onClose={() => setIsSpeedRatingOpen(false)}
         />
       )}
 
       {selectedEvent && (
-        <EventDetailModal 
-          event={selectedEvent} 
+        <EventDetailModal
+          event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
           onUpdate={fetchFeed}
         />
@@ -201,8 +201,8 @@ function Home() {
             const item = heroItems[currentHeroIndex];
             if (!item) return null;
             return item.feed_type === 'EVENT' ? (
-              <div 
-                className="hero-banner" 
+              <div
+                className="hero-banner"
                 onClick={() => setSelectedEvent(item)}
               >
                 {item.cover_image ? (
@@ -223,28 +223,39 @@ function Home() {
                     </span>
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: '200px', marginLeft: 'auto', textAlign: 'left', display: 'flex', flexDirection: 'column', containerType: 'inline-size' }}>
-                  <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, lineHeight: 0.5, marginTop: '20px' }}>“</div>
-                  <div style={{ 
-                    fontSize: `min(2rem, calc(100cqw / ${(item.tagline || item.quote || "一起走進戲院，共享這段難忘的放映時光。").length + 1}))`,
-                    color: 'var(--text-primary)', 
-                    fontStyle: 'italic', 
-                    letterSpacing: '2px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    {item.tagline || item.quote || "一起走進戲院，共享這段難忘的放映時光。"}
+                <div style={{ flex: 1, minWidth: '200px', maxWidth: '400px', marginLeft: '10%', marginRight: '15%', textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>王小姐</span>
+                    <span>•</span>
+                    <span>5 小時前</span>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, position: 'absolute', top: '-15px', left: '-25px', lineHeight: 1 }}>“</div>
+                    <div style={{ 
+                      fontSize: '1.25rem',
+                      color: 'var(--text-primary)', 
+                      fontStyle: 'italic', 
+                      letterSpacing: '1px',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      position: 'relative',
+                      zIndex: 1,
+                      lineHeight: 1.5
+                    }}>
+                      「{item.quote || "這場放映活動絕對是不容錯過的精彩體驗，推薦大家一起來。"}」
+                    </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div 
-                className="hero-banner" 
+              <div
+                className="hero-banner"
                 onClick={() => navigate(`/movies/${item.id}`)}
                 style={{ position: 'relative' }}
               >
-                <div 
+                <div
                   style={{ position: 'relative', flexShrink: 0 }}
                   onMouseEnter={() => setHeroHovered(true)}
                   onMouseLeave={() => setHeroHovered(false)}
@@ -272,28 +283,39 @@ function Home() {
                       【{item.avg_rating ? item.avg_rating.toFixed(1) : '0.0'}/5】
                     </div>
                     <span className="hero-review-count">
-                      累積 {item.review_count || 0} 篇深度影評
+                      {item.review_count || 0} 個人寫下他的想法
                     </span>
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: '200px', marginLeft: 'auto', textAlign: 'left', display: 'flex', flexDirection: 'column', containerType: 'inline-size' }}>
-                  <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, lineHeight: 0.5, marginTop: '20px' }}>“</div>
-                  <div style={{ 
-                    fontSize: `min(2rem, calc(100cqw / ${(item.tagline || item.quote || "一部值得再三回味的傑作，後勁無窮。").length + 1}))`,
-                    color: 'var(--text-primary)', 
-                    fontStyle: 'italic', 
-                    letterSpacing: '2px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    {item.tagline || item.quote || "一部值得再三回味的傑作，後勁無窮。"}
+                <div style={{ flex: 1, minWidth: '200px', maxWidth: '400px', marginLeft: '10%', marginRight: '15%', textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>林先生</span>
+                    <span>•</span>
+                    <span>2 小時前</span>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, position: 'absolute', top: '-15px', left: '-25px', lineHeight: 1 }}>“</div>
+                    <div style={{ 
+                      fontSize: '1.25rem',
+                      color: 'var(--text-primary)', 
+                      fontStyle: 'italic', 
+                      letterSpacing: '1px',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      position: 'relative',
+                      zIndex: 1,
+                      lineHeight: 1.5
+                    }}>
+                      「{item.tagline || item.quote || "看到最後我居然有點想哭。這真的是一部值得再三回味的傑作。"}」
+                    </div>
                   </div>
                 </div>
               </div>
             );
           })()}
-          
+
           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
             {heroItems.map((_, idx) => (
               <button
@@ -318,19 +340,19 @@ function Home() {
 
       {/* 膠囊快篩 */}
       <div className={styles.tabsContainer} style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
-        <button 
+        <button
           className={`${styles.tab} ${feedType === 'all' ? styles.active : ''}`}
           onClick={() => { setFeedType('all'); setCurrentPage(1); }}
         >
           全部動態
         </button>
-        <button 
+        <button
           className={`${styles.tab} ${feedType === 'movies' ? styles.active : ''}`}
           onClick={() => { setFeedType('movies'); setCurrentPage(1); }}
         >
           電影專區
         </button>
-        <button 
+        <button
           className={`${styles.tab} ${feedType === 'events' ? styles.active : ''}`}
           onClick={() => { setFeedType('events'); setCurrentPage(1); }}
         >
@@ -371,7 +393,7 @@ function Home() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
-              <button 
+              <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
@@ -379,7 +401,7 @@ function Home() {
                 上一頁
               </button>
               <span style={{ color: 'var(--text-secondary)' }}>第 {currentPage} 頁 / 共 {totalPages} 頁</span>
-              <button 
+              <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
@@ -392,8 +414,8 @@ function Home() {
 
         {/* 右側 30%：功能操作面板 */}
         <div className="home-action-panel">
-          
-          <div 
+
+          <div
             className="glass hover-scale action-card action-card-compose"
             onClick={handleComposeClick}
           >
@@ -406,7 +428,7 @@ function Home() {
             </div>
           </div>
 
-          <div 
+          <div
             className="glass hover-scale action-card action-card-speed"
             onClick={() => {
               if (!isLoggedIn) {
@@ -426,7 +448,7 @@ function Home() {
             </div>
           </div>
 
-          <div 
+          <div
             className="glass hover-scale action-card action-card-drift"
             onClick={handleDriftClick}
           >
@@ -450,19 +472,19 @@ function Home() {
       {isComposing && (
         <ReviewForm onClose={() => setIsComposing(false)} />
       )}
-      
+
       {isEventComposing && (
         <EventForm onClose={() => setIsEventComposing(false)} />
       )}
-      
+
       {isSpeedRatingOpen && (
         <SpeedRatingModal onClose={() => setIsSpeedRatingOpen(false)} />
       )}
-      
+
       {isDriftBottleOpen && (
         <DriftBottleModal onClose={() => setIsDriftBottleOpen(false)} />
       )}
-      
+
       {selectedEvent && (
         <EventDetailModal
           event={selectedEvent}

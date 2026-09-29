@@ -467,7 +467,7 @@ def get_speed_rate_genres_flex(genres_subset, frontend_url):
             "contents": [
                 {
                     "type": "text",
-                    "text": "🔥\n熱門隨機抽",
+                    "text": "\n熱門隨機抽",
                     "weight": "bold",
                     "size": "md",
                     "color": "#111111",
@@ -724,7 +724,7 @@ def get_rules_flex(frontend_url):
                     "contents": [
                         {
                             "type": "text",
-                            "text": "⭐ 急速評星 (無限流抽片)",
+                            "text": "急速評星 (無限流抽片)",
                             "weight": "bold",
                             "color": "#6C5CE7",
                             "size": "md"
