@@ -1,25 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
-  /* Royal Velvet & Gold Palette */
-  --bg-primary: #140F2D;
-  --bg-secondary: #231B4D;
-  --bg-tertiary: #2F2466;
+  /* Warm Black & Gold Palette */
+  --bg-primary: #15110e;
+  --bg-secondary: #1e1915;
+  --bg-tertiary: #2a231d;
   
-  --text-primary: #E9D8FD;
-  --text-secondary: #C4B5FD;
-  --text-muted: #A78BFA;
+  --text-primary: #efe6d8;
+  --text-secondary: #d4cbbd;
+  --text-muted: #a89f91;
   
-  --accent-primary: #F5A623; /* Gold */
-  --accent-hover: #E59610; /* Darker Gold */
-  --accent-glow: rgba(245, 166, 35, 0.4);
+  --accent-primary: #e0a03a;
+  --accent-hover: #c98c2e;
+  --accent-glow: rgba(224, 160, 58, 0.4);
   
   --danger: #ef4444;
   --danger-hover: #dc2626;
   --success: #22c55e;
   
-  --border-color: rgba(255, 255, 255, 0.1);
-  --glass-bg: rgba(20, 20, 20, 0.7);
+  --border-color: #3a3128;
+  --glass-bg: rgba(30, 25, 21, 0.7);
   
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
@@ -41,14 +41,25 @@
 }
 
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Noto Serif TC', serif;
+  font-variant-numeric: tabular-nums;
   background-color: var(--bg-primary);
-  background-image: radial-gradient(ellipse 100% 100% at top center, rgba(124, 58, 237, 0.45) 0%, transparent 100%);
+  background-image: radial-gradient(ellipse 100% 100% at top center, rgba(224, 160, 58, 0.08) 0%, transparent 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+}
+
+/* Force numbers to use Space Mono */
+@font-face {
+  font-family: 'NumberMono';
+  src: local('Space Mono');
+  unicode-range: U+0030-0039;
+}
+.number-mono, h1, h2, h3, h4, h5, h6, .hero-rating, .movie-list-rating, .posterRating, .hero-review-count, .movie-review-count {
+  font-family: 'Space Mono', 'Noto Serif TC', monospace;
 }
 
 a {
@@ -82,11 +93,11 @@ button {
 
 .hover-scale:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 20px 50px 0 rgba(0, 0, 0, 0.5), 0 0 24px rgba(139, 92, 246, 0.3);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-top: 1px solid rgba(255, 255, 255, 0.35);
-  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 20px 50px 0 rgba(0, 0, 0, 0.5), 0 0 24px rgba(224, 160, 58, 0.15);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 10;
 }
 
@@ -223,7 +234,7 @@ button {
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
-  color: #F5A623;
+  color: var(--accent-primary);
   font-weight: bold;
   letter-spacing: 1px;
   font-size: 1.1rem;
@@ -243,14 +254,14 @@ button {
 }
 
 .hero-rating {
-  background-color: rgba(245, 166, 35, 0.15);
+  background-color: rgba(224, 160, 58, 0.15);
   padding: 8px 20px;
   border-radius: 24px;
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid rgba(245, 166, 35, 0.4);
-  color: #F5A623;
+  border: 1px solid rgba(224, 160, 58, 0.4);
+  color: var(--accent-primary);
   font-size: 1.4rem;
   font-weight: bold;
 }
@@ -339,16 +350,16 @@ button {
 }
 
 .movie-list-rating {
-  background-color: rgba(245, 166, 35, 0.1);
+  background-color: rgba(224, 160, 58, 0.1);
   padding: 6px 12px;
   border-radius: 20px;
-  color: #F5A623;
+  color: var(--accent-primary);
   font-size: 1.2rem;
   font-weight: bold;
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid rgba(245, 166, 35, 0.25);
+  border: 1px solid rgba(224, 160, 58, 0.25);
 }
 
 @media (max-width: 600px) {
@@ -378,7 +389,7 @@ button {
 }
 
 .action-card-compose {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(20, 20, 20, 0.4) 100%);
+  background: linear-gradient(135deg, rgba(224, 160, 58, 0.15) 0%, rgba(20, 20, 20, 0.4) 100%);
 }
 
 .action-card-speed {
@@ -396,8 +407,8 @@ button {
 }
 
 .action-card-compose .action-card-icon {
-  background-color: rgba(139, 92, 246, 0.2);
-  color: #D8B4FE;
+  background-color: rgba(224, 160, 58, 0.15);
+  color: var(--accent-primary);
 }
 
 .action-card-speed .action-card-icon {
@@ -464,7 +475,7 @@ button {
 
 .clickable-avatar:hover {
   transform: scale(1.15) translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+  box-shadow: 0 4px 12px rgba(224, 160, 58, 0.3);
   filter: brightness(1.1);
 }
 
@@ -542,7 +553,7 @@ button {
 .posterCard:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  border-color: rgba(139, 92, 246, 0.3);
+  border-color: rgba(224, 160, 58, 0.3);
 }
 .posterWrapper {
   position: relative;
@@ -606,7 +617,7 @@ button {
   align-items: center;
 }
 .posterRating {
-  color: #F59E0B;
+  color: var(--accent-primary);
   font-size: 0.85rem;
   display: flex;
   align-items: center;

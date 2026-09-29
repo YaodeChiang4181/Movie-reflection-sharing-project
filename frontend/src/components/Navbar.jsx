@@ -13,6 +13,7 @@ function Navbar() {
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
   const [mailboxPartner, setMailboxPartner] = useState(null);
   const [publishMenuOpen, setPublishMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,7 +73,7 @@ function Navbar() {
             {isLoggedIn ? (
               <>
                 <div className={styles.publishDropdownContainer} onMouseEnter={() => setPublishMenuOpen(true)} onMouseLeave={() => setPublishMenuOpen(false)}>
-                  <button className={styles.publishBtn}>
+                  <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Plus size={16} />
                     <span>發布</span>
                     <ChevronDown size={14} />
@@ -96,20 +97,34 @@ function Navbar() {
                 >
                   <Bell size={20} />
                   {unreadCount > 0 && (
-                    <span style={{ position: 'absolute', top: -2, right: -2, background: 'var(--danger-color, #ff4d4f)', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                    <span style={{ position: 'absolute', top: -2, right: -2, background: 'var(--danger)', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '0.7rem', fontWeight: 'bold' }}>
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
                 </button>
-                <span className={styles.welcomeText}>Hi, {userProfile?.nickname}</span>
-                <Link to="/profile" className={styles.profileBtn}>
-                  <User size={18} />
-                  <span>個人主頁</span>
-                </Link>
-                <button onClick={() => { logout(); }} className={styles.logoutBtn}>登出</button>
+                
+                <div className={styles.profileDropdownContainer} onMouseEnter={() => setProfileMenuOpen(true)} onMouseLeave={() => setProfileMenuOpen(false)}>
+                  <button className={styles.avatarBtn}>
+                    {userProfile?.avatar_url ? (
+                      <img src={userProfile.avatar_url} alt="avatar" className={styles.avatarImg} />
+                    ) : (
+                      <div className={styles.avatarPlaceholder}><User size={18} /></div>
+                    )}
+                  </button>
+                  {profileMenuOpen && (
+                    <div className={`${styles.profileDropdown} glass`}>
+                      <Link to="/profile" className={styles.profileDropdownItem}>
+                        <User size={16} /> 個人主頁
+                      </Link>
+                      <button onClick={() => logout()} className={styles.profileDropdownItem} style={{ color: 'var(--danger)' }}>
+                        登出
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
-              <Link to="/auth" className={`btn-primary ${styles.loginBtn}`}>
+              <Link to="/auth" className={styles.navLink}>
                 <User size={18} />
                 <span>登入 / 註冊</span>
               </Link>
@@ -146,7 +161,6 @@ function Navbar() {
                   </div>
                   <span>信箱與通知</span>
                 </button>
-                <span className={styles.mobileWelcome}>Hi, {userProfile?.nickname}</span>
                 <Link
                   to="/profile"
                   className={styles.mobileDropdownItem}
