@@ -143,7 +143,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
         style={{
           background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer',
           color: activeTab === 'messages' ? 'white' : '#94a3b8',
-          borderBottom: activeTab === 'messages' ? '2px solid #a855f7' : '2px solid transparent',
+          borderBottom: activeTab === 'messages' ? '2px solid #e0a03a' : '2px solid transparent',
           fontWeight: activeTab === 'messages' ? 600 : 400,
           display: 'flex', alignItems: 'center', gap: '6px'
         }}
@@ -156,7 +156,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
         style={{
           background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer',
           color: activeTab === 'notifications' ? 'white' : '#94a3b8',
-          borderBottom: activeTab === 'notifications' ? '2px solid #a855f7' : '2px solid transparent',
+          borderBottom: activeTab === 'notifications' ? '2px solid #e0a03a' : '2px solid transparent',
           fontWeight: activeTab === 'notifications' ? 600 : 400,
           display: 'flex', alignItems: 'center', gap: '6px'
         }}
@@ -325,7 +325,7 @@ export default function CinemaMailboxDrawer({ isOpen, onClose, initialPartner = 
                     onMouseOut={(e) => notif.target_url && (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)')}
                   >
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                      <div style={{ marginTop: '2px', color: notif.type === 'new_event' ? '#38bdf8' : '#a855f7' }}>
+                      <div style={{ marginTop: '2px', color: notif.type === 'new_event' ? '#38bdf8' : '#e0a03a' }}>
                         <Bell size={16} />
                       </div>
                       <div>

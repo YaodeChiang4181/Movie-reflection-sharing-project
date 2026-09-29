@@ -149,7 +149,7 @@ function UserCardModal({ campusId, onClose }) {
                   justifyContent: 'center', 
                   gap: '6px',
                   whiteSpace: 'nowrap',
-                  background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                  background: 'linear-gradient(135deg, #e0a03a, #c98c2e)',
                   border: 'none'
                 }}
                 onClick={() => {

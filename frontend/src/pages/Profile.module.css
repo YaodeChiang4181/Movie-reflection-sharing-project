@@ -223,7 +223,7 @@
 
 .syncBtn:hover:not(:disabled) {
   color: var(--text-secondary);
-  background: rgba(108, 92, 231, 0.12);
+  background: rgba(224, 160, 58, 0.12);
 }
 
 .spin {

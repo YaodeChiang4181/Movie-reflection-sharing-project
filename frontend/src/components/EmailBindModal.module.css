@@ -67,7 +67,7 @@
 }
 
 .icon {
-  color: #a855f7;
+  color: #e0a03a;
 }
 
 .title {
@@ -118,14 +118,14 @@
 
 .input:focus {
   outline: none;
-  border-color: #a855f7;
+  border-color: #e0a03a;
   background: rgba(255, 255, 255, 0.1);
 }
 
 .primaryBtn {
   width: 100%;
   padding: 14px;
-  background: #a855f7;
+  background: #e0a03a;
   color: white;
   border: none;
   border-radius: 12px;
@@ -170,7 +170,7 @@
 
 .hint {
   margin: 0;
-  color: #a855f7;
+  color: #e0a03a;
   font-size: 0.85rem;
   text-align: center;
   font-weight: 500;

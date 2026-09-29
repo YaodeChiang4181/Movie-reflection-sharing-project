@@ -23,7 +23,7 @@ function FeedCard({ item, onClick }) {
           <div className="posterTitle">{item.title}</div>
           <div className="posterMeta">
             {item.avg_rating > 0 ? (
-              <span className="posterRating"><Star size={12} fill="currentColor" /> {item.avg_rating.toFixed(1)}/5</span>
+              <span className="posterRating">{item.avg_rating.toFixed(1)}/5</span>
             ) : (
               <span className="posterDate" style={{ color: 'var(--text-muted)' }}>無評分</span>
             )}

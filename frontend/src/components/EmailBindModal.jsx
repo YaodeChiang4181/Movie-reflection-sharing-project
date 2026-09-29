@@ -79,7 +79,7 @@ export default function EmailBindModal({ isOpen, onClose }) {
         
         <h2 className={styles.title}>綁定電子信箱</h2>
         <p className={styles.desc}>
-          綁定常用信箱，即可解鎖「每晚 21:00 影迷日報」功能！完成綁定後再送您 <strong style={{ color: '#a855f7' }}>+20 EXP</strong> 獎勵！
+          綁定常用信箱，即可解鎖「每晚 21:00 影迷日報」功能！完成綁定後再送您 <strong style={{ color: '#e0a03a' }}>+20 EXP</strong> 獎勵！
         </p>
 
         {step === 1 ? (

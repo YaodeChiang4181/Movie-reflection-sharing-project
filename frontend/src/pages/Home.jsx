@@ -223,27 +223,15 @@ function Home() {
                     </span>
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: '200px', maxWidth: '400px', marginLeft: '10%', marginRight: '15%', textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div className="hero-quote-block">
+                  <div className="hero-quote-author">
                     <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>王小姐</span>
                     <span>•</span>
                     <span>5 小時前</span>
                   </div>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, position: 'absolute', top: '-15px', left: '-25px', lineHeight: 1 }}>“</div>
-                    <div style={{ 
-                      fontSize: '1.25rem',
-                      color: 'var(--text-primary)', 
-                      fontStyle: 'italic', 
-                      letterSpacing: '1px',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      position: 'relative',
-                      zIndex: 1,
-                      lineHeight: 1.5
-                    }}>
+                  <div className="hero-quote-content">
+                    <div className="hero-quote-mark">“</div>
+                    <div className="hero-quote-text">
                       「{item.quote || "這場放映活動絕對是不容錯過的精彩體驗，推薦大家一起來。"}」
                     </div>
                   </div>
@@ -284,27 +272,15 @@ function Home() {
                     </div>
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: '200px', maxWidth: '400px', marginLeft: '10%', marginRight: '15%', textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div className="hero-quote-block">
+                  <div className="hero-quote-author">
                     <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>林先生</span>
                     <span>•</span>
                     <span>2 小時前</span>
                   </div>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ fontSize: '3rem', color: 'var(--accent-primary)', opacity: 0.3, position: 'absolute', top: '-15px', left: '-25px', lineHeight: 1 }}>“</div>
-                    <div style={{ 
-                      fontSize: '1.25rem',
-                      color: 'var(--text-primary)', 
-                      fontStyle: 'italic', 
-                      letterSpacing: '1px',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      position: 'relative',
-                      zIndex: 1,
-                      lineHeight: 1.5
-                    }}>
+                  <div className="hero-quote-content">
+                    <div className="hero-quote-mark">“</div>
+                    <div className="hero-quote-text">
                       「{item.tagline || item.quote || "看到最後我居然有點想哭。這真的是一部值得再三回味的傑作。"}」
                     </div>
                   </div>
@@ -412,18 +388,18 @@ function Home() {
         {/* 右側 30%：功能操作面板 */}
         <div className="home-action-panel">
           <div className="editorial-action-block">
-            <div className="editorial-header">映後</div>
+            <div className="editorial-header">人群散場後</div>
             <div className="editorial-content">
               <p>這部電影，</p>
               <p>你看完想說什麼？</p>
             </div>
-            
+
             <button className="editorial-btn" onClick={handleComposeClick}>
               [ 寫下觀後感 ]
             </button>
-            
+
             <div className="editorial-or">或</div>
-            
+
             <button className="editorial-btn" onClick={() => {
               if (!isLoggedIn) {
                 alert('請先登入才能使用急速評星。');
@@ -432,9 +408,9 @@ function Home() {
               }
               setIsSpeedRatingOpen(true);
             }}>
-              [ ★ 快速評星 ]
+              [ 急速評星 ]
             </button>
-            
+
             <button className="editorial-btn-secondary" onClick={handleDriftClick} style={{ marginTop: '32px' }}>
               尋找影迷漂流瓶
             </button>
