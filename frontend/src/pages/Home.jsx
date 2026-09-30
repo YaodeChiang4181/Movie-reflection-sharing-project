@@ -14,6 +14,40 @@ import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from '../components/EventFilterTabs.module.css';
 
+function truncateAtSentence(text, maxLen = 40) {
+  if (!text) return '';
+  const clean = text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+  if (clean.length <= maxLen) return clean;
+
+  const sub = clean.slice(0, maxLen);
+  const lastPunctuation = Math.max(
+    sub.lastIndexOf('。'),
+    sub.lastIndexOf('！'),
+    sub.lastIndexOf('？'),
+    sub.lastIndexOf('…')
+  );
+
+  if (lastPunctuation > 10) {
+    return sub.slice(0, lastPunctuation + 1);
+  }
+  return sub + '…';
+}
+
+function formatTimeAgo(dateStr) {
+  const now = new Date();
+  const then = new Date(dateStr);
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+
+  if (diffMin < 1) return '剛剛';
+  if (diffMin < 60) return `${diffMin} 分鐘前`;
+  if (diffHr < 24) return `${diffHr} 小時前`;
+  if (diffDay < 30) return `${diffDay} 天前`;
+  return `${Math.floor(diffDay / 30)} 個月前`;
+}
+
 function Home() {
   const [isComposing, setIsComposing] = useState(false);
   const [isEventComposing, setIsEventComposing] = useState(false);
@@ -25,6 +59,7 @@ function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [heroItems, setHeroItems] = useState([]);
+  const [heroQuotes, setHeroQuotes] = useState({});
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [heroHovered, setHeroHovered] = useState(false);
@@ -119,10 +154,48 @@ function Home() {
       if (upcomingEvents.length > 2) mixed.push({ ...upcomingEvents[2], feed_type: 'EVENT' });
       if (topMovies.length > 2) mixed.push({ ...topMovies[2], feed_type: 'MOVIE' });
 
-      setHeroItems(mixed.slice(0, 5));
+      const finalItems = mixed.slice(0, 5);
+      setHeroItems(finalItems);
+      
+      // 非同步抓取各電影的最新短評
+      fetchHeroQuotes(finalItems);
     } catch (err) {
       console.error("Failed to fetch hero items", err);
     }
+  };
+
+  const fetchHeroQuotes = async (items) => {
+    const quotes = {};
+    
+    await Promise.allSettled(
+      items.map(async (item) => {
+        if (item.feed_type === 'MOVIE' && item.id) {
+          try {
+            const res = await api.get(`reviews/`, {
+              params: { movie: item.id, page_size: 5 }
+            });
+            const reviews = res.data.results || res.data;
+            
+            // 找第一則有內容且非爆雷的心得
+            const pick = reviews.find(r => 
+              r.content && r.content.trim().length > 0 && !r.is_spoiler
+            );
+            
+            if (pick) {
+              quotes[item.id] = {
+                nickname: pick.user?.nickname || pick.user?.campus_id || '匿名影迷',
+                createdAt: pick.effective_date || pick.created_at,
+                excerpt: truncateAtSentence(pick.content, 40),
+              };
+            }
+          } catch (e) {
+            console.error(`Failed to fetch quote for movie ${item.id}`, e);
+          }
+        }
+      })
+    );
+    
+    setHeroQuotes(quotes);
   };
 
   const handleComposeClick = () => {
@@ -273,17 +346,30 @@ function Home() {
                   </div>
                 </div>
                 <div className="hero-quote-block">
-                  <div className="hero-quote-author">
-                    <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>林先生</span>
-                    <span>•</span>
-                    <span>2 小時前</span>
-                  </div>
-                  <div className="hero-quote-content">
-                    <div className="hero-quote-mark">“</div>
-                    <div className="hero-quote-text">
-                      「{item.tagline || item.quote || "看到最後我居然有點想哭。這真的是一部值得再三回味的傑作。"}」
+                  {heroQuotes[item.id] ? (
+                    <>
+                      <div className="hero-quote-author">
+                        <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                          {heroQuotes[item.id].nickname}
+                        </span>
+                        <span>•</span>
+                        <span>{formatTimeAgo(heroQuotes[item.id].createdAt)}</span>
+                      </div>
+                      <div className="hero-quote-content">
+                        <div className="hero-quote-mark">“</div>
+                        <div className="hero-quote-text">
+                          「{heroQuotes[item.id].excerpt}」
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="hero-quote-content">
+                      <div className="hero-quote-mark">“</div>
+                      <div className="hero-quote-text" style={{ color: 'var(--text-muted)', fontStyle: 'normal' }}>
+                        這部電影還沒有人寫下心得，等你來當第一個。
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             );
