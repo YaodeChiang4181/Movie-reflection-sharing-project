@@ -213,7 +213,7 @@ button {
 .hero-poster {
   width: 160px;
   height: 240px;
-  border-radius: 12px;
+  border-radius: 4px;
   flex-shrink: 0;
   box-shadow: 0 12px 32px rgba(0,0,0,0.5);
 }
@@ -365,7 +365,7 @@ button {
 .movie-list-poster {
   width: 50px;
   height: 75px;
-  border-radius: 6px;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
@@ -579,14 +579,14 @@ button {
 .skeleton-poster {
   width: 160px;
   height: 240px;
-  border-radius: 12px;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
 .skeleton-list-poster {
   width: 50px;
   height: 75px;
-  border-radius: 6px;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
@@ -617,7 +617,7 @@ button {
   width: 100%;
   aspect-ratio: 2/3;
   background: #000;
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }

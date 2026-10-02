@@ -156,7 +156,7 @@ function Home() {
 
       const finalItems = mixed.slice(0, 5);
       setHeroItems(finalItems);
-      
+
       // 非同步抓取各電影的最新短評
       fetchHeroQuotes(finalItems);
     } catch (err) {
@@ -166,7 +166,7 @@ function Home() {
 
   const fetchHeroQuotes = async (items) => {
     const quotes = {};
-    
+
     await Promise.allSettled(
       items.map(async (item) => {
         if (item.feed_type === 'MOVIE' && item.id) {
@@ -175,12 +175,12 @@ function Home() {
               params: { movie: item.id, page_size: 5 }
             });
             const reviews = res.data.results || res.data;
-            
-            // 找第一則有內容且非爆雷的心得
-            const pick = reviews.find(r => 
-              r.content && r.content.trim().length > 0 && !r.is_spoiler
+
+            // 找第一則有內容且非爆雷的心得，並過濾掉預設的急速評星文字
+            const pick = reviews.find(r =>
+              r.content && r.content.trim().length > 0 && !r.is_spoiler && r.content.trim() !== '來自急速評星的無內文評價'
             );
-            
+
             if (pick) {
               quotes[item.id] = {
                 nickname: pick.user?.nickname || pick.user?.campus_id || '匿名影迷',
@@ -194,7 +194,7 @@ function Home() {
         }
       })
     );
-    
+
     setHeroQuotes(quotes);
   };
 
@@ -366,7 +366,7 @@ function Home() {
                     <div className="hero-quote-content">
                       <div className="hero-quote-mark">“</div>
                       <div className="hero-quote-text" style={{ color: 'var(--text-muted)', fontStyle: 'normal' }}>
-                        這部電影還沒有人寫下心得，等你來當第一個。
+                        這部電影在等你的意見呢
                       </div>
                     </div>
                   )}
