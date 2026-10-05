@@ -228,7 +228,7 @@ function MovieDetail() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                       {hotReviews.length > 0 && (
                         <div>
-                          <h4 style={{ color: 'var(--accent-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>🔥 熱度心得貼文</h4>
+                          <h4 style={{ color: 'var(--accent-primary)', marginBottom: '16px', fontSize: '1.2rem' }}>熱門心得貼文</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {hotReviews.map(review => (
                               <ReviewCard key={review.id} review={review} onReviewDeleted={fetchReviews} onReviewUpdated={fetchReviews} onCardClick={() => setSelectedReview(review)} onUserClick={(campusId) => setSelectedUserCampusId(campusId)} />

@@ -158,19 +158,25 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
     def get_real_name(self, obj):
         names = []
+        base_names = set()
         
         # 1. 取得真實姓名 (UserIdentity / OutsiderIdentity)
         if hasattr(obj, 'identity') and obj.identity and obj.identity.real_name:
             names.append(obj.identity.real_name)
+            base_names.add(obj.identity.real_name)
         elif hasattr(obj, 'outsider_identity') and obj.outsider_identity and obj.outsider_identity.real_name:
             names.append(obj.outsider_identity.real_name)
+            base_names.add(obj.outsider_identity.real_name)
         elif obj.line_display_name:
             names.append(f"{obj.line_display_name} (LINE)")
+            base_names.add(obj.line_display_name)
             
         # 2. 取得 Portal 拿到的中文名字 (存放在 username)
         if obj.username and obj.username != obj.campus_id and obj.username != 'Unknown':
-            # 避免與真實姓名完全重複時再顯示一次
-            if not names or obj.username not in names:
+            # 若 username 與 LINE 名稱相同，代表它並非真的 Portal 本名，而是 LINE 綁定時的預設值
+            is_line_fallback = obj.line_display_name and obj.username == obj.line_display_name
+            # 避免與已存在的真實姓名完全重複時再顯示一次
+            if not is_line_fallback and obj.username not in base_names:
                 names.append(f"{obj.username} (Portal)")
                 
         if names:

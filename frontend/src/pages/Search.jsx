@@ -12,7 +12,7 @@ function Search() {
   const [selectedReview, setSelectedReview] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const [recommendedTags, setRecommendedTags] = useState(['🔥 動作', '😂 喜劇', '🚀 科幻', '🎬 劇情']);
+  const [recommendedTags, setRecommendedTags] = useState(['動作', '喜劇', '科幻', '劇情']);
 
   useEffect(() => {
     const fetchLatestTags = async () => {

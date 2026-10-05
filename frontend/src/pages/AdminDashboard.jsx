@@ -393,7 +393,6 @@ function AdminDashboard() {
               <tr>
                 <th>校園 ID (學號)</th>
                 <th>公開暱稱</th>
-                <th>真實姓名</th>
                 <th>信箱</th>
                 <th>身分類別</th>
                 <th>註冊時間</th>
@@ -406,7 +405,6 @@ function AdminDashboard() {
                   <tr key={user.campus_id}>
                     <td>{user.campus_id}</td>
                     <td>{user.nickname}</td>
-                    <td>{user.real_name || 'N/A'}</td>
                     <td>{user.email || 'N/A'}</td>
                     <td>
                       <span style={{
