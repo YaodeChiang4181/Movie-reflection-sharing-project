@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Clock, Calendar, ThumbsUp, ThumbsDown, User, MessageCircle, Send, Edit2, Trash2, MoreVertical, ArrowLeft } from 'lucide-react';
+import { Star, Clock, Calendar, ThumbsUp, ThumbsDown, User, MessageCircle, Send, Edit2, Trash2, MoreVertical, ArrowLeft, Library } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './MovieDetail.module.css';
@@ -21,6 +21,7 @@ function MovieDetail() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [relatedMovies, setRelatedMovies] = useState([]);
+  const [relatedLists, setRelatedLists] = useState([]);
   const { isLoggedIn } = useAuth();
   const [isComposing, setIsComposing] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
@@ -45,10 +46,14 @@ function MovieDetail() {
         setMovie(movieRes.data);
 
         try {
-          const relatedRes = await api.get(`movies/${id}/related/`);
+          const [relatedRes, listsRes] = await Promise.all([
+            api.get(`movies/${id}/related/`),
+            api.get(`lists/by-movie/${id}/`)
+          ]);
           setRelatedMovies(relatedRes.data);
+          setRelatedLists(listsRes.data);
         } catch (err) {
-          console.error("Failed to fetch related movies", err);
+          console.error("Failed to fetch related data", err);
         }
       } catch (error) {
         console.error("Failed to fetch movie details:", error);
@@ -183,6 +188,39 @@ function MovieDetail() {
               <span className={styles.ratingText}>{avgRating} / 5.0 (來自 {reviews.length} 則影評)</span>
             </div>
           </div>
+
+          {relatedLists && relatedLists.length > 0 && (
+            <div style={{ marginBottom: '40px', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--accent-primary)' }}>
+                <Library size={20} />
+                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>本片同時收錄於 {relatedLists.length} 個主題片單</h3>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' }}>
+                {relatedLists.map(list => (
+                  <div 
+                    key={list.id}
+                    onClick={() => navigate(`/lists/${list.id}`)}
+                    className="glass hover-scale"
+                    style={{ 
+                      padding: '12px 20px', 
+                      borderRadius: '100px', 
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'rgba(255,255,255,0.05)',
+                      color: 'white',
+                      fontSize: '0.95rem'
+                    }}
+                  >
+                    <span>{list.title}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>({list.bookmark_count} 收藏)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className={styles.reviewSection}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>

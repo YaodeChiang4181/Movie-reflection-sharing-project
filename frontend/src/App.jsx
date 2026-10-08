@@ -15,6 +15,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const ReviewForm = lazy(() => import('./pages/liff/ReviewForm'));
 const ProfileCard = lazy(() => import('./pages/liff/ProfileCard'));
 const CampaignScan = lazy(() => import('./pages/liff/CampaignScan'));
+const CuratedListDetail = lazy(() => import('./pages/CuratedListDetail'));
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/events/:id/scan" element={<EventScan />} />
             <Route path="/search" element={<Search />} />
             <Route path="/movies/:id" element={<MovieDetail />} />
+            <Route path="/lists/:id" element={<CuratedListDetail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/liff/review-form" element={<ReviewForm />} />

@@ -104,6 +104,9 @@ urlpatterns = [
     # Integrations: LINE Webhook
     path('line/', include('api.integrations.line.urls')),
     
+    # Domain: Curated Lists (主題策展片單)
+    path('lists/', include('api.domains.curated_lists.urls')),
+
     # Domain: Feed (首頁資訊流)
     path('feed/', include('api.domains.feed.urls')),
 ]

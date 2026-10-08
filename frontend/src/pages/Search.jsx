@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Search as SearchIcon, MessageCircle, Film, Star } from 'lucide-react';
+import { Search as SearchIcon, MessageCircle, Film, Star, List } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ReviewModal from '../components/ReviewModal';
+import ListCard from '../components/ListCard';
 import api from '../api/axios';
 
 function Search() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [listResults, setListResults] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
+  const [activeTab, setActiveTab] = useState('all'); // all, reviews, lists
   const navigate = useNavigate();
   const location = useLocation();
   const [recommendedTags, setRecommendedTags] = useState(['動作', '喜劇', '科幻', '劇情']);
@@ -18,7 +21,7 @@ function Search() {
     const fetchLatestTags = async () => {
       const CACHE_KEY = 'recommended_tags';
       const CACHE_TIME_KEY = 'recommended_tags_time';
-      const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+      const CACHE_DURATION = 60 * 60 * 1000;
 
       const cachedTags = localStorage.getItem(CACHE_KEY);
       const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
@@ -59,8 +62,12 @@ function Search() {
     setIsLoading(true);
     setHasSearched(true);
     try {
-      const res = await api.get(`reviews/search/?q=${encodeURIComponent(searchQuery)}`);
-      setResults(res.data);
+      const [reviewsRes, listsRes] = await Promise.all([
+        api.get(`reviews/search/?q=${encodeURIComponent(searchQuery)}`),
+        api.get(`lists/search/?q=${encodeURIComponent(searchQuery)}`)
+      ]);
+      setResults(reviewsRes.data);
+      setListResults(listsRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -104,7 +111,7 @@ function Search() {
             type="text" 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="輸入電影名稱或心得關鍵字..."
+            placeholder="輸入關鍵字..."
             style={{ 
               flex: 1, padding: '16px 24px', fontSize: '1.1rem',
               background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
@@ -123,7 +130,7 @@ function Search() {
               <button
                 key={tag}
                 onClick={() => {
-                  const keyword = tag.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]\s?/, ''); // Remove emoji prefix if any
+                  const keyword = tag.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]\s?/, '');
                   setQuery(keyword);
                   performSearch(keyword);
                 }}
@@ -147,6 +154,29 @@ function Search() {
         )}
       </header>
 
+      {hasSearched && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
+          <button 
+            onClick={() => setActiveTab('all')}
+            style={{ padding: '8px 24px', borderRadius: '20px', background: activeTab === 'all' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)', color: activeTab === 'all' ? 'var(--bg-primary)' : 'white', fontWeight: 'bold' }}
+          >
+            全部
+          </button>
+          <button 
+            onClick={() => setActiveTab('reviews')}
+            style={{ padding: '8px 24px', borderRadius: '20px', background: activeTab === 'reviews' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)', color: activeTab === 'reviews' ? 'var(--bg-primary)' : 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <MessageCircle size={16} /> 心得
+          </button>
+          <button 
+            onClick={() => setActiveTab('lists')}
+            style={{ padding: '8px 24px', borderRadius: '20px', background: activeTab === 'lists' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)', color: activeTab === 'lists' ? 'var(--bg-primary)' : 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <List size={16} /> 主題片單
+          </button>
+        </div>
+      )}
+
       {selectedReview && (
         <ReviewModal 
           review={selectedReview} 
@@ -169,48 +199,75 @@ function Search() {
             </div>
           ))}
         </div>
-      ) : hasSearched && results.length === 0 ? (
-        <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-          <h2 style={{ color: 'var(--text-primary)' }}>未發現相關心得</h2>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '16px' }}>試試換個關鍵字搜尋一次吧！</p>
-        </div>
-      ) : (
-        <div className="posterGrid">
-          {results.map(review => (
-            <div key={review.id} className="posterCard" onClick={() => {
-                if (review.movie?.id) navigate(`/movies/${review.movie.id}`);
-            }}>
-              <div className="posterWrapper">
-                {review.movie?.poster_url ? (
-                  <img src={review.movie.poster_url} alt="poster" className="posterImg" />
-                ) : (
-                  <div className="posterPlaceholder"><Film size={32} /></div>
-                )}
-                <div className="posterOverlay">
-                  <button 
-                    className="overlayBtn" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedReview(review);
-                    }}
-                  >
-                    <MessageCircle size={16} /> 查看心得
-                  </button>
-                </div>
-              </div>
-              <div className="posterInfo">
-                <div className="posterTitle">{review.movie?.title || '未命名電影'}</div>
-                <div className="posterMeta">
-                  {review.rating !== null && review.rating > 0 && (
-                    <span className="posterRating"><Star size={12} fill="currentColor" /> {review.rating}/5</span>
-                  )}
-                  <span className="posterDate">{new Date(review.effective_date || review.created_at).toLocaleDateString('zh-TW')}</span>
-                </div>
+      ) : hasSearched ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+          
+          {/* 片單結果 */}
+          {(activeTab === 'all' || activeTab === 'lists') && listResults.length > 0 && (
+            <div>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <List size={24} color="var(--accent-primary)" /> 相關主題片單
+              </h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                {listResults.map(list => (
+                  <ListCard key={list.id} list={list} onClick={() => navigate(`/lists/${list.id}`)} />
+                ))}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* 心得結果 */}
+          {(activeTab === 'all' || activeTab === 'reviews') && results.length > 0 && (
+            <div>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MessageCircle size={24} color="var(--accent-primary)" /> 相關影評心得
+              </h2>
+              <div className="posterGrid">
+                {results.map(review => (
+                  <div key={review.id} className="posterCard" onClick={() => {
+                      if (review.movie?.id) navigate(`/movies/${review.movie.id}`);
+                  }}>
+                    <div className="posterWrapper">
+                      {review.movie?.poster_url ? (
+                        <img src={review.movie.poster_url} alt="poster" className="posterImg" />
+                      ) : (
+                        <div className="posterPlaceholder"><Film size={32} /></div>
+                      )}
+                      <div className="posterOverlay">
+                        <button 
+                          className="overlayBtn" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedReview(review);
+                          }}
+                        >
+                          <MessageCircle size={16} /> 查看心得
+                        </button>
+                      </div>
+                    </div>
+                    <div className="posterInfo">
+                      <div className="posterTitle">{review.movie?.title || '未命名電影'}</div>
+                      <div className="posterMeta">
+                        {review.rating !== null && review.rating > 0 && (
+                          <span className="posterRating"><Star size={12} fill="currentColor" /> {review.rating}/5</span>
+                        )}
+                        <span className="posterDate">{new Date(review.effective_date || review.created_at).toLocaleDateString('zh-TW')}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {results.length === 0 && listResults.length === 0 && (
+            <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+              <h2 style={{ color: 'var(--text-primary)' }}>未發現相關結果</h2>
+              <p style={{ color: 'var(--text-secondary)', marginTop: '16px' }}>試試換個關鍵字搜尋一次吧！</p>
+            </div>
+          )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

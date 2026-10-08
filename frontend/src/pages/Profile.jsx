@@ -4,6 +4,8 @@ import { Film, ThumbsUp, MessageSquare, Star, TrendingUp, RefreshCw, Camera, Edi
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 import ReviewModal from '../components/ReviewModal';
+import ListCard from '../components/ListCard';
+import CuratorStudioModal from '../components/CuratorStudioModal';
 import styles from './Profile.module.css';
 
 // 根據等級取得身分標章
@@ -24,6 +26,9 @@ function Profile() {
   const [userData, setUserData] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [commentedReviews, setCommentedReviews] = useState([]);
+  const [myLists, setMyLists] = useState([]);
+  const [bookmarkedLists, setBookmarkedLists] = useState([]);
+  const [showCuratorStudio, setShowCuratorStudio] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedReview, setSelectedReview] = useState(null);
   const [activeTab, setActiveTab] = useState('my'); // 'my' or 'commented'
@@ -133,14 +138,18 @@ function Profile() {
 
     const fetchProfileData = async () => {
       try {
-        const [userRes, reviewsRes, commentedRes] = await Promise.all([
+        const [userRes, reviewsRes, commentedRes, myListsRes, bookmarkedListsRes] = await Promise.all([
           api.get('users/me/'),
           api.get('reviews/me/'),
-          api.get('reviews/commented_by_me/')
+          api.get('reviews/commented_by_me/'),
+          api.get('lists/mine/'),
+          api.get('lists/bookmarked/')
         ]);
         setUserData(userRes.data);
         setReviews(reviewsRes.data);
         setCommentedReviews(commentedRes.data);
+        setMyLists(myListsRes.data);
+        setBookmarkedLists(bookmarkedListsRes.data);
       } catch (err) {
         console.error("Failed to fetch profile", err);
         if (err.response?.status === 401) {
@@ -464,11 +473,59 @@ function Profile() {
         >
           <MessageSquare size={16} /> 留言過的 ({commentedReviews.length})
         </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'myLists' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('myLists')}
+        >
+          <Film size={16} /> 我的片單 ({myLists.length})
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'bookmarkedLists' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('bookmarkedLists')}
+        >
+          <Star size={16} /> 收藏片單 ({bookmarkedLists.length})
+        </button>
       </div>
 
-      {/* ===== 心得列表 ===== */}
+      {/* ===== 內容區域 ===== */}
       <div className={styles.reviewsSection}>
-        {currentReviews.length === 0 ? (
+        {activeTab === 'myLists' || activeTab === 'bookmarkedLists' ? (
+          <>
+            {activeTab === 'myLists' && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => setShowCuratorStudio(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Edit2 size={16} /> 建立新片單
+                </button>
+              </div>
+            )}
+            {(activeTab === 'myLists' ? myLists : bookmarkedLists).length === 0 ? (
+              <div className="glass" style={{ padding: '48px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                <h2 style={{ color: 'var(--text-primary)', marginBottom: '12px', fontSize: '1.2rem' }}>
+                  {activeTab === 'myLists' ? '您還沒有建立任何片單' : '您還沒有收藏任何片單'}
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
+                  {activeTab === 'myLists' ? '開始策展，分享你的專屬影迷品味吧！' : '去探索看看有什麼有趣的片單！'}
+                </p>
+                {activeTab === 'myLists' && (
+                  <button className="btn-primary" onClick={() => setShowCuratorStudio(true)}>
+                    建立新片單
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                {(activeTab === 'myLists' ? myLists : bookmarkedLists).map(list => (
+                  <ListCard key={list.id} list={list} onClick={() => navigate(`/lists/${list.id}`)} />
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          currentReviews.length === 0 ? (
           <div className="glass" style={{ padding: '48px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>
               {activeTab === 'my' ? '影評' : '💬'}
@@ -523,6 +580,17 @@ function Profile() {
           </div>
         )}
       </div>
+
+      {/* Curator Studio Modal */}
+      {showCuratorStudio && (
+        <CuratorStudioModal 
+          onClose={() => setShowCuratorStudio(false)}
+          onSuccess={(newList) => {
+            setMyLists([newList, ...myLists]);
+            setShowCuratorStudio(false);
+          }}
+        />
+      )}
 
       {/* Review Modal */}
       {selectedReview && (

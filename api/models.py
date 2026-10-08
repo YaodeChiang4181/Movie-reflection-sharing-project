@@ -377,3 +377,7 @@ class AuthCode(models.Model):
         
     def __str__(self):
         return f"AuthCode for {self.user.campus_id} (used: {self.is_used})"
+
+# 策展片單 Models（定義於 api.domains.curated_lists.models，此處匯入供 Migration 使用）
+from api.domains.curated_lists.models import MovieList, MovieListItem, MovieListBookmark
+
