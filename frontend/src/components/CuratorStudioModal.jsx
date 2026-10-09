@@ -180,7 +180,6 @@ const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '' }) => 
                 />
               </div>
               <div>
-              <div>
                 <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>主題標籤 (請點選或自行輸入)</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
                   {PRESET_TAGS.map(tag => {
