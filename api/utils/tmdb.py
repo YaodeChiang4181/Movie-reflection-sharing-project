@@ -328,12 +328,21 @@ def fetch_movie_metadata_by_id(tmdb_id):
             poster_path = data.get('poster_path')
             poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
             
+            release_date = data.get('release_date', '')
+            release_year = None
+            if release_date:
+                try:
+                    release_year = int(release_date.split('-')[0])
+                except:
+                    pass
+            
             return {
                 'tmdb_id': data.get('id'),
                 'title': data.get('title'),
                 'original_title': data.get('original_title'),
                 'genres': genres,
                 'poster_url': poster_url,
+                'release_year': release_year,
             }
     except Exception as e:
         print(f"TMDB Fetch Metadata By ID Error: {e}")

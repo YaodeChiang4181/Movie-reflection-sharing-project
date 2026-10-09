@@ -88,7 +88,7 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                 'title': tmdb_meta.get('localized_title') or tmdb_meta.get('title'),
                 'original_title': tmdb_meta.get('original_title') or '',
                 'poster_url': tmdb_meta.get('poster_url') or '',
-                'release_year': tmdb_meta.get('release_year'),
+                'release_year': tmdb_meta.get('release_year') or 2024,
             }
         )
         return Response({'id': movie.id, 'title': movie.title})
