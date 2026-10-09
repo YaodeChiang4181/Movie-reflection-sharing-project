@@ -35,7 +35,7 @@ function Search() {
         const res = await api.get('reviews/');
         const reviewsList = res.data.results || res.data;
         const tagCounts = {};
-        
+
         reviewsList.forEach(review => {
           if (review.tags) {
             review.tags.forEach(tag => {
@@ -43,7 +43,7 @@ function Search() {
             });
           }
         });
-        
+
         const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
         if (sortedTags.length > 0) {
           const topTags = sortedTags.slice(0, 4);
@@ -91,7 +91,7 @@ function Search() {
   }, [location.search]);
 
   const handleReviewUpdated = () => {
-    handleSearch({ preventDefault: () => {} });
+    handleSearch({ preventDefault: () => { } });
   };
 
   const handleReviewDeleted = (id) => {
@@ -99,20 +99,20 @@ function Search() {
   };
 
   return (
-    <div className="container" style={{ 
-      paddingTop: '80px', 
+    <div className="container" style={{
+      paddingTop: '80px',
       paddingBottom: '60px',
       minHeight: '100vh'
     }}>
       <header style={{ marginBottom: '40px', textAlign: 'center' }}>
         <h1 style={{ marginBottom: '24px' }}>精準搜尋...</h1>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0', maxWidth: '600px', margin: '0 auto' }}>
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="輸入關鍵字..."
-            style={{ 
+            style={{
               flex: 1, padding: '16px 24px', fontSize: '1.1rem',
               background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
               borderRight: 'none',
@@ -156,31 +156,31 @@ function Search() {
 
       {hasSearched && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
-          <button 
+          <button
             onClick={() => setActiveTab('all')}
             style={{ padding: '8px 24px', borderRadius: '20px', background: activeTab === 'all' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)', color: activeTab === 'all' ? 'var(--bg-primary)' : 'white', fontWeight: 'bold' }}
           >
             全部
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('reviews')}
             style={{ padding: '8px 24px', borderRadius: '20px', background: activeTab === 'reviews' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)', color: activeTab === 'reviews' ? 'var(--bg-primary)' : 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <MessageCircle size={16} /> 心得
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('lists')}
             style={{ padding: '8px 24px', borderRadius: '20px', background: activeTab === 'lists' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)', color: activeTab === 'lists' ? 'var(--bg-primary)' : 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <List size={16} /> 主題片單
+            <List size={16} /> 你的片單
           </button>
         </div>
       )}
 
       {selectedReview && (
-        <ReviewModal 
-          review={selectedReview} 
-          onClose={() => setSelectedReview(null)} 
+        <ReviewModal
+          review={selectedReview}
+          onClose={() => setSelectedReview(null)}
           onReviewUpdated={handleReviewUpdated}
           onReviewDeleted={handleReviewDeleted}
         />
@@ -201,14 +201,14 @@ function Search() {
         </div>
       ) : hasSearched ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-          
+
           {/* 片單結果 */}
           {(activeTab === 'all' || activeTab === 'lists') && listResults.length > 0 && (
             <div>
               <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <List size={24} color="var(--accent-primary)" /> 相關主題片單
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+              <div className="posterGrid">
                 {listResults.map(list => (
                   <ListCard key={list.id} list={list} onClick={() => navigate(`/lists/${list.id}`)} />
                 ))}
@@ -225,7 +225,7 @@ function Search() {
               <div className="posterGrid">
                 {results.map(review => (
                   <div key={review.id} className="posterCard" onClick={() => {
-                      if (review.movie?.id) navigate(`/movies/${review.movie.id}`);
+                    if (review.movie?.id) navigate(`/movies/${review.movie.id}`);
                   }}>
                     <div className="posterWrapper">
                       {review.movie?.poster_url ? (
@@ -234,8 +234,8 @@ function Search() {
                         <div className="posterPlaceholder"><Film size={32} /></div>
                       )}
                       <div className="posterOverlay">
-                        <button 
-                          className="overlayBtn" 
+                        <button
+                          className="overlayBtn"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedReview(review);

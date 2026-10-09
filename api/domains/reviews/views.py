@@ -65,6 +65,35 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         results = search_tmdb_movies(query)
         return Response(results)
 
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def sync(self, request):
+        """同步 TMDB 電影至本地資料庫並回傳本地 ID"""
+        tmdb_id = request.data.get('tmdb_id')
+        if not tmdb_id:
+            return Response({'error': '需要 tmdb_id'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 先檢查本地是否已經有了
+        movie = Movie.objects.filter(tmdb_id=tmdb_id).first()
+        if movie:
+            return Response({'id': movie.id, 'title': movie.title})
+            
+        # 若無，則呼叫 tmdb api 同步
+        tmdb_meta = fetch_movie_metadata_by_id(tmdb_id)
+        if not tmdb_meta:
+            return Response({'error': '找不到該 TMDB 電影'}, status=status.HTTP_404_NOT_FOUND)
+            
+        movie, _ = Movie.objects.get_or_create(
+            tmdb_id=tmdb_id,
+            defaults={
+                'title': tmdb_meta.get('localized_title') or tmdb_meta.get('title'),
+                'original_title': tmdb_meta.get('original_title') or '',
+                'poster_url': tmdb_meta.get('poster_url') or '',
+                'release_year': tmdb_meta.get('release_year'),
+            }
+        )
+        return Response({'id': movie.id, 'title': movie.title})
+
+
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def speed_rating_candidates(self, request):
         """

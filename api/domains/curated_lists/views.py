@@ -72,8 +72,8 @@ class MovieListViewSet(viewsets.GenericViewSet):
                     order_index=item_data.get('order_index', 0),
                 )
 
-            # 首次建立片單 +20 EXP（含至少 3 部電影才算有效）
-            if movie_list.items.count() >= 3:
+            # 首次建立片單 +20 EXP（含至少 2 部電影才算有效）
+            if movie_list.items.count() >= 2:
                 add_user_experience(request.user, exp_gained=20)
 
         result = MovieListSerializer(movie_list, context={'request': request})

@@ -19,14 +19,14 @@ function Navbar() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    
+
     const handleOpenMailbox = (e) => {
       setIsMailboxOpen(true);
       if (e.detail) {
         setMailboxPartner(e.detail);
       }
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('open-mailbox', handleOpenMailbox);
     return () => {
@@ -83,15 +83,15 @@ function Navbar() {
                         <Film size={16} /> 發起放映活動
                       </button>
                       <button onClick={() => window.dispatchEvent(new CustomEvent('open-curator-studio'))}>
-                        <List size={16} /> 建立主題片單
+                        <List size={16} /> 建立你的片單
                       </button>
                     </div>
                   )}
                 </div>
 
-                <button 
-                  onClick={() => setIsMailboxOpen(true)} 
-                  className={styles.navLink} 
+                <button
+                  onClick={() => setIsMailboxOpen(true)}
+                  className={styles.navLink}
                   style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   <Bell size={20} />
@@ -101,7 +101,7 @@ function Navbar() {
                     </span>
                   )}
                 </button>
-                
+
                 <div className={styles.profileDropdownContainer} onMouseEnter={() => setProfileMenuOpen(true)} onMouseLeave={() => setProfileMenuOpen(false)}>
                   <button className={styles.avatarBtn}>
                     {userProfile?.avatar_url ? (
@@ -227,9 +227,9 @@ function Navbar() {
       </nav>
 
       {/* 影迷信箱側邊滑出抽屜 */}
-      <CinemaMailboxDrawer 
-        isOpen={isMailboxOpen} 
-        onClose={() => setIsMailboxOpen(false)} 
+      <CinemaMailboxDrawer
+        isOpen={isMailboxOpen}
+        onClose={() => setIsMailboxOpen(false)}
         initialPartner={mailboxPartner}
       />
     </>

@@ -517,7 +517,7 @@ function Profile() {
                 )}
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+              <div className="posterGrid">
                 {(activeTab === 'myLists' ? myLists : bookmarkedLists).map(list => (
                   <ListCard key={list.id} list={list} onClick={() => navigate(`/lists/${list.id}`)} />
                 ))}

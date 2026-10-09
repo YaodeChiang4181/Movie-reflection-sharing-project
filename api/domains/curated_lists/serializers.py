@@ -115,8 +115,8 @@ class MovieListCreateSerializer(serializers.Serializer):
         return bleach.clean(value, tags=[], attributes={}, strip=True).strip()
 
     def validate_items(self, value):
-        if len(value) < 3:
-            raise serializers.ValidationError("片單至少需要包含 3 部電影。")
+        if len(value) < 2:
+            raise serializers.ValidationError("片單至少需要包含 2 部電影。")
         if len(value) > 15:
             raise serializers.ValidationError("片單最多只能包含 15 部電影。")
         return value
@@ -149,8 +149,8 @@ class MovieListUpdateSerializer(serializers.Serializer):
 
     def validate_items(self, value):
         if value is not None:
-            if len(value) < 3:
-                raise serializers.ValidationError("片單至少需要包含 3 部電影。")
+            if len(value) < 2:
+                raise serializers.ValidationError("片單至少需要包含 2 部電影。")
             if len(value) > 15:
                 raise serializers.ValidationError("片單最多只能包含 15 部電影。")
         return value
