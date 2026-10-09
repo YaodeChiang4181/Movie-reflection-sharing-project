@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Bookmark, Share2, User, Clock, Film } from 'lucide-react';
+import { Bookmark, Share2, User, Clock, Film, Edit2, Trash2 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import CollageCover from '../components/CollageCover';
 import WatchProviderOverlay from '../components/WatchProviderOverlay';
+import CuratorStudioModal from '../components/CuratorStudioModal';
 import styles from './CuratedListDetail.module.css';
 
 function CuratedListDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { user, isLoggedIn } = useAuth();
   
   const [listData, setListData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredMovieId, setHoveredMovieId] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     const fetchList = async () => {
@@ -64,6 +66,22 @@ function CuratedListDetail() {
       alert('連結已複製！');
     }
   };
+
+  const handleDelete = async () => {
+    if (window.confirm('確定要刪除這個片單嗎？此操作無法復原。')) {
+      try {
+        await api.delete(`lists/${id}/`);
+        alert('片單已刪除');
+        navigate('/events'); // Return to events/wall
+      } catch (err) {
+        alert(err.response?.data?.error || '刪除失敗');
+      }
+    }
+  };
+
+  const isOwnerOrAdmin = isLoggedIn && user && listData && (
+    user.id === listData.creator_info?.user_id || user.is_staff
+  );
 
   if (isLoading) {
     return (
@@ -162,7 +180,31 @@ function CuratedListDetail() {
           <Share2 size={20} />
           分享
         </button>
+
+        {isOwnerOrAdmin && (
+          <>
+            <button className={`${styles.actionBtn} ${styles.secondary}`} onClick={() => setShowEditModal(true)}>
+              <Edit2 size={20} />
+              編輯片單
+            </button>
+            <button className={`${styles.actionBtn}`} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }} onClick={handleDelete}>
+              <Trash2 size={20} />
+              刪除
+            </button>
+          </>
+        )}
       </div>
+
+      {showEditModal && (
+        <CuratorStudioModal
+          editData={listData}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={(updatedData) => {
+            setListData(updatedData);
+            setShowEditModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

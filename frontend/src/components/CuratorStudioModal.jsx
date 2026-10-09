@@ -2,13 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Search, Plus, Trash2, GripVertical, Loader2, Image as ImageIcon } from 'lucide-react';
 import api from '../api/axios';
 
-const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '' }) => {
+const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '', editData = null }) => {
   const [step, setStep] = useState(initialSearchQuery ? 2 : 1);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    hashtags: [],
-    items: [] // { movie_id, title, original_title, curator_note }
+    title: editData?.title || '',
+    description: editData?.description || '',
+    hashtags: editData?.hashtags || [],
+    items: editData?.items ? editData.items.map((item, idx) => ({
+      movie_id: item.movie.id,
+      tmdb_id: item.movie.tmdb_id,
+      title: item.movie.title,
+      original_title: item.movie.original_title || '',
+      curator_note: item.curator_note || '',
+      order_index: idx
+    })) : []
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -163,8 +170,14 @@ const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '' }) => 
         }))
       };
 
-      const res = await api.post('lists/', payload);
-      alert('建立成功！獲得 20 EXP！');
+      let res;
+      if (editData) {
+        res = await api.put(`lists/${editData.id}/`, payload);
+        alert('儲存成功！');
+      } else {
+        res = await api.post('lists/', payload);
+        alert('建立成功！獲得 20 EXP！');
+      }
       onSuccess(res.data);
     } catch (err) {
       alert(err.response?.data?.error || '建立失敗');
@@ -356,8 +369,8 @@ const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '' }) => 
           ) : (
             <>
               <button className="btn-outline" onClick={() => setStep(1)}>上一步</button>
-              <button className="btn-primary" onClick={handleSubmit} disabled={isSubmitting || formData.items.length < 3}>
-                {isSubmitting ? '建立中...' : '發布片單'}
+              <button className="btn-primary" onClick={handleSubmit} disabled={isSubmitting || formData.items.length < 2}>
+                {isSubmitting ? '處理中...' : (editData ? '儲存變更' : '發布片單')}
               </button>
             </>
           )}

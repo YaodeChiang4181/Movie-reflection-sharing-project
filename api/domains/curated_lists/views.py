@@ -128,8 +128,8 @@ class MovieListViewSet(viewsets.GenericViewSet):
         except (MovieList.DoesNotExist, ValueError):
             return Response({'error': '找不到該片單'}, status=status.HTTP_404_NOT_FOUND)
 
-        if movie_list.creator != request.user:
-            return Response({'error': '只有策展人才能編輯片單'}, status=status.HTTP_403_FORBIDDEN)
+        if movie_list.creator != request.user and not request.user.is_staff:
+            return Response({'error': '無權限編輯此片單'}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = MovieListUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

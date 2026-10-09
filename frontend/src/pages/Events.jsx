@@ -6,7 +6,9 @@ import { useAuth } from '../contexts/AuthContext';
 import EventForm from '../components/EventForm';
 import EventCard from '../components/EventCard';
 import EventDetailModal from '../components/EventDetailModal';
+import ListCard from '../components/ListCard';
 import styles from './Events.module.css';
+import { Link } from 'react-router-dom';
 
 function Events() {
   const [eventCategories, setEventCategories] = useState({
@@ -15,22 +17,25 @@ function Events() {
     '已額滿': [],
     '活動回顧': [],
   });
+  const [curatedLists, setCuratedLists] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isComposing, setIsComposing] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  
+
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
     setIsLoading(true);
     try {
-      const [upcomingRes, completedRes] = await Promise.all([
+      const [upcomingRes, completedRes, listsRes] = await Promise.all([
         api.get(`events/?status=UPCOMING`),
-        api.get(`events/?status=COMPLETED`)
+        api.get(`events/?status=COMPLETED`),
+        api.get(`lists/?sort=new&page_size=10`)
       ]);
       const upcomingEvents = upcomingRes.data.results || upcomingRes.data || [];
       const completedEvents = completedRes.data.results || completedRes.data || [];
+      setCuratedLists(listsRes.data.results || listsRes.data || []);
 
       const categorized = {
         '開放報名': [],
@@ -42,7 +47,7 @@ function Events() {
       upcomingEvents.forEach(event => {
         const isFull = event.capacity > 0 && event.registered_count >= event.capacity;
         const isAlmostFull = !isFull && event.capacity > 0 && (event.capacity - event.registered_count <= 2);
-        
+
         if (isFull) {
           categorized['已額滿'].push(event);
         } else if (isAlmostFull) {
@@ -87,7 +92,7 @@ function Events() {
     <div className={`container ${styles.pageWrapper}`}>
       <header className={`flex-between ${styles.header}`}>
         <div>
-          <h1 className={styles.title}>活動牆</h1>
+          <h1 className={styles.title}>留言牆</h1>
           <p className={styles.subtitle}>尋找志同道合的影迷，一起揪團看電影、討論劇情！</p>
         </div>
         <button className="btn btn-primary" onClick={handleCreateEvent} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -96,15 +101,15 @@ function Events() {
       </header>
 
       {isComposing && (
-        <EventForm 
-          onClose={() => setIsComposing(false)} 
-          onEventAdded={handleEventAdded} 
+        <EventForm
+          onClose={() => setIsComposing(false)}
+          onEventAdded={handleEventAdded}
         />
       )}
 
       {selectedEvent && (
-        <EventDetailModal 
-          event={selectedEvent} 
+        <EventDetailModal
+          event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
           onUpdate={fetchEvents}
         />
@@ -124,7 +129,7 @@ function Events() {
               </div>
             ))}
           </div>
-        ) : !hasAnyEvents ? (
+        ) : !hasAnyEvents && curatedLists.length === 0 ? (
           <div className="glass" style={{ padding: '60px', textAlign: 'center', borderRadius: 'var(--radius-lg)' }}>
             <Ticket size={64} style={{ color: 'var(--accent-primary)', marginBottom: '20px', opacity: 0.8 }} />
             <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前還沒有任何活動</h2>
@@ -134,7 +139,24 @@ function Events() {
             </button>
           </div>
         ) : (
-          Object.entries(eventCategories).map(([categoryName, events]) => {
+          <>
+            {curatedLists.length > 0 && (
+              <div className={styles.trackSection}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 className={styles.trackTitle} style={{ margin: 0 }}>精選主題片單</h2>
+                  <Link to="/search" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textDecoration: 'none' }}>探索更多</Link>
+                </div>
+                <div className={styles.carouselTrack} style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px' }}>
+                  {curatedLists.map(list => (
+                    <div key={list.id} style={{ minWidth: '280px', flexShrink: 0 }}>
+                      <ListCard list={list} onClick={() => navigate(`/lists/${list.id}`)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {Object.entries(eventCategories).map(([categoryName, events]) => {
             if (events.length === 0) return null;
             return (
               <div key={categoryName} className={styles.trackSection}>
@@ -142,16 +164,17 @@ function Events() {
                 <div className={styles.carouselTrack}>
                   {events.map(event => (
                     <div key={event.id} className={styles.cardWrapper}>
-                      <EventCard 
-                        event={event} 
-                        onClick={() => handleEventClick(event)} 
+                      <EventCard
+                        event={event}
+                        onClick={() => handleEventClick(event)}
                       />
                     </div>
                   ))}
                 </div>
               </div>
             );
-          })
+          })}
+          </>
         )}
       </div>
     </div>

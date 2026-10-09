@@ -29,6 +29,7 @@ class MovieListItemWriteSerializer(serializers.Serializer):
 
 class CreatorInfoSerializer(serializers.Serializer):
     """策展人公開資訊"""
+    user_id = serializers.IntegerField(required=False)
     campus_id = serializers.CharField()
     nickname = serializers.CharField()
     avatar = serializers.SerializerMethodField()
@@ -74,6 +75,7 @@ class MovieListSerializer(serializers.ModelSerializer):
             level = 1
 
         data = {
+            'user_id': user.id,
             'campus_id': user.campus_id,
             'nickname': nickname,
             'avatar': avatar,
@@ -187,7 +189,7 @@ class MovieListCardSerializer(serializers.ModelSerializer):
             level = user.experience.level
         except UserExperience.DoesNotExist:
             level = 1
-        return {'campus_id': user.campus_id, 'nickname': nickname, 'level': level}
+        return {'user_id': user.id, 'campus_id': user.campus_id, 'nickname': nickname, 'level': level}
 
     def get_cover_posters(self, obj):
         items = obj.items.select_related('movie').order_by('order_index')[:4]
