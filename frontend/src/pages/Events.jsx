@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Ticket, Plus } from 'lucide-react';
+import { Ticket, Plus, ChevronDown, Film, List } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import EventForm from '../components/EventForm';
 import EventCard from '../components/EventCard';
 import EventDetailModal from '../components/EventDetailModal';
 import ListCard from '../components/ListCard';
+import CuratorStudioModal from '../components/CuratorStudioModal';
 import styles from './Events.module.css';
 import { Link } from 'react-router-dom';
 
@@ -21,6 +22,9 @@ function Events() {
   const [isLoading, setIsLoading] = useState(true);
   const [isComposing, setIsComposing] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [createMenuOpen, setCreateMenuOpen] = useState(false);
+  const [emptyMenuOpen, setEmptyMenuOpen] = useState(false);
+  const [showCuratorStudio, setShowCuratorStudio] = useState(false);
 
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
@@ -95,9 +99,64 @@ function Events() {
           <h1 className={styles.title}>留言牆</h1>
           <p className={styles.subtitle}>尋找志同道合的影迷，一起揪團看電影、討論劇情！</p>
         </div>
-        <button className="btn btn-primary" onClick={handleCreateEvent} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Plus size={18} /> 發起活動
-        </button>
+        <div 
+          style={{ position: 'relative' }}
+          onMouseEnter={() => setCreateMenuOpen(true)}
+          onMouseLeave={() => setCreateMenuOpen(false)}
+        >
+          <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Plus size={18} />
+            <span>建立</span>
+            <ChevronDown size={14} />
+          </button>
+
+          {createMenuOpen && (
+            <div className="glass" style={{
+              position: 'absolute', top: '100%', right: 0, marginTop: '8px',
+              display: 'flex', flexDirection: 'column', padding: '8px',
+              borderRadius: '12px', minWidth: '160px', zIndex: 10,
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <button 
+                onClick={() => { setCreateMenuOpen(false); handleCreateEvent(); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: 'none', border: 'none', color: 'white',
+                  textAlign: 'left', padding: '10px 12px', cursor: 'pointer',
+                  borderRadius: '8px', fontSize: '0.95rem',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+              >
+                <Film size={16} /> 發起活動
+              </button>
+              <button 
+                onClick={() => { 
+                  setCreateMenuOpen(false);
+                  if (!isLoggedIn) {
+                    alert('請先登入後再建立片單！');
+                    navigate('/auth');
+                    return;
+                  }
+                  setShowCuratorStudio(true); 
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: 'none', border: 'none', color: 'white',
+                  textAlign: 'left', padding: '10px 12px', cursor: 'pointer',
+                  borderRadius: '8px', fontSize: '0.95rem',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+              >
+                <List size={16} /> 建立個人片單
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {isComposing && (
@@ -134,16 +193,70 @@ function Events() {
             <Ticket size={64} style={{ color: 'var(--accent-primary)', marginBottom: '20px', opacity: 0.8 }} />
             <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前還沒有任何活動</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>來發起第一場揪團，尋找一起看電影的好夥伴吧！</p>
-            <button className="btn btn-primary" onClick={handleCreateEvent} style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}>
-              <Plus size={18} /> 發起第一場觀影活動
-            </button>
+            <div 
+              style={{ position: 'relative', display: 'inline-block' }}
+              onMouseEnter={() => setEmptyMenuOpen(true)}
+              onMouseLeave={() => setEmptyMenuOpen(false)}
+            >
+              <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}>
+                <Plus size={18} /> 建立
+                <ChevronDown size={14} />
+              </button>
+
+              {emptyMenuOpen && (
+                <div className="glass" style={{
+                  position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '8px',
+                  display: 'flex', flexDirection: 'column', padding: '8px',
+                  borderRadius: '12px', minWidth: '160px', zIndex: 10,
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                  <button 
+                    onClick={() => { setEmptyMenuOpen(false); handleCreateEvent(); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      background: 'none', border: 'none', color: 'white',
+                      textAlign: 'left', padding: '10px 12px', cursor: 'pointer',
+                      borderRadius: '8px', fontSize: '0.95rem',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                  >
+                    <Film size={16} /> 發起活動
+                  </button>
+                  <button 
+                    onClick={() => { 
+                      setEmptyMenuOpen(false);
+                      if (!isLoggedIn) {
+                        alert('請先登入後再建立片單！');
+                        navigate('/auth');
+                        return;
+                      }
+                      setShowCuratorStudio(true); 
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      background: 'none', border: 'none', color: 'white',
+                      textAlign: 'left', padding: '10px 12px', cursor: 'pointer',
+                      borderRadius: '8px', fontSize: '0.95rem',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                  >
+                    <List size={16} /> 建立個人片單
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <>
             {curatedLists.length > 0 && (
               <div className={styles.trackSection}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h2 className={styles.trackTitle} style={{ margin: 0 }}>精選主題片單</h2>
+                  <h2 className={styles.trackTitle} style={{ margin: 0 }}>看看別人的片單...</h2>
                   <Link to="/search" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textDecoration: 'none' }}>探索更多</Link>
                 </div>
                 <div className={styles.carouselTrack} style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px' }}>
@@ -155,28 +268,38 @@ function Events() {
                 </div>
               </div>
             )}
-            
+
             {Object.entries(eventCategories).map(([categoryName, events]) => {
-            if (events.length === 0) return null;
-            return (
-              <div key={categoryName} className={styles.trackSection}>
-                <h2 className={styles.trackTitle}>{categoryName}</h2>
-                <div className={styles.carouselTrack}>
-                  {events.map(event => (
-                    <div key={event.id} className={styles.cardWrapper}>
-                      <EventCard
-                        event={event}
-                        onClick={() => handleEventClick(event)}
-                      />
-                    </div>
-                  ))}
+              if (events.length === 0) return null;
+              return (
+                <div key={categoryName} className={styles.trackSection}>
+                  <h2 className={styles.trackTitle}>{categoryName}</h2>
+                  <div className={styles.carouselTrack}>
+                    {events.map(event => (
+                      <div key={event.id} className={styles.cardWrapper}>
+                        <EventCard
+                          event={event}
+                          onClick={() => handleEventClick(event)}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
           </>
         )}
       </div>
+
+      {showCuratorStudio && (
+        <CuratorStudioModal
+          onClose={() => setShowCuratorStudio(false)}
+          onSuccess={() => {
+            setShowCuratorStudio(false);
+            fetchEvents();
+          }}
+        />
+      )}
     </div>
   );
 }
