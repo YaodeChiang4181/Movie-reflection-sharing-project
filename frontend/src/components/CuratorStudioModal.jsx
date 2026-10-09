@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { X, Search, Plus, Trash2, GripVertical } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Search, Plus, Trash2, GripVertical, Loader2, Image as ImageIcon } from 'lucide-react';
 import api from '../api/axios';
 
-const CuratorStudioModal = ({ onClose, onSuccess }) => {
-  const [step, setStep] = useState(1);
+const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '' }) => {
+  const [step, setStep] = useState(initialSearchQuery ? 2 : 1);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -15,27 +15,61 @@ const CuratorStudioModal = ({ onClose, onSuccess }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const searchTimeout = useRef(null);
+  
+  const PRESET_TAGS = ['院線熱映', '週末放鬆', '燒腦神作', '催淚神片', '冷門佳作'];
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    setIsSearching(true);
-    try {
-      const res = await api.get(`movies/search_tmdb/?q=${encodeURIComponent(searchQuery)}`);
-      setSearchResults(res.data.results || res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSearching(false);
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    
+    if (val.trim().length >= 1) {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+      searchTimeout.current = setTimeout(async () => {
+        setIsSearching(true);
+        try {
+          const res = await api.get(`movies/search_tmdb/?q=${encodeURIComponent(val)}`);
+          setSearchResults(res.data.results || res.data);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 500);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    if (initialSearchQuery && step === 2 && !searchQuery) {
+      setSearchQuery(initialSearchQuery);
+      setIsSearching(true);
+      api.get(`movies/search_tmdb/?q=${encodeURIComponent(initialSearchQuery)}`)
+        .then(res => {
+          setSearchResults(res.data.results || res.data);
+        })
+        .catch(err => console.error(err))
+        .finally(() => setIsSearching(false));
+    }
+  }, [initialSearchQuery, step]);
+
+  const handleTagToggle = (tag) => {
+    const currentTags = formData.hashtags.split(/[ ,，、]/).map(t => t.trim()).filter(Boolean);
+    if (currentTags.includes(tag)) {
+      setFormData({ ...formData, hashtags: currentTags.filter(t => t !== tag).join(', ') });
+    } else {
+      setFormData({ ...formData, hashtags: [...currentTags, tag].join(', ') });
     }
   };
 
   const addMovie = (movie) => {
+    const movieId = movie.tmdb_id || movie.id;
     if (formData.items.length >= 15) {
       alert('最多只能收錄 15 部電影！');
       return;
     }
-    if (formData.items.find(item => item.tmdb_id === movie.id || item.movie_id === movie.id)) {
+    if (formData.items.find(item => item.tmdb_id === movieId || item.movie_id === movieId)) {
       alert('已收錄過這部電影！');
       return;
     }
@@ -43,8 +77,8 @@ const CuratorStudioModal = ({ onClose, onSuccess }) => {
     setFormData(prev => ({
       ...prev,
       items: [...prev.items, {
-        movie_id: movie.id, // For existing local movies
-        tmdb_id: movie.id,  // For TMDB movies
+        movie_id: movieId, // We will map it in backend
+        tmdb_id: movieId,  // For TMDB movies
         title: movie.title,
         original_title: movie.original_title || '',
         curator_note: '',
@@ -124,7 +158,7 @@ const CuratorStudioModal = ({ onClose, onSuccess }) => {
           {step === 1 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>片單標題 (必填)</label>
+                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>片單標題</label>
                 <input 
                   type="text" 
                   value={formData.title} 
@@ -135,7 +169,7 @@ const CuratorStudioModal = ({ onClose, onSuccess }) => {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>情境引言 (選填)</label>
+                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>情境引言</label>
                 <textarea 
                   value={formData.description} 
                   onChange={e => setFormData({...formData, description: e.target.value})} 
@@ -146,12 +180,37 @@ const CuratorStudioModal = ({ onClose, onSuccess }) => {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>主題標籤 (選填，請用逗號分隔)</label>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>主題標籤 (請點選或自行輸入)</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                  {PRESET_TAGS.map(tag => {
+                    const isSelected = formData.hashtags.split(/[ ,，、]/).map(t => t.trim()).includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => handleTagToggle(tag)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '100px',
+                          fontSize: '0.85rem',
+                          background: isSelected ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+                          color: isSelected ? '#000' : 'var(--text-secondary)',
+                          border: `1px solid ${isSelected ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)'}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        #{tag}
+                      </button>
+                    )
+                  })}
+                </div>
                 <input 
                   type="text" 
                   value={formData.hashtags} 
                   onChange={e => setFormData({...formData, hashtags: e.target.value})} 
-                  placeholder="例如：雨天, 燒腦, 溫馨"
+                  placeholder="自訂標籤，多個請用逗號分隔，如：小眾, 浪漫..."
                   style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 />
               </div>
@@ -160,33 +219,40 @@ const CuratorStudioModal = ({ onClose, onSuccess }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div style={{ background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '12px' }}>
                 <h3 style={{ margin: '0 0 16px 0', color: 'white', fontSize: '1.1rem' }}>新增電影</h3>
-                <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                  <input 
-                    type="text" 
-                    value={searchQuery} 
-                    onChange={e => setSearchQuery(e.target.value)} 
-                    placeholder="搜尋電影..."
-                    style={{ flex: 1, padding: '10px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
-                  />
-                  <button type="submit" className="btn-primary" disabled={isSearching} style={{ padding: '0 16px' }}>
-                    <Search size={18} />
-                  </button>
-                </form>
-                
-                {searchResults.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '150px', overflowY: 'auto' }}>
-                    {searchResults.map(m => (
-                      <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                        <div>
-                          <div style={{ color: 'white' }}>{m.title}</div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{m.release_date || m.release_year}</div>
-                        </div>
-                        <button onClick={() => addMovie(m)} style={{ color: 'var(--accent-primary)' }}><Plus size={20} /></button>
-                      </div>
-                    ))}
+                <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0 16px', marginBottom: '16px' }}>
+                    <Search size={18} style={{ color: 'var(--text-muted)' }} />
+                    <input 
+                      type="text" 
+                      value={searchQuery} 
+                      onChange={handleSearchChange} 
+                      placeholder="輸入電影名稱搜尋..."
+                      style={{ flex: 1, padding: '12px', background: 'transparent', border: 'none', color: 'white', outline: 'none' }}
+                    />
+                    {isSearching && <Loader2 size={18} className="animate-spin" style={{ color: 'var(--text-muted)' }} />}
                   </div>
-                )}
-              </div>
+                  
+                  {searchResults.length > 0 && searchQuery.trim().length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '250px', overflowY: 'auto', background: '#1a1a24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                      {searchResults.map(m => (
+                        <div key={m.tmdb_id || m.id} onClick={() => { addMovie(m); setSearchQuery(''); setSearchResults([]); }} className="hover-bg" style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
+                          {m.poster_url ? (
+                            <img src={m.poster_url} alt="poster" style={{ width: '40px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                          ) : (
+                            <div style={{ width: '40px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <ImageIcon size={16} color="rgba(255,255,255,0.3)" />
+                            </div>
+                          )}
+                          <div style={{ flex: 1 }}>
+                            <div style={{ color: 'white', fontWeight: 'bold' }}>{m.title}</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{m.release_date || m.release_year || m.original_title}</div>
+                          </div>
+                          <Plus size={20} style={{ color: 'var(--accent-primary)' }} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>

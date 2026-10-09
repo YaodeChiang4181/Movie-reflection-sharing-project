@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Clapperboard, User, Home, Search, CalendarDays, Menu, X, Bell, Shield, Plus, ChevronDown, Edit3, Film } from 'lucide-react';
+import { Clapperboard, User, Home, Search, CalendarDays, Menu, X, Bell, Shield, Plus, ChevronDown, Edit3, Film, List } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CinemaMailboxDrawer from './CinemaMailboxDrawer';
 import styles from './Navbar.module.css';
@@ -81,6 +81,9 @@ function Navbar() {
                       </button>
                       <button onClick={() => window.dispatchEvent(new CustomEvent('open-event-form'))}>
                         <Film size={16} /> 發起放映活動
+                      </button>
+                      <button onClick={() => window.dispatchEvent(new CustomEvent('open-curator-studio'))}>
+                        <List size={16} /> 建立主題片單
                       </button>
                     </div>
                   )}

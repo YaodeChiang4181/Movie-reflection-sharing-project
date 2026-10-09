@@ -191,7 +191,16 @@ function DriftBottleModal({ onClose }) {
                     <button className={styles.secondaryBtn} onClick={handlePick}>
                       再撈一個
                     </button>
-                    {/* Optionally, you could provide a TMDB search link here based on movie_title */}
+                    <button 
+                      className="btn-primary" 
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('open-curator-studio', { detail: { searchTitle: pickedBottle.movie_title } }));
+                        onClose();
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <Anchor size={16} /> 收錄至新片單
+                    </button>
                   </div>
                 </div>
               )}

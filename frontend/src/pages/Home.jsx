@@ -13,6 +13,7 @@ import SEO from '../components/SEO';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from '../components/EventFilterTabs.module.css';
+import CuratorStudioModal from '../components/CuratorStudioModal';
 
 function truncateAtSentence(text, maxLen = 40) {
   if (!text) return '';
@@ -53,6 +54,7 @@ function Home() {
   const [isEventComposing, setIsEventComposing] = useState(false);
   const [isSpeedRatingOpen, setIsSpeedRatingOpen] = useState(false);
   const [isDriftBottleOpen, setIsDriftBottleOpen] = useState(false);
+  const [isCuratorStudioOpen, setIsCuratorStudioOpen] = useState(false);
 
   const [feedItems, setFeedItems] = useState([]);
   const [feedType, setFeedType] = useState('all'); // 'all', 'movies', 'events'
@@ -90,12 +92,23 @@ function Home() {
       setIsEventComposing(true);
     };
 
+    const handleOpenCuratorStudio = (e) => {
+      if (!isLoggedIn) {
+        alert('請先登入後再建立片單！');
+        navigate('/auth');
+        return;
+      }
+      setIsCuratorStudioOpen(e.detail?.searchTitle || true);
+    };
+
     window.addEventListener('open-review-form', handleOpenReviewForm);
     window.addEventListener('open-event-form', handleOpenEventForm);
+    window.addEventListener('open-curator-studio', handleOpenCuratorStudio);
 
     return () => {
       window.removeEventListener('open-review-form', handleOpenReviewForm);
       window.removeEventListener('open-event-form', handleOpenEventForm);
+      window.removeEventListener('open-curator-studio', handleOpenCuratorStudio);
     };
   }, [isLoggedIn, navigate]);
 
@@ -524,6 +537,18 @@ function Home() {
         <EventDetailModal
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
+        />
+      )}
+
+      {/* Curator Studio Modal */}
+      {isCuratorStudioOpen && (
+        <CuratorStudioModal 
+          onClose={() => setIsCuratorStudioOpen(false)}
+          onSuccess={(newList) => {
+            setIsCuratorStudioOpen(false);
+            navigate(`/lists/${newList.id}`);
+          }}
+          initialSearchQuery={typeof isCuratorStudioOpen === 'string' ? isCuratorStudioOpen : ''}
         />
       )}
     </div>
