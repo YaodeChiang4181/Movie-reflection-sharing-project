@@ -252,6 +252,7 @@ const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '' }) => 
                     </div>
                   )}
                 </div>
+              </div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
