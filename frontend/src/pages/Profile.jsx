@@ -578,8 +578,9 @@ function Profile() {
               </div>
             ))}
           </div>
-        )}
-      </div>
+        )
+      )}
+    </div>
 
       {/* Curator Studio Modal */}
       {showCuratorStudio && (
