@@ -162,6 +162,7 @@ function MovieDetail() {
             >
               <TmdbPoster
                 title={movie.title}
+                posterUrl={movie.poster_url}
                 style={{ width: '220px', height: '330px', borderRadius: '16px', boxShadow: '0 12px 32px rgba(0,0,0,0.4)', transition: 'transform 0.3s ease' }}
               />
               {posterHovered && (

@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Film } from 'lucide-react';
 
-function TmdbPoster({ title, style, className }) {
-  const [posterUrl, setPosterUrl] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+function TmdbPoster({ title, posterUrl: initialPosterUrl, style, className }) {
+  const [posterUrl, setPosterUrl] = useState(initialPosterUrl || null);
+  const [isLoading, setIsLoading] = useState(!initialPosterUrl);
 
   useEffect(() => {
+    if (initialPosterUrl) {
+      setPosterUrl(initialPosterUrl);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchPoster = async () => {
       if (!title) {
         setIsLoading(false);
         return;
       }
       try {
-        const apiKey = import.meta.env.VITE_TMDB_API_KEY;
+        const apiKey = import.meta.env.VITE_TMDB_API_KEY || '9f47183d5f6d186439851ec7c0555109';
         if (!apiKey) {
           console.warn("VITE_TMDB_API_KEY is not set.");
           setIsLoading(false);
@@ -44,7 +50,7 @@ function TmdbPoster({ title, style, className }) {
     };
 
     fetchPoster();
-  }, [title]);
+  }, [title, initialPosterUrl]);
 
   if (posterUrl) {
     return (
@@ -53,6 +59,7 @@ function TmdbPoster({ title, style, className }) {
         alt={title} 
         style={{ ...style, objectFit: 'cover' }}
         className={className}
+        onError={() => setPosterUrl(null)}
       />
     );
   }

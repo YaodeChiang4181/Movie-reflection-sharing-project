@@ -12,7 +12,7 @@ function FeedCard({ item, onClick }) {
         onClick={onClick}
       >
         <div className="posterWrapper">
-          <TmdbPoster title={item.title} className="posterImg" />
+          <TmdbPoster title={item.title} posterUrl={item.poster_url} className="posterImg" />
           <div className="posterOverlay">
             <button className="overlayBtn">
               <MessageCircle size={16} /> 查看電影

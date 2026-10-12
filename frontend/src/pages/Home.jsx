@@ -334,7 +334,7 @@ function Home() {
                   onMouseEnter={() => setHeroHovered(true)}
                   onMouseLeave={() => setHeroHovered(false)}
                 >
-                  <TmdbPoster title={item.title} className="hero-poster" />
+                  <TmdbPoster title={item.title} posterUrl={item.poster_url} className="hero-poster" />
                   {heroHovered && item.feed_type === 'MOVIE' && (
                     <div style={{ position: 'absolute', bottom: '-8px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
                       <WatchProviderOverlay movieId={item.id} isVisible={heroHovered} variant="overlay" />
