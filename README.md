@@ -1,4 +1,15 @@
+---
+title: Movie Platform Backend
+emoji: 🎬
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 映後時光 (Movie Reflection Sharing Project)
+
 
 > 一個以電影心得交流為核心的社群平台，結合網頁端與 LINE Bot 機器人，讓使用者能分享觀影心得、搜尋電影評論、發起觀影揪團活動，並透過豐富的遊戲化機制增加社群黏著度。
 

@@ -1,22 +1,27 @@
 FROM python:3.11-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=7860
+
+# 建立符合 Hugging Face 規範的 non-root user (UID 1000)
+RUN useradd -m -u 1000 user
+
 WORKDIR /app
 
-# 避免 Python 寫入 .pyc 檔案
-ENV PYTHONDONTWRITEBYTECODE 1
-# 確保 stdout/stderr 立刻輸出，不會被緩衝
-ENV PYTHONUNBUFFERED 1
-
-# 安裝系統相依套件 (若有需要可以加)
-# RUN apt-get update && apt-get install -y gcc
-
-# 複製並安裝 Python 套件
+# 先安裝依賴以利用 Docker 快取
 COPY requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# 複製其餘程式碼 (開發時會被 docker-compose 的 volume 覆蓋)
-COPY . /app/
+# 建立靜態檔案與 media 目錄並設定擁有者
+RUN mkdir -p /app/staticfiles /app/media && chown -R user:user /app
 
-EXPOSE 8000
+# 複製專案檔案並將擁有者指派給 user
+COPY --chown=user:user . /app
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+USER user
+
+EXPOSE 7860
+
+CMD ["sh", "-c", "python manage.py collectstatic --no-input && python manage.py migrate && gunicorn backend.wsgi:application --bind 0.0.0.0:7860 --workers 2 --timeout 120"]
