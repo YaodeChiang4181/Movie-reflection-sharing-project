@@ -102,7 +102,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600
+        conn_max_age=0 if os.environ.get('VERCEL') else 600
     )
 }
 
@@ -235,7 +235,7 @@ SIMPLE_JWT = {
 }
 
 # Email Configuration (OTP Verification & Daily Digest)
-if os.environ.get('USE_SMTP') == 'True' or os.environ.get('RENDER'):
+if os.environ.get('USE_SMTP') == 'True' or os.environ.get('RENDER') or os.environ.get('VERCEL'):
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = 587
