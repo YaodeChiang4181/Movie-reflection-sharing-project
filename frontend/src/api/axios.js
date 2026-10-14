@@ -16,6 +16,12 @@ const api = axios.create({
 // Response Interceptor: 統一錯誤處理 (包含 Token 過期與自動刷新機制)
 api.interceptors.response.use(
   (response) => {
+    // 防呆機制：若後端未正確轉發導致回傳了 index.html 前端頁面
+    if (typeof response.data === 'string' && (response.data.trim().toLowerCase().startsWith('<!doctype') || response.data.trim().toLowerCase().startsWith('<html'))) {
+      const err = new Error('API 端點回傳了 HTML 而非預期的 JSON（後端路由轉發異常）');
+      err.response = response;
+      return Promise.reject(err);
+    }
     return response;
   },
   async (error) => {

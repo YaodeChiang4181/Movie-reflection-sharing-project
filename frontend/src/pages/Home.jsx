@@ -132,14 +132,17 @@ function Home() {
     try {
       setIsLoading(true);
       const response = await api.get(`feed/?type=${feedType}&page=${currentPage}`);
-      setFeedItems(response.data.results || response.data);
-      if (response.data.count) {
-        setTotalPages(Math.ceil(response.data.count / 20));
+      const raw = response.data;
+      const items = Array.isArray(raw?.results) ? raw.results : (Array.isArray(raw) ? raw : []);
+      setFeedItems(items);
+      if (raw?.count && typeof raw.count === 'number') {
+        setTotalPages(Math.ceil(raw.count / 20));
       } else {
         setTotalPages(1);
       }
     } catch (err) {
       console.error("Failed to fetch feed", err);
+      setFeedItems([]);
     } finally {
       setIsLoading(false);
     }
@@ -156,8 +159,12 @@ function Home() {
       const eventsRes = results[0].status === 'fulfilled' ? results[0].value : null;
       const moviesRes = results[1].status === 'fulfilled' ? results[1].value : null;
 
-      const upcomingEvents = (eventsRes && (eventsRes.data.results || eventsRes.data)) || [];
-      const topMovies = (moviesRes && (moviesRes.data.results || moviesRes.data)) || [];
+      const upcomingEvents = Array.isArray(eventsRes?.data?.results)
+        ? eventsRes.data.results
+        : (Array.isArray(eventsRes?.data) ? eventsRes.data : []);
+      const topMovies = Array.isArray(moviesRes?.data?.results)
+        ? moviesRes.data.results
+        : (Array.isArray(moviesRes?.data) ? moviesRes.data : []);
 
       const mixed = [];
       if (upcomingEvents.length > 0) mixed.push({ ...upcomingEvents[0], feed_type: 'EVENT' });
@@ -174,6 +181,7 @@ function Home() {
       fetchHeroQuotes(finalItems);
     } catch (err) {
       console.error("Failed to fetch hero items", err);
+      setHeroItems([]);
     }
   };
 
@@ -187,11 +195,12 @@ function Home() {
             const res = await api.get(`reviews/`, {
               params: { movie: item.id, page_size: 5 }
             });
-            const reviews = res.data.results || res.data;
+            const raw = res.data;
+            const reviews = Array.isArray(raw?.results) ? raw.results : (Array.isArray(raw) ? raw : []);
 
             // 找第一則有內容且非爆雷的心得，並過濾掉預設的急速評星文字
             const pick = reviews.find(r =>
-              r.content && r.content.trim().length > 0 && !r.is_spoiler && r.content.trim() !== '來自急速評星的無內文評價'
+              r && r.content && r.content.trim().length > 0 && !r.is_spoiler && r.content.trim() !== '來自急速評星的無內文評價'
             );
 
             if (pick) {
