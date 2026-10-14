@@ -3,7 +3,37 @@ from django.http import HttpResponse
 from api.domains.auth.views import UserMeView, PublicProfileView
 
 def ping(request):
-    return HttpResponse("pong")
+    import os
+    from django.db import connection
+    from django.http import JsonResponse
+    
+    db_status = "unknown"
+    error = None
+    movies_count = None
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM api_movie")
+            movies_count = cursor.fetchone()[0]
+        db_status = "connected"
+    except Exception as e:
+        db_status = "error"
+        error = str(e)
+
+    raw_db_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL') or os.environ.get('POSTGRES_URL_NON_POOLING') or ''
+    masked_url = (raw_db_url[:12] + '...' + raw_db_url[-15:]) if len(raw_db_url) > 27 else ('set' if raw_db_url else 'not set')
+
+    return JsonResponse({
+        "status": "pong",
+        "has_DATABASE_URL": bool(os.environ.get('DATABASE_URL')),
+        "has_POSTGRES_URL": bool(os.environ.get('POSTGRES_URL')),
+        "database_url_preview": masked_url,
+        "db_engine": connection.settings_dict.get('ENGINE'),
+        "db_host": connection.settings_dict.get('HOST'),
+        "db_name": connection.settings_dict.get('NAME'),
+        "db_status": db_status,
+        "movies_count": movies_count,
+        "db_error": error,
+    })
 
 def trigger_daily_digest(request):
     import os
