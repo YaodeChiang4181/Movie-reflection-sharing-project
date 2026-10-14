@@ -27,13 +27,14 @@ def ping(request):
         "has_DATABASE_URL": bool(os.environ.get('DATABASE_URL')),
         "has_POSTGRES_URL": bool(os.environ.get('POSTGRES_URL')),
         "database_url_preview": masked_url,
-        "db_engine": connection.settings_dict.get('ENGINE'),
-        "db_host": connection.settings_dict.get('HOST'),
-        "db_name": connection.settings_dict.get('NAME'),
+        "db_engine": str(connection.settings_dict.get('ENGINE')),
+        "db_host": str(connection.settings_dict.get('HOST')),
+        "db_name": str(connection.settings_dict.get('NAME')),
         "db_status": db_status,
         "movies_count": movies_count,
         "db_error": error,
     })
+
 
 def trigger_daily_digest(request):
     import os
