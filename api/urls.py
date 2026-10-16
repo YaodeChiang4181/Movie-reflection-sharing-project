@@ -33,6 +33,10 @@ def ping(request):
         "db_status": db_status,
         "movies_count": movies_count,
         "db_error": error,
+        "has_AWS_STORAGE_BUCKET_NAME": bool(os.environ.get('AWS_STORAGE_BUCKET_NAME')),
+        "has_AWS_ACCESS_KEY_ID": bool(os.environ.get('AWS_ACCESS_KEY_ID')),
+        "has_AWS_SECRET_ACCESS_KEY": bool(os.environ.get('AWS_SECRET_ACCESS_KEY')),
+        "has_AWS_S3_ENDPOINT_URL": bool(os.environ.get('AWS_S3_ENDPOINT_URL')),
     })
 
 

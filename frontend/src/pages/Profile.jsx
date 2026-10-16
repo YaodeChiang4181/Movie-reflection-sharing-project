@@ -40,6 +40,7 @@ function Profile() {
   const [editNicknameValue, setEditNicknameValue] = useState('');
   const [isSavingNickname, setIsSavingNickname] = useState(false);
   const [showAllTagsModal, setShowAllTagsModal] = useState(false);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
 
   const handleAvatarClick = () => {
     if (fileInputRef.current) {
@@ -270,8 +271,13 @@ function Profile() {
                   onClick={handleAvatarClick}
                   style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
                 >
-                  {userData?.avatar ? (
-                    <img src={userData.avatar} alt="avatar" className={styles.avatarImage} />
+                  {userData?.avatar && !avatarLoadError ? (
+                    <img
+                      src={userData.avatar}
+                      alt="avatar"
+                      className={styles.avatarImage}
+                      onError={() => setAvatarLoadError(true)}
+                    />
                   ) : (
                     <span className={styles.avatarText}>
                       {(userData?.nickname || 'U').charAt(0).toUpperCase()}
