@@ -26,45 +26,59 @@
       }
     },
     {
-      "source": "/assets/(.*)",
+      "source": "/auth(.*)",
       "destination": {
         "service": "frontend",
-        "path": "/assets/$1"
+        "path": "/"
       }
     },
     {
-      "source": "/favicon.svg",
+      "source": "/events(.*)",
       "destination": {
         "service": "frontend",
-        "path": "/favicon.svg"
+        "path": "/"
       }
     },
     {
-      "source": "/robots.txt",
+      "source": "/search(.*)",
       "destination": {
         "service": "frontend",
-        "path": "/robots.txt"
+        "path": "/"
       }
     },
     {
-      "source": "/sitemap.xml",
+      "source": "/movies/(.*)",
       "destination": {
         "service": "frontend",
-        "path": "/sitemap.xml"
+        "path": "/"
       }
     },
     {
-      "source": "/icons.svg",
+      "source": "/lists/(.*)",
       "destination": {
         "service": "frontend",
-        "path": "/icons.svg"
+        "path": "/"
+      }
+    },
+    {
+      "source": "/profile(.*)",
+      "destination": {
+        "service": "frontend",
+        "path": "/"
+      }
+    },
+    {
+      "source": "/liff/(.*)",
+      "destination": {
+        "service": "frontend",
+        "path": "/"
       }
     },
     {
       "source": "/(.*)",
       "destination": {
         "service": "frontend",
-        "path": "/index.html"
+        "path": "/$1"
       }
     }
   ],
