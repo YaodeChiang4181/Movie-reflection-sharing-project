@@ -234,3 +234,271 @@
 .actionBtn.secondary:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* Inline Editing Styles */
+.editBanner {
+  background: rgba(224, 160, 58, 0.12);
+  border: 1px solid rgba(224, 160, 58, 0.35);
+  border-radius: 12px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  color: var(--accent-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+  backdrop-filter: blur(8px);
+}
+
+.editTitleInput {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--accent-primary);
+  border-radius: 8px;
+  padding: 8px 14px;
+  width: 100%;
+  margin-bottom: 12px;
+  outline: none;
+  font-family: inherit;
+}
+
+.editDescInput {
+  font-size: 1rem;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  width: 100%;
+  min-height: 70px;
+  margin-bottom: 16px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.editTitleInput:focus,
+.editDescInput:focus,
+.editNoteInput:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(224, 160, 58, 0.3);
+}
+
+.tagEditable {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(224, 160, 58, 0.15);
+  color: var(--accent-primary);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+}
+
+.tagDeleteBtn {
+  background: transparent;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.tagAddInput {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-pill);
+  color: #fff;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  outline: none;
+  width: 140px;
+}
+
+.movieCardEditing {
+  position: relative;
+  border-color: rgba(224, 160, 58, 0.35);
+  background: rgba(35, 28, 22, 0.85);
+  cursor: default;
+}
+
+.removeMovieBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.removeMovieBtn:hover {
+  background: #ef4444;
+  color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+.editNoteInput {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px dashed var(--accent-primary);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 56px;
+  outline: none;
+  margin-top: 8px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+/* Bottom Add Movie Section */
+.addMovieSection {
+  margin-left: 96px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(224, 160, 58, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  z-index: 2;
+  transition: all 0.2s;
+}
+
+@media (max-width: 600px) {
+  .addMovieSection {
+    margin-left: 0;
+  }
+}
+
+.addMovieSection:hover {
+  border-color: var(--accent-primary);
+  background: rgba(224, 160, 58, 0.05);
+}
+
+.addMovieHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-primary);
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.searchBoxWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.addSearchInput {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 40px 12px 42px;
+  color: white;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.addSearchInput:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 15px rgba(224, 160, 58, 0.2);
+}
+
+.searchLoader {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent-primary);
+}
+
+.searchResultsDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  background: #1c1815;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+  z-index: 100;
+}
+
+.searchResultItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.15s;
+}
+
+.searchResultItem:hover {
+  background: rgba(224, 160, 58, 0.15);
+}
+
+.searchItemPoster {
+  width: 36px;
+  height: 52px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #333;
+  flex-shrink: 0;
+}
+
+.searchItemInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.searchItemTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.searchItemMeta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.addIcon {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
