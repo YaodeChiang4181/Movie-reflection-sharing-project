@@ -96,10 +96,10 @@ function Events() {
     <div className={`container ${styles.pageWrapper}`}>
       <header className={`flex-between ${styles.header}`}>
         <div>
-          <h1 className={styles.title}>留言牆</h1>
-          <p className={styles.subtitle}>尋找志同道合的影迷，一起揪團看電影、討論劇情！</p>
+          <h1 className={styles.title}>廣場</h1>
+          <p className={styles.subtitle}>在茫茫人海中，尋找志同道合的朋友！</p>
         </div>
-        <div 
+        <div
           style={{ position: 'relative' }}
           onMouseEnter={() => setCreateMenuOpen(true)}
           onMouseLeave={() => setCreateMenuOpen(false)}
@@ -118,7 +118,7 @@ function Events() {
               boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
               border: '1px solid rgba(255,255,255,0.1)'
             }}>
-              <button 
+              <button
                 onClick={() => { setCreateMenuOpen(false); handleCreateEvent(); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px',
@@ -132,15 +132,15 @@ function Events() {
               >
                 <Film size={16} /> 發起活動
               </button>
-              <button 
-                onClick={() => { 
+              <button
+                onClick={() => {
                   setCreateMenuOpen(false);
                   if (!isLoggedIn) {
                     alert('請先登入後再建立片單！');
                     navigate('/auth');
                     return;
                   }
-                  setShowCuratorStudio(true); 
+                  setShowCuratorStudio(true);
                 }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px',
@@ -193,7 +193,7 @@ function Events() {
             <Ticket size={64} style={{ color: 'var(--accent-primary)', marginBottom: '20px', opacity: 0.8 }} />
             <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前還沒有任何活動</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>來發起第一場揪團，尋找一起看電影的好夥伴吧！</p>
-            <div 
+            <div
               style={{ position: 'relative', display: 'inline-block' }}
               onMouseEnter={() => setEmptyMenuOpen(true)}
               onMouseLeave={() => setEmptyMenuOpen(false)}
@@ -211,7 +211,7 @@ function Events() {
                   boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
                   border: '1px solid rgba(255,255,255,0.1)'
                 }}>
-                  <button 
+                  <button
                     onClick={() => { setEmptyMenuOpen(false); handleCreateEvent(); }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '8px',
@@ -225,15 +225,15 @@ function Events() {
                   >
                     <Film size={16} /> 發起活動
                   </button>
-                  <button 
-                    onClick={() => { 
+                  <button
+                    onClick={() => {
                       setEmptyMenuOpen(false);
                       if (!isLoggedIn) {
                         alert('請先登入後再建立片單！');
                         navigate('/auth');
                         return;
                       }
-                      setShowCuratorStudio(true); 
+                      setShowCuratorStudio(true);
                     }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '8px',

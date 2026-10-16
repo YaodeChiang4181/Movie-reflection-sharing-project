@@ -26,6 +26,13 @@
       }
     },
     {
+      "source": "/((?!assets/|favicon\\.svg|robots\\.txt|sitemap\\.xml|.*\\..*).*)",
+      "destination": {
+        "service": "frontend",
+        "path": "/index.html"
+      }
+    },
+    {
       "source": "/(.*)",
       "destination": {
         "service": "frontend"
