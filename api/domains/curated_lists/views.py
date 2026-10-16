@@ -61,9 +61,22 @@ class MovieListViewSet(viewsets.GenericViewSet):
             )
 
             for item_data in data['items']:
-                try:
-                    movie = Movie.objects.get(id=item_data['movie_id'])
-                except Movie.DoesNotExist:
+                mid = item_data['movie_id']
+                movie = Movie.objects.filter(id=mid).first() or Movie.objects.filter(tmdb_id=mid).first()
+                if not movie:
+                    from api.utils.tmdb import fetch_movie_metadata_by_id
+                    meta = fetch_movie_metadata_by_id(mid)
+                    if meta:
+                        movie, _ = Movie.objects.get_or_create(
+                            tmdb_id=mid,
+                            defaults={
+                                'title': meta.get('localized_title') or meta.get('title'),
+                                'original_title': meta.get('original_title') or '',
+                                'poster_url': meta.get('poster_url') or '',
+                                'release_year': meta.get('release_year') or 2024,
+                            }
+                        )
+                if not movie:
                     continue
                 MovieListItem.objects.create(
                     movie_list=movie_list,
@@ -150,9 +163,22 @@ class MovieListViewSet(viewsets.GenericViewSet):
                 # 重建全部項目
                 movie_list.items.all().delete()
                 for item_data in data['items']:
-                    try:
-                        movie = Movie.objects.get(id=item_data['movie_id'])
-                    except Movie.DoesNotExist:
+                    mid = item_data['movie_id']
+                    movie = Movie.objects.filter(id=mid).first() or Movie.objects.filter(tmdb_id=mid).first()
+                    if not movie:
+                        from api.utils.tmdb import fetch_movie_metadata_by_id
+                        meta = fetch_movie_metadata_by_id(mid)
+                        if meta:
+                            movie, _ = Movie.objects.get_or_create(
+                                tmdb_id=mid,
+                                defaults={
+                                    'title': meta.get('localized_title') or meta.get('title'),
+                                    'original_title': meta.get('original_title') or '',
+                                    'poster_url': meta.get('poster_url') or '',
+                                    'release_year': meta.get('release_year') or 2024,
+                                }
+                            )
+                    if not movie:
                         continue
                     MovieListItem.objects.create(
                         movie_list=movie_list,
