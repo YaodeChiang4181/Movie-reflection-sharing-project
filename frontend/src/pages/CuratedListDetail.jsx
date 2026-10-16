@@ -33,7 +33,19 @@ function CuratedListDetail() {
   const [isSearching, setIsSearching] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const searchTimeout = useRef(null);
+  const searchContainerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const fetchList = async () => {
@@ -133,21 +145,27 @@ function CuratedListDetail() {
     const query = e.target.value;
     setSearchQuery(query);
 
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+
     if (query.trim().length >= 1) {
-      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+      setIsSearching(true);
+      setShowDropdown(true);
       searchTimeout.current = setTimeout(async () => {
-        setIsSearching(true);
         try {
-          const res = await api.get(`movies/search_tmdb/?q=${encodeURIComponent(query)}`);
-          setSearchResults(res.data.results || res.data || []);
+          const res = await api.get(`movies/search_tmdb/?q=${encodeURIComponent(query.trim())}`);
+          const list = res.data.results || res.data || [];
+          setSearchResults(Array.isArray(list) ? list : []);
         } catch (err) {
-          console.error(err);
+          console.error('Search error', err);
+          setSearchResults([]);
         } finally {
           setIsSearching(false);
         }
-      }, 400);
+      }, 350);
     } else {
       setSearchResults([]);
+      setIsSearching(false);
+      setShowDropdown(false);
     }
   };
 
@@ -172,9 +190,9 @@ function CuratedListDetail() {
         movie: {
           id: localMovie.id,
           title: movie.title || localMovie.title,
-          original_title: movie.original_title || '',
-          poster_url: movie.poster_url || '',
-          release_year: movie.release_year || 2024,
+          original_title: movie.original_title || localMovie.original_title || '',
+          poster_url: movie.poster_url || localMovie.poster_url || '',
+          release_year: movie.release_year || movie.year || localMovie.release_year || 2024,
           tmdb_id: movieId
         },
         movie_id: localMovie.id,
@@ -185,6 +203,7 @@ function CuratedListDetail() {
       setEditItems(prev => [...prev, newItem]);
       setSearchQuery('');
       setSearchResults([]);
+      setShowDropdown(false);
     } catch (err) {
       console.error(err);
       alert('同步電影資料失敗，請稍後再試');
@@ -454,7 +473,7 @@ function CuratedListDetail() {
               <span>新增收錄電影 ({editItems.length} / 15 部)</span>
             </div>
 
-            <div className={styles.searchBoxWrapper}>
+            <div className={styles.searchBoxWrapper} ref={searchContainerRef}>
               <Search size={18} className={styles.searchIcon} />
               <input
                 type="text"
@@ -462,46 +481,69 @@ function CuratedListDetail() {
                 placeholder="搜尋電影名稱以收錄至片單..."
                 value={searchQuery}
                 onChange={handleSearchChange}
+                onFocus={() => {
+                  if (searchQuery.trim().length >= 1) setShowDropdown(true);
+                }}
               />
               {(isSearching || isSyncing) && (
                 <Loader2 size={18} className={`animate-spin ${styles.searchLoader}`} />
               )}
 
               {/* 搜尋結果下拉選單 */}
-              {searchResults.length > 0 && (
+              {showDropdown && searchQuery.trim().length >= 1 && (
                 <div className={styles.searchResultsDropdown}>
-                  {searchResults.map(movie => {
-                    const mId = movie.tmdb_id || movie.id;
-                    const isAlreadyAdded = editItems.some(it => it.movie?.tmdb_id === mId || it.movie?.id === mId || it.movie_id === mId);
+                  {isSearching ? (
+                    <div className={styles.searchStatus}>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>正在搜尋 TMDB 電影資料庫...</span>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    searchResults.map(movie => {
+                      const mId = movie.tmdb_id || movie.id;
+                      const isAlreadyAdded = editItems.some(
+                        it => it.movie?.tmdb_id === mId || it.movie?.id === mId || it.movie_id === mId
+                      );
 
-                    return (
-                      <div 
-                        key={mId} 
-                        className={styles.searchResultItem}
-                        onClick={() => !isAlreadyAdded && handleAddMovie(movie)}
-                        style={{ opacity: isAlreadyAdded ? 0.5 : 1, cursor: isAlreadyAdded ? 'not-allowed' : 'pointer' }}
-                      >
-                        {movie.poster_url ? (
-                          <img src={movie.poster_url} alt={movie.title} className={styles.searchItemPoster} />
-                        ) : (
-                          <div className={styles.searchItemPoster} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Film size={16} color="#666" />
+                      return (
+                        <div 
+                          key={mId} 
+                          className={styles.searchResultItem}
+                          onClick={() => {
+                            if (!isAlreadyAdded && !isSyncing) {
+                              handleAddMovie(movie);
+                            }
+                          }}
+                          style={{ 
+                            opacity: isAlreadyAdded ? 0.5 : 1, 
+                            cursor: isAlreadyAdded ? 'not-allowed' : 'pointer' 
+                          }}
+                        >
+                          {movie.poster_url ? (
+                            <img src={movie.poster_url} alt={movie.title} className={styles.searchItemPoster} />
+                          ) : (
+                            <div className={styles.searchItemPoster} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Film size={16} color="#666" />
+                            </div>
+                          )}
+                          <div className={styles.searchItemInfo}>
+                            <div className={styles.searchItemTitle}>{movie.title}</div>
+                            <div className={styles.searchItemMeta}>
+                              {movie.release_year || movie.year || '年份未知'} · {movie.original_title || ''}
+                            </div>
                           </div>
-                        )}
-                        <div className={styles.searchItemInfo}>
-                          <div className={styles.searchItemTitle}>{movie.title}</div>
-                          <div className={styles.searchItemMeta}>
-                            {movie.release_year || '年份未知'} · {movie.original_title || ''}
-                          </div>
+                          {isAlreadyAdded ? (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>已收錄</span>
+                          ) : (
+                            <Plus size={18} className={styles.addIcon} />
+                          )}
                         </div>
-                        {isAlreadyAdded ? (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>已收錄</span>
-                        ) : (
-                          <Plus size={18} className={styles.addIcon} />
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    <div className={styles.searchStatus}>
+                      找不到符合「{searchQuery}」的電影
+                    </div>
+                  )}
                 </div>
               )}
             </div>

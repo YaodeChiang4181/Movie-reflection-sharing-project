@@ -8,7 +8,10 @@ from django.db.models.functions import Length, Replace
 from django.core.cache import cache
 from api.models import Movie, Review, Vote, Comment
 from .serializers import MovieSerializer, ReviewSerializer, CommentSerializer
-from api.utils.tmdb import search_tmdb_movies, fetch_tmdb_popular_pool, fetch_movie_metadata, fetch_watch_providers
+from api.utils.tmdb import (
+    search_tmdb_movies, fetch_tmdb_popular_pool, fetch_movie_metadata, 
+    fetch_watch_providers, fetch_movie_metadata_by_id
+)
 from api.domains.gamification.services import add_user_experience
 import random
 
@@ -59,10 +62,28 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def search_tmdb(self, request):
-        query = request.query_params.get('q', '')
+        query = request.query_params.get('q', '').strip()
         if not query:
             return Response([])
-        results = search_tmdb_movies(query)
+        results = search_tmdb_movies(query) or []
+        
+        # 整合本地資料庫已有之電影（增強命中率與容錯能力）
+        existing_tmdb_ids = {r.get('tmdb_id') or r.get('id') for r in results if (r.get('tmdb_id') or r.get('id'))}
+        local_movies = Movie.objects.filter(
+            Q(title__icontains=query) | Q(original_title__icontains=query)
+        )[:10]
+        for lm in local_movies:
+            ref_id = lm.tmdb_id or lm.id
+            if ref_id not in existing_tmdb_ids:
+                results.append({
+                    'tmdb_id': lm.tmdb_id or lm.id,
+                    'id': lm.tmdb_id or lm.id,
+                    'title': lm.title,
+                    'original_title': lm.original_title or '',
+                    'year': str(lm.release_year) if lm.release_year else '',
+                    'release_year': lm.release_year or '',
+                    'poster_url': lm.poster_url or '',
+                })
         return Response(results)
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
@@ -72,10 +93,17 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         if not tmdb_id:
             return Response({'error': '需要 tmdb_id'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # 先檢查本地是否已經有了
+        # 先檢查本地是否已經有了 (tmdb_id 或本地 id 符合)
         movie = Movie.objects.filter(tmdb_id=tmdb_id).first()
+        if not movie and isinstance(tmdb_id, int):
+            movie = Movie.objects.filter(id=tmdb_id).first()
         if movie:
-            return Response({'id': movie.id, 'title': movie.title})
+            return Response({
+                'id': movie.id, 
+                'title': movie.title,
+                'poster_url': movie.poster_url,
+                'release_year': movie.release_year
+            })
             
         # 若無，則呼叫 tmdb api 同步
         tmdb_meta = fetch_movie_metadata_by_id(tmdb_id)
@@ -91,7 +119,12 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                 'release_year': tmdb_meta.get('release_year') or 2024,
             }
         )
-        return Response({'id': movie.id, 'title': movie.title})
+        return Response({
+            'id': movie.id, 
+            'title': movie.title,
+            'poster_url': movie.poster_url,
+            'release_year': movie.release_year
+        })
 
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])

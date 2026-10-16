@@ -41,7 +41,7 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # TMDB API Key
-TMDB_API_KEY = os.environ.get('TMDB_API_KEY', '')
+TMDB_API_KEY = os.environ.get('TMDB_API_KEY') or '9f47183d5f6d186439851ec7c0555109'
 
 
 # Application definition

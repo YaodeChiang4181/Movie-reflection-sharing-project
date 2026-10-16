@@ -30,12 +30,17 @@ GENRE_MAP = {
     37: "西部"
 }
 
+DEFAULT_TMDB_API_KEY = '9f47183d5f6d186439851ec7c0555109'
+
+def get_tmdb_api_key():
+    return getattr(settings, 'TMDB_API_KEY', '') or DEFAULT_TMDB_API_KEY
+
 def _search_tmdb(movie_title_raw):
     """
     Helper to search TMDB for a movie or TV show.
     Handles year extraction and case-insensitive exact matching.
     """
-    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    api_key = get_tmdb_api_key()
     if not api_key:
         return None
 
@@ -276,7 +281,7 @@ def search_tmdb_movies(query):
     Search TMDB for movies matching the query.
     Returns a list of dicts with 'id', 'title', 'original_title', 'release_date', 'poster_url'.
     """
-    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    api_key = get_tmdb_api_key()
     if not api_key or not query.strip():
         return []
 
@@ -297,9 +302,11 @@ def search_tmdb_movies(query):
                 
                 results.append({
                     'tmdb_id': item.get('id'),
+                    'id': item.get('id'),
                     'title': item.get('title'),
-                    'original_title': item.get('original_title'),
+                    'original_title': item.get('original_title') or '',
                     'year': year,
+                    'release_year': year,
                     'poster_url': poster_url,
                 })
             return results
@@ -312,7 +319,7 @@ def fetch_movie_metadata_by_id(tmdb_id):
     """
     Fetch TMDB metadata exact match by tmdb_id.
     """
-    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    api_key = get_tmdb_api_key()
     if not api_key:
         return None
 
@@ -361,7 +368,7 @@ def fetch_tmdb_popular_pool(pool_size=50):
     if cached:
         return cached
 
-    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    api_key = get_tmdb_api_key()
     if not api_key:
         return []
 
@@ -436,7 +443,7 @@ def fetch_watch_providers(tmdb_id, media_type='movie', region='TW'):
     if cached is not None:
         return cached
 
-    api_key = getattr(settings, 'TMDB_API_KEY', '')
+    api_key = get_tmdb_api_key()
     if not api_key:
         return {}
 
