@@ -138,24 +138,36 @@ function Profile() {
 
     const fetchProfileData = async () => {
       try {
-        const [userRes, reviewsRes, commentedRes, myListsRes, bookmarkedListsRes] = await Promise.all([
+        const [userRes, reviewsRes, commentedRes, myListsRes, bookmarkedListsRes] = await Promise.allSettled([
           api.get('users/me/'),
           api.get('reviews/me/'),
           api.get('reviews/commented_by_me/'),
           api.get('lists/mine/'),
           api.get('lists/bookmarked/')
         ]);
-        setUserData(userRes.data);
-        setReviews(reviewsRes.data);
-        setCommentedReviews(commentedRes.data);
-        setMyLists(myListsRes.data);
-        setBookmarkedLists(bookmarkedListsRes.data);
-      } catch (err) {
-        console.error("Failed to fetch profile", err);
-        if (err.response?.status === 401) {
+
+        if (userRes.status === 'fulfilled') {
+          setUserData(userRes.value.data);
+        } else if (userRes.reason?.response?.status === 401) {
           logout();
           navigate('/auth');
+          return;
         }
+
+        if (reviewsRes.status === 'fulfilled') {
+          setReviews(reviewsRes.value.data);
+        }
+        if (commentedRes.status === 'fulfilled') {
+          setCommentedReviews(commentedRes.value.data);
+        }
+        if (myListsRes.status === 'fulfilled') {
+          setMyLists(myListsRes.value.data);
+        }
+        if (bookmarkedListsRes.status === 'fulfilled') {
+          setBookmarkedLists(bookmarkedListsRes.value.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
       } finally {
         setIsLoading(false);
       }

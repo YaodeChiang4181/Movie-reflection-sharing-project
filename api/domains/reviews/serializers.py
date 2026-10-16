@@ -51,13 +51,19 @@ class ReviewSerializer(serializers.ModelSerializer):
     upvotes = serializers.IntegerField(read_only=True, required=False)
     downvotes = serializers.IntegerField(read_only=True, required=False)
     user_voted = serializers.SerializerMethodField()
-    comments_count = serializers.IntegerField(source='comments.count', read_only=True)
+    comments_count = serializers.SerializerMethodField()
     effective_date = serializers.SerializerMethodField()
     display_date = serializers.DateTimeField(required=False, allow_null=True)
     
     class Meta:
         model = Review
         fields = ('id', 'user', 'movie', 'movie_title', 'tmdb_id', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'display_date', 'effective_date', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
+
+    def get_comments_count(self, obj):
+        val = getattr(obj, 'comments_count', None)
+        if val is not None:
+            return val
+        return obj.comments.count()
 
 
 

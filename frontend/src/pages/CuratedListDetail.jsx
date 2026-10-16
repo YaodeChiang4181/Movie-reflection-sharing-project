@@ -11,7 +11,7 @@ import styles from './CuratedListDetail.module.css';
 function CuratedListDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isLoggedIn } = useAuth();
+  const { userProfile, isLoggedIn } = useAuth();
   
   const [listData, setListData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,8 +79,8 @@ function CuratedListDetail() {
     }
   };
 
-  const isOwnerOrAdmin = isLoggedIn && user && listData && (
-    user.id === listData.creator_info?.user_id || user.is_staff
+  const isOwnerOrAdmin = isLoggedIn && userProfile && listData && (
+    (userProfile.campus_id || userProfile.id) === (listData.creator_info?.campus_id || listData.creator_info?.user_id) || userProfile.is_staff
   );
 
   if (isLoading) {

@@ -224,9 +224,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     
     def get_queryset(self):
-        qs = Review.objects.filter(is_deleted=False).annotate(
-            upvotes=Count('votes', filter=Q(votes__vote_type=1)),
-            downvotes=Count('votes', filter=Q(votes__vote_type=-1))
+        qs = Review.objects.filter(is_deleted=False).select_related(
+            'movie', 'user', 'user__profile', 'user__experience'
+        ).prefetch_related(
+            'tags'
+        ).annotate(
+            upvotes=Count('votes', filter=Q(votes__vote_type=1), distinct=True),
+            downvotes=Count('votes', filter=Q(votes__vote_type=-1), distinct=True),
+            comments_count=Count('comments', distinct=True)
         )
         movie_id = self.request.query_params.get('movie')
         if movie_id:
