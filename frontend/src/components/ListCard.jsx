@@ -20,12 +20,34 @@ const ListCard = ({ list, onClick }) => {
           )}
         </div>
       </div>
-      <div className="posterInfo" style={{ padding: '10px 12px', background: 'rgba(19,23,34,0.85)', borderRadius: '0 0 4px 4px' }}>
-        <div className="posterTitle line-clamp-1" style={{ fontSize: '0.95rem', marginBottom: '4px', color: 'white' }}>
+      <div className="posterInfo" style={{ padding: '10px 12px', background: 'rgba(19,23,34,0.85)', borderRadius: '0 0 4px 4px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+        <div 
+          style={{ 
+            fontSize: '0.95rem', 
+            fontWeight: 600, 
+            marginBottom: '4px', 
+            color: 'white',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            width: '100%'
+          }}
+          title={title}
+        >
           {title}
         </div>
-        <div className="posterMeta" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-          收錄: {movie_titles_preview?.length ? movie_titles_preview.slice(0,2).join('、') + (movie_titles_preview.length > 2 ? '...' : '') : '暫無'}
+        <div 
+          style={{ 
+            fontSize: '0.8rem', 
+            color: 'var(--text-secondary)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            width: '100%'
+          }}
+          title={movie_titles_preview?.join('、')}
+        >
+          收錄: {movie_titles_preview?.length ? movie_titles_preview.join('、') : '暫無'}
         </div>
         {hashtags && hashtags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>

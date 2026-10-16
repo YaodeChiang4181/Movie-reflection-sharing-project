@@ -40,6 +40,11 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   font-family: 'Noto Serif TC', serif;
   font-variant-numeric: tabular-nums;
@@ -50,6 +55,23 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.app-content {
+  flex: 1;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Force numbers to use Space Mono */
@@ -106,6 +128,14 @@ button {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 16px;
+  }
 }
 
 .flex-center {
@@ -188,13 +218,15 @@ button {
   .home-layout {
     display: flex;
     flex-direction: column-reverse;
+    width: 100%;
   }
   
   .home-action-panel {
     position: static;
-    margin-bottom: 16px;
-    flex-direction: row;
-    gap: 12px;
+    margin-bottom: 24px;
+    flex-direction: column;
+    width: 100%;
+    padding: 0;
   }
 }
 
@@ -328,20 +360,48 @@ button {
 @media (max-width: 600px) {
   .hero-banner {
     flex-direction: column;
-    padding: 24px;
-    gap: 24px;
+    padding: 20px 16px;
+    gap: 20px;
     text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .hero-poster {
+    width: 140px;
+    height: 210px;
+    margin: 0 auto;
+  }
+  .hero-content {
+    width: 100%;
   }
   .hero-content h2 {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    text-align: center;
+    word-break: break-word;
   }
   .hero-badge {
     justify-content: center;
   }
   .hero-stats {
     justify-content: center;
-    flex-direction: column;
+    flex-direction: row;
     gap: 12px;
+  }
+  .hero-quote-block {
+    margin: 16px 0 0 0;
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+  }
+  .hero-quote-mark {
+    display: none;
+  }
+  .hero-quote-text {
+    text-align: center;
+    font-size: 1rem;
+  }
+  .hero-quote-author {
+    justify-content: center;
   }
 }
 
@@ -601,13 +661,16 @@ button {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
+  width: 100%;
 }
 .posterCard {
   background: transparent;
-  border-radius: 0;
+  border-radius: 4px;
   border: none;
   cursor: pointer;
   transition: transform 0.2s;
+  overflow: hidden;
+  width: 100%;
 }
 .posterCard:hover {
   transform: translateY(-4px);
@@ -660,7 +723,9 @@ button {
   cursor: pointer;
 }
 .posterInfo {
-  padding: 12px;
+  padding: 10px 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .posterTitle {
   color: var(--text-primary);
@@ -669,13 +734,18 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  width: 100%;
 }
 .posterMeta {
   display: flex;
   justify-content: space-between;
   align-items: center;
   white-space: nowrap;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  gap: 4px;
 }
 .posterRating {
   color: var(--accent-primary);
@@ -683,21 +753,20 @@ button {
   display: flex;
   align-items: center;
   gap: 2px;
+  flex-shrink: 0;
 }
 .posterDate {
   color: var(--text-muted);
   font-size: 0.8rem;
+  flex-shrink: 0;
 }
 
-@media (max-width: 900px) {
-  .posterGrid { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1200px) {
+  .posterGrid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
 }
-@media (max-width: 768px) {
-  .posterGrid { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 900px) {
+  .posterGrid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
 }
 @media (max-width: 600px) {
-  .posterGrid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
-}
-@media (max-width: 480px) {
-  .posterGrid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .posterGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 }
