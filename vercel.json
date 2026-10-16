@@ -26,16 +26,45 @@
       }
     },
     {
-      "source": "/((?!assets/|favicon\\.svg|robots\\.txt|sitemap\\.xml|.*\\..*).*)",
+      "source": "/assets/(.*)",
       "destination": {
         "service": "frontend",
-        "path": "/index.html"
+        "path": "/assets/$1"
+      }
+    },
+    {
+      "source": "/favicon.svg",
+      "destination": {
+        "service": "frontend",
+        "path": "/favicon.svg"
+      }
+    },
+    {
+      "source": "/robots.txt",
+      "destination": {
+        "service": "frontend",
+        "path": "/robots.txt"
+      }
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": {
+        "service": "frontend",
+        "path": "/sitemap.xml"
+      }
+    },
+    {
+      "source": "/icons.svg",
+      "destination": {
+        "service": "frontend",
+        "path": "/icons.svg"
       }
     },
     {
       "source": "/(.*)",
       "destination": {
-        "service": "frontend"
+        "service": "frontend",
+        "path": "/index.html"
       }
     }
   ],
