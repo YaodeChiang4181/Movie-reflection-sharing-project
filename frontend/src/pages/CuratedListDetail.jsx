@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Bookmark, Share2, User, Clock, Film, Edit2, Trash2, 
-  Plus, X, Search, Loader2, Check, Sparkles 
+import {
+  Bookmark, Share2, User, Clock, Film, Edit2, Trash2,
+  Plus, X, Search, Loader2, Check, Sparkles
 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,7 +14,7 @@ function CuratedListDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { userProfile, isLoggedIn } = useAuth();
-  
+
   const [listData, setListData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredMovieId, setHoveredMovieId] = useState(null);
@@ -287,7 +287,7 @@ function CuratedListDetail() {
   if (!listData) return null;
 
   // 編輯模式時即時預覽前 4 張海報
-  const currentCoverPosters = isEditing 
+  const currentCoverPosters = isEditing
     ? editItems.slice(0, 4).map(it => it.movie?.poster_url).filter(Boolean)
     : listData.cover_posters;
 
@@ -300,10 +300,10 @@ function CuratedListDetail() {
         <div className={styles.editBanner}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkles size={18} />
-            <span>正在編輯片單：可直接修改標題、簡介，在單部電影旁修改短評或刪除，並可在底部新增電影</span>
+            <span>編輯片單中</span>
           </div>
-          <button 
-            onClick={handleCancelEdit} 
+          <button
+            onClick={handleCancelEdit}
             style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             <X size={18} />
@@ -314,7 +314,7 @@ function CuratedListDetail() {
       {/* ─── 頂部標頭 ─── */}
       <header className={styles.header}>
         <CollageCover posters={currentCoverPosters} size="large" />
-        
+
         <div style={{ flex: 1, minWidth: 0 }}>
           {isEditing ? (
             <div>
@@ -340,17 +340,17 @@ function CuratedListDetail() {
               <p className={styles.description}>"{listData.description || '這個片單還沒有引言喔！'}"</p>
             </>
           )}
-          
+
           <div className={styles.meta}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <User size={16} /> 
+              <User size={16} />
               <span>{listData.creator_info?.nickname || listData.creator_info?.campus_id}</span>
               <span style={{ color: 'var(--accent-primary)', fontWeight: 'bold' }}>
                 (Lv.{listData.creator_info?.level || 1})
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Bookmark size={16} /> 
+              <Bookmark size={16} />
               <span>{listData.bookmark_count} 次收藏</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -358,7 +358,7 @@ function CuratedListDetail() {
               <span>{new Date(listData.created_at).toLocaleDateString('zh-TW')} 建立</span>
             </div>
           </div>
-          
+
           {/* 主題標籤 */}
           <div className={styles.tags}>
             {isEditing ? (
@@ -366,9 +366,9 @@ function CuratedListDetail() {
                 {editHashtags.map(tag => (
                   <span key={tag} className={styles.tagEditable}>
                     #{tag}
-                    <button 
-                      type="button" 
-                      className={styles.tagDeleteBtn} 
+                    <button
+                      type="button"
+                      className={styles.tagDeleteBtn}
                       onClick={() => handleRemoveTag(tag)}
                     >
                       <X size={12} />
@@ -400,9 +400,9 @@ function CuratedListDetail() {
         {currentItems.map((item, idx) => (
           <div key={item.id || idx} className={styles.listItem}>
             <div className={styles.orderBadge}>{idx + 1}</div>
-            
+
             <div className={styles.itemContent}>
-              <div 
+              <div
                 className={`${styles.movieCard} ${isEditing ? styles.movieCardEditing : ''}`}
                 onClick={() => {
                   if (!isEditing) navigate(`/movies/${item.movie.id}`);
@@ -412,8 +412,8 @@ function CuratedListDetail() {
               >
                 {/* 編輯模式下的單部電影移除按鈕 */}
                 {isEditing && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className={styles.removeMovieBtn}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -437,14 +437,14 @@ function CuratedListDetail() {
                     <WatchProviderOverlay tmdbId={item.movie.tmdb_id} />
                   )}
                 </div>
-                
+
                 <div className={styles.movieInfo}>
                   <h3 className={styles.movieTitle}>{item.movie?.title}</h3>
                   <div className={styles.movieYear}>{item.movie?.original_title}</div>
                   <div className={styles.movieYear} style={{ marginTop: '4px' }}>{item.movie?.release_year}</div>
                 </div>
               </div>
-              
+
               {/* 策展人短評：編輯模式下直接可編輯 */}
               {isEditing ? (
                 <textarea
@@ -505,17 +505,17 @@ function CuratedListDetail() {
                       );
 
                       return (
-                        <div 
-                          key={mId} 
+                        <div
+                          key={mId}
                           className={styles.searchResultItem}
                           onClick={() => {
                             if (!isAlreadyAdded && !isSyncing) {
                               handleAddMovie(movie);
                             }
                           }}
-                          style={{ 
-                            opacity: isAlreadyAdded ? 0.5 : 1, 
-                            cursor: isAlreadyAdded ? 'not-allowed' : 'pointer' 
+                          style={{
+                            opacity: isAlreadyAdded ? 0.5 : 1,
+                            cursor: isAlreadyAdded ? 'not-allowed' : 'pointer'
                           }}
                         >
                           {movie.poster_url ? (
@@ -555,7 +555,7 @@ function CuratedListDetail() {
       <div className={styles.actionBar}>
         {isEditing ? (
           <>
-            <button 
+            <button
               className={`${styles.actionBtn} ${styles.primary}`}
               onClick={handleSaveList}
               disabled={isSaving}
@@ -563,7 +563,7 @@ function CuratedListDetail() {
               {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
               <span>{isSaving ? '儲存中...' : '儲存變更'}</span>
             </button>
-            <button 
+            <button
               className={`${styles.actionBtn} ${styles.secondary}`}
               onClick={handleCancelEdit}
               disabled={isSaving}
@@ -574,7 +574,7 @@ function CuratedListDetail() {
           </>
         ) : (
           <>
-            <button 
+            <button
               className={`${styles.actionBtn} ${listData.is_bookmarked ? styles.secondary : styles.primary}`}
               onClick={handleBookmark}
             >
@@ -592,9 +592,9 @@ function CuratedListDetail() {
                   <Edit2 size={20} />
                   編輯片單
                 </button>
-                <button 
-                  className={styles.actionBtn} 
-                  style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }} 
+                <button
+                  className={styles.actionBtn}
+                  style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}
                   onClick={handleDelete}
                 >
                   <Trash2 size={20} />

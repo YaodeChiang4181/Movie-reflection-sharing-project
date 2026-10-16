@@ -59,6 +59,23 @@
   scroll-snap-align: start;
 }
 
+.listCardWrapper {
+  flex: 0 0 190px;
+  width: 190px;
+  max-width: 190px;
+  min-width: 160px;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 600px) {
+  .listCardWrapper {
+    flex: 0 0 150px;
+    width: 150px;
+    max-width: 150px;
+    min-width: 130px;
+  }
+}
+
 @media (max-width: 1200px) {
   .cardWrapper {
     flex: 0 0 calc(25% - 12px);

@@ -259,9 +259,9 @@ function Events() {
                   <h2 className={styles.trackTitle} style={{ margin: 0 }}>看看別人的片單...</h2>
                   <Link to="/search" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textDecoration: 'none' }}>探索更多</Link>
                 </div>
-                <div className={styles.carouselTrack} style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px' }}>
+                <div className={styles.carouselTrack}>
                   {curatedLists.map(list => (
-                    <div key={list.id} style={{ minWidth: '280px', flexShrink: 0 }}>
+                    <div key={list.id} className={styles.listCardWrapper}>
                       <ListCard list={list} onClick={() => navigate(`/lists/${list.id}`)} />
                     </div>
                   ))}

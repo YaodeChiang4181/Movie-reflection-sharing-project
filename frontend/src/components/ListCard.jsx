@@ -6,8 +6,8 @@ const ListCard = ({ list, onClick }) => {
   const { title, description, hashtags, bookmark_count, creator_info, cover_posters, movie_titles_preview } = list;
 
   return (
-    <div className="posterCard" onClick={onClick}>
-      <div className="posterWrapper">
+    <div className="posterCard" onClick={onClick} style={{ width: '100%', maxWidth: '220px' }}>
+      <div className="posterWrapper" style={{ position: 'relative', width: '100%', aspectRatio: '2 / 3', overflow: 'hidden' }}>
         <CollageCover posters={cover_posters} size="small" />
         <div className="posterOverlay" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '12px' }}>
           <div style={{ color: 'white', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -20,15 +20,15 @@ const ListCard = ({ list, onClick }) => {
           )}
         </div>
       </div>
-      <div className="posterInfo" style={{ padding: '12px', background: 'rgba(19,23,34,0.8)' }}>
-        <div className="posterTitle line-clamp-1" style={{ fontSize: '1rem', marginBottom: '4px', color: 'white' }}>
+      <div className="posterInfo" style={{ padding: '10px 12px', background: 'rgba(19,23,34,0.85)', borderRadius: '0 0 4px 4px' }}>
+        <div className="posterTitle line-clamp-1" style={{ fontSize: '0.95rem', marginBottom: '4px', color: 'white' }}>
           {title}
         </div>
         <div className="posterMeta" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
           收錄: {movie_titles_preview?.length ? movie_titles_preview.slice(0,2).join('、') + (movie_titles_preview.length > 2 ? '...' : '') : '暫無'}
         </div>
         {hashtags && hashtags.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
             <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', color: 'var(--accent-primary)' }}>
               #{hashtags[0]}
             </span>
