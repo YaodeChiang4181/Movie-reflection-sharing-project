@@ -1,9 +1,11 @@
 import React from 'react';
 import { Bookmark, User } from 'lucide-react';
 import CollageCover from './CollageCover';
+import { decodeHtml } from '../utils/text';
 
 const ListCard = ({ list, onClick }) => {
   const { title, description, hashtags, bookmark_count, creator_info, cover_posters, movie_titles_preview } = list;
+  const decodedTitle = decodeHtml(title);
 
   return (
     <div className="posterCard" onClick={onClick} style={{ width: '100%', maxWidth: '220px' }}>
@@ -32,9 +34,9 @@ const ListCard = ({ list, onClick }) => {
             textOverflow: 'ellipsis',
             width: '100%'
           }}
-          title={title}
+          title={decodedTitle}
         >
-          {title}
+          {decodedTitle}
         </div>
         <div 
           style={{ 
@@ -45,14 +47,14 @@ const ListCard = ({ list, onClick }) => {
             textOverflow: 'ellipsis',
             width: '100%'
           }}
-          title={movie_titles_preview?.join('、')}
+          title={movie_titles_preview?.map(decodeHtml).join('、')}
         >
-          收錄: {movie_titles_preview?.length ? movie_titles_preview.join('、') : '暫無'}
+          收錄: {movie_titles_preview?.length ? movie_titles_preview.map(decodeHtml).join('、') : '暫無'}
         </div>
         {hashtags && hashtags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
             <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', color: 'var(--accent-primary)' }}>
-              #{hashtags[0]}
+              #{decodeHtml(hashtags[0])}
             </span>
             {hashtags.length > 1 && (
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+{hashtags.length - 1}</span>

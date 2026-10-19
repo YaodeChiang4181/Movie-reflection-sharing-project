@@ -1,19 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Search, Plus, Trash2, GripVertical, Loader2, Image as ImageIcon } from 'lucide-react';
 import api from '../api/axios';
+import { decodeHtml } from '../utils/text';
 
 const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '', editData = null }) => {
   const [step, setStep] = useState(initialSearchQuery ? 2 : 1);
   const [formData, setFormData] = useState({
-    title: editData?.title || '',
-    description: editData?.description || '',
-    hashtags: editData?.hashtags || [],
+    title: decodeHtml(editData?.title || ''),
+    description: decodeHtml(editData?.description || ''),
+    hashtags: editData?.hashtags ? editData.hashtags.map(decodeHtml) : [],
     items: editData?.items ? editData.items.map((item, idx) => ({
       movie_id: item.movie.id,
       tmdb_id: item.movie.tmdb_id,
-      title: item.movie.title,
-      original_title: item.movie.original_title || '',
-      curator_note: item.curator_note || '',
+      title: decodeHtml(item.movie.title),
+      original_title: decodeHtml(item.movie.original_title || ''),
+      curator_note: decodeHtml(item.curator_note || ''),
       order_index: idx
     })) : []
   });

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from api.models import Movie, UserProfile, UserExperience
 from api.domains.curated_lists.models import MovieList, MovieListItem, MovieListBookmark
+from api.utils.sanitizer import sanitize_plain_text
 
 
 class ListItemMovieSerializer(serializers.ModelSerializer):
@@ -25,6 +26,9 @@ class MovieListItemWriteSerializer(serializers.Serializer):
     movie_id = serializers.IntegerField()
     curator_note = serializers.CharField(max_length=100, required=False, default='', allow_blank=True)
     order_index = serializers.IntegerField(required=False, default=0)
+
+    def validate_curator_note(self, value):
+        return sanitize_plain_text(value) if value else ''
 
 
 class CreatorInfoSerializer(serializers.Serializer):
@@ -109,12 +113,10 @@ class MovieListCreateSerializer(serializers.Serializer):
     items = MovieListItemWriteSerializer(many=True)
 
     def validate_title(self, value):
-        import bleach
-        return bleach.clean(value, tags=[], attributes={}, strip=True).strip()
+        return sanitize_plain_text(value)
 
     def validate_description(self, value):
-        import bleach
-        return bleach.clean(value, tags=[], attributes={}, strip=True).strip()
+        return sanitize_plain_text(value)
 
     def validate_items(self, value):
         if len(value) < 2:
@@ -126,8 +128,7 @@ class MovieListCreateSerializer(serializers.Serializer):
     def validate_hashtags(self, value):
         if len(value) > 5:
             raise serializers.ValidationError("最多只能設定 5 個主題標籤。")
-        import bleach
-        return [bleach.clean(tag, tags=[], attributes={}, strip=True).strip().lstrip('#') for tag in value]
+        return [sanitize_plain_text(tag).lstrip('#') for tag in value]
 
 
 class MovieListUpdateSerializer(serializers.Serializer):
@@ -142,12 +143,10 @@ class MovieListUpdateSerializer(serializers.Serializer):
     items = MovieListItemWriteSerializer(many=True, required=False)
 
     def validate_title(self, value):
-        import bleach
-        return bleach.clean(value, tags=[], attributes={}, strip=True).strip()
+        return sanitize_plain_text(value)
 
     def validate_description(self, value):
-        import bleach
-        return bleach.clean(value, tags=[], attributes={}, strip=True).strip()
+        return sanitize_plain_text(value)
 
     def validate_items(self, value):
         if value is not None:
@@ -160,8 +159,7 @@ class MovieListUpdateSerializer(serializers.Serializer):
     def validate_hashtags(self, value):
         if value is not None and len(value) > 5:
             raise serializers.ValidationError("最多只能設定 5 個主題標籤。")
-        import bleach
-        return [bleach.clean(tag, tags=[], attributes={}, strip=True).strip().lstrip('#') for tag in value] if value else value
+        return [sanitize_plain_text(tag).lstrip('#') for tag in value] if value else value
 
 
 class MovieListCardSerializer(serializers.ModelSerializer):

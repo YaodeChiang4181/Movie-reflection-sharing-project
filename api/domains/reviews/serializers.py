@@ -5,6 +5,7 @@ from api.models import Movie, Tag, Review, Vote, Comment
 from api.domains.auth.serializers import UserSerializer
 from api.utils.tmdb import fetch_movie_metadata, fetch_movie_metadata_by_id
 from api.utils.text_utils import normalize_movie_title
+from api.utils.sanitizer import sanitize_plain_text
 
 class MovieSerializer(serializers.ModelSerializer):
     avg_rating = serializers.FloatField(read_only=True)
@@ -28,9 +29,8 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ('review',)
 
     def validate_content(self, value):
-        import bleach
         if value:
-            return bleach.clean(value, tags=[], attributes={}, strip=True)
+            return sanitize_plain_text(value)
         return value
 
     def to_representation(self, instance):
@@ -78,9 +78,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         return data
 
     def validate_content(self, value):
-        import bleach
         if value:
-            return bleach.clean(value, tags=[], attributes={}, strip=True)
+            return sanitize_plain_text(value)
         return value
 
     def to_representation(self, instance):

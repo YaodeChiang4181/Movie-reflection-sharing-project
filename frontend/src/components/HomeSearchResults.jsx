@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, MessageCircle, List as ListIcon, Star, Film } from 'lucide-react';
 import ListCard from './ListCard';
+import { decodeHtml } from '../utils/text';
 import styles from './HomeSearchResults.module.css';
 
 function HomeSearchResults({
@@ -163,8 +164,8 @@ function HomeSearchResults({
                     </div>
 
                     <div className="posterInfo">
-                      <div className="posterTitle" title={review.movie?.title}>
-                        {review.movie?.title || '未命名電影'}
+                      <div className="posterTitle" title={decodeHtml(review.movie?.title)}>
+                        {decodeHtml(review.movie?.title || '未命名電影')}
                       </div>
                       <div className="posterMeta">
                         {review.rating !== null && review.rating > 0 && (

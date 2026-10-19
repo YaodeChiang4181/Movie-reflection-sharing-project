@@ -8,6 +8,7 @@ import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import CollageCover from '../components/CollageCover';
 import WatchProviderOverlay from '../components/WatchProviderOverlay';
+import { decodeHtml } from '../utils/text';
 import styles from './CuratedListDetail.module.css';
 
 function CuratedListDetail() {
@@ -69,9 +70,9 @@ function CuratedListDetail() {
 
   // ─── 進入編輯模式 ───
   const handleStartEdit = () => {
-    setEditTitle(listData.title || '');
-    setEditDescription(listData.description || '');
-    setEditHashtags(listData.hashtags || []);
+    setEditTitle(decodeHtml(listData.title || ''));
+    setEditDescription(decodeHtml(listData.description || ''));
+    setEditHashtags(listData.hashtags ? listData.hashtags.map(decodeHtml) : []);
     setEditItems(listData.items ? [...listData.items] : []);
     setSearchQuery('');
     setSearchResults([]);
@@ -336,8 +337,8 @@ function CuratedListDetail() {
             </div>
           ) : (
             <>
-              <h1 className={styles.title}>{listData.title}</h1>
-              <p className={styles.description}>"{listData.description || '這個片單還沒有引言喔！'}"</p>
+              <h1 className={styles.title}>{decodeHtml(listData.title)}</h1>
+              <p className={styles.description}>"{decodeHtml(listData.description) || '這個片單還沒有引言喔！'}"</p>
             </>
           )}
 
@@ -388,7 +389,7 @@ function CuratedListDetail() {
               </>
             ) : (
               listData.hashtags?.map(tag => (
-                <span key={tag} className={styles.tag}>#{tag}</span>
+                <span key={tag} className={styles.tag}>#{decodeHtml(tag)}</span>
               ))
             )}
           </div>
