@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ThumbsUp, MessageCircle, Edit3, FastForward, Star, Flame, CalendarDays, Ticket } from 'lucide-react';
 import TmdbPoster from '../components/TmdbPoster';
 import ReviewForm from '../components/ReviewForm';
@@ -14,6 +14,9 @@ import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from '../components/EventFilterTabs.module.css';
 import CuratorStudioModal from '../components/CuratorStudioModal';
+import HomeSearch from '../components/HomeSearch';
+import HomeSearchResults from '../components/HomeSearchResults';
+import ReviewModal from '../components/ReviewModal';
 
 function truncateAtSentence(text, maxLen = 40) {
   if (!text) return '';
@@ -72,6 +75,19 @@ function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // 搜尋融合狀態機
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [searchResults, setSearchResults] = useState([]);
+  const [listResults, setListResults] = useState([]);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(Boolean(searchParams.get('q')?.trim()));
+  const [searchActiveTab, setSearchActiveTab] = useState('all');
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [recommendedTags, setRecommendedTags] = useState(['動作', '喜劇', '科幻', '劇情']);
+  const searchInputRef = useRef(null);
+  const searchTimerRef = useRef(null);
+
   // Global event listeners for Navbar buttons
   useEffect(() => {
     const handleOpenReviewForm = () => {
@@ -119,6 +135,171 @@ function Home() {
   useEffect(() => {
     fetchHeroItems();
   }, []);
+
+  // 標籤統計推薦（1 小時 localStorage 快取）
+  useEffect(() => {
+    const fetchLatestTags = async () => {
+      const CACHE_KEY = 'recommended_tags';
+      const CACHE_TIME_KEY = 'recommended_tags_time';
+      const CACHE_DURATION = 60 * 60 * 1000;
+
+      const cachedTags = localStorage.getItem(CACHE_KEY);
+      const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+
+      if (cachedTags && cachedTime && (Date.now() - parseInt(cachedTime) < CACHE_DURATION)) {
+        try {
+          setRecommendedTags(JSON.parse(cachedTags));
+          return;
+        } catch {
+          // ignore cache parse error
+        }
+      }
+
+      try {
+        const res = await api.get('reviews/');
+        const reviewsList = res.data.results || res.data;
+        const tagCounts = {};
+
+        if (Array.isArray(reviewsList)) {
+          reviewsList.forEach(review => {
+            if (review.tags && Array.isArray(review.tags)) {
+              review.tags.forEach(tag => {
+                const name = tag?.name || tag;
+                if (name) tagCounts[name] = (tagCounts[name] || 0) + 1;
+              });
+            }
+          });
+        }
+
+        const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
+        if (sortedTags.length > 0) {
+          const topTags = sortedTags.slice(0, 4);
+          setRecommendedTags(topTags);
+          localStorage.setItem(CACHE_KEY, JSON.stringify(topTags));
+          localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+        }
+      } catch (err) {
+        console.error("Failed to fetch tags for homepage search", err);
+      }
+    };
+    fetchLatestTags();
+  }, []);
+
+  // 雙核心搜尋執行函式
+  const performSearch = async (term) => {
+    const cleanTerm = term?.trim();
+    if (!cleanTerm) {
+      setSearchResults([]);
+      setListResults([]);
+      setHasSearched(false);
+      setIsSearchLoading(false);
+      return;
+    }
+
+    setIsSearchLoading(true);
+    setHasSearched(true);
+    try {
+      const [reviewsRes, listsRes] = await Promise.all([
+        api.get(`reviews/search/?q=${encodeURIComponent(cleanTerm)}`),
+        api.get(`lists/search/?q=${encodeURIComponent(cleanTerm)}`)
+      ]);
+      setSearchResults(Array.isArray(reviewsRes.data) ? reviewsRes.data : (reviewsRes.data?.results || []));
+      setListResults(Array.isArray(listsRes.data) ? listsRes.data : (listsRes.data?.results || []));
+    } catch (err) {
+      console.error("Home search failed:", err);
+      setSearchResults([]);
+      setListResults([]);
+    } finally {
+      setIsSearchLoading(false);
+    }
+  };
+
+  const handleSearchQueryChange = (val) => {
+    setSearchQuery(val);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+
+    if (!val.trim()) {
+      setHasSearched(false);
+      setSearchResults([]);
+      setListResults([]);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('q');
+      setSearchParams(newParams, { replace: true });
+      return;
+    }
+
+    searchTimerRef.current = setTimeout(() => {
+      const clean = val.trim();
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('q', clean);
+      setSearchParams(newParams, { replace: true });
+      performSearch(clean);
+    }, 300);
+  };
+
+  const handleSearchSubmit = (val) => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    const clean = (val || searchQuery).trim();
+    if (!clean) return;
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('q', clean);
+    setSearchParams(newParams, { replace: true });
+    performSearch(clean);
+  };
+
+  const handleClearSearch = () => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    setSearchQuery('');
+    setHasSearched(false);
+    setSearchResults([]);
+    setListResults([]);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('q');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const handleTagClick = (tag) => {
+    const cleanTag = tag.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]\s?/, '').replace(/^#/, '');
+    setSearchQuery(cleanTag);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('q', cleanTag);
+    setSearchParams(newParams, { replace: true });
+    performSearch(cleanTag);
+  };
+
+  // URL 參數與焦點同步
+  useEffect(() => {
+    const qParam = searchParams.get('q');
+    const focusParam = searchParams.get('focus');
+
+    if (focusParam === 'search') {
+      setTimeout(() => {
+        searchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        searchInputRef.current?.focus();
+      }, 150);
+    }
+
+    if (qParam !== null && qParam !== undefined) {
+      if (qParam.trim()) {
+        if (qParam !== searchQuery) {
+          setSearchQuery(qParam);
+        }
+        performSearch(qParam);
+      }
+    }
+  }, [searchParams]);
+
+  const handleReviewUpdated = () => {
+    if (searchQuery.trim()) {
+      performSearch(searchQuery.trim());
+    }
+    fetchFeed();
+  };
+
+  const handleReviewDeleted = (deletedId) => {
+    setSearchResults(prev => prev.filter(r => r.id !== deletedId));
+    fetchFeed();
+  };
 
   useEffect(() => {
     if (heroItems.length <= 1) return;
@@ -419,8 +600,36 @@ function Home() {
         </div>
       )}
 
-      {/* 膠囊快篩 */}
-      <div className={styles.tabsContainer} style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
+      {/* 首頁融合搜尋組件 (Anti-Generic AI Aesthetic) */}
+      <HomeSearch
+        query={searchQuery}
+        onChange={handleSearchQueryChange}
+        onSearch={handleSearchSubmit}
+        onClear={handleClearSearch}
+        recommendedTags={recommendedTags}
+        onTagClick={handleTagClick}
+        isLoading={isSearchLoading}
+        inputRef={searchInputRef}
+      />
+
+      {hasSearched ? (
+        /* 狀態 2：搜尋結果視圖（異質層次呈現） */
+        <HomeSearchResults
+          query={searchQuery}
+          reviews={searchResults}
+          lists={listResults}
+          isLoading={isSearchLoading}
+          activeTab={searchActiveTab}
+          setActiveTab={setSearchActiveTab}
+          onSelectReview={setSelectedReview}
+          onClearSearch={handleClearSearch}
+          navigate={navigate}
+        />
+      ) : (
+        /* 狀態 1：預設首頁動態流 */
+        <>
+          {/* 膠囊快篩 */}
+          <div className={styles.tabsContainer} style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
         <button
           className={`${styles.tab} ${feedType === 'all' ? styles.active : ''}`}
           onClick={() => { setFeedType('all'); setCurrentPage(1); }}
@@ -525,6 +734,8 @@ function Home() {
           </div>
         </div>
       </div>
+        </>
+      )}
 
       {isComposing && (
         <ReviewForm onClose={() => setIsComposing(false)} />
@@ -558,6 +769,16 @@ function Home() {
             navigate(`/lists/${newList.id}`);
           }}
           initialSearchQuery={typeof isCuratorStudioOpen === 'string' ? isCuratorStudioOpen : ''}
+        />
+      )}
+
+      {/* 影評詳情彈窗（自搜尋結果或動態流觸發） */}
+      {selectedReview && (
+        <ReviewModal
+          review={selectedReview}
+          onClose={() => setSelectedReview(null)}
+          onReviewUpdated={handleReviewUpdated}
+          onReviewDeleted={handleReviewDeleted}
         />
       )}
     </div>

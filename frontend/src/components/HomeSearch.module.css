@@ -1,0 +1,139 @@
+/* 映後時光 — 首頁搜尋列 (Anti-Generic AI Aesthetic) */
+
+.searchContainer {
+  max-width: 680px;
+  margin: 32px auto 14px auto;
+  position: relative;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.searchInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-muted);
+  font-size: 1rem;
+  pointer-events: none;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.searchInput {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+  border-radius: 8px; /* 沉穩微圓角，避免過度膨脹的大膠囊 */
+  padding: 13px 44px 13px 44px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.searchInput:focus {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent-primary);
+  box-shadow: none; /* 拒絕炫彩霓虹外發光 (No Neon Glow) */
+}
+
+.searchInput:focus + .searchIcon,
+.searchInputWrapper:focus-within .searchIcon {
+  color: var(--accent-primary);
+}
+
+.clearBtn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.clearBtn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* 編輯精選標籤列：電影雜誌風格，拒絕高飽和彩色膠囊 */
+.keywordList {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  margin-bottom: 24px;
+  font-size: 0.85rem;
+  padding: 0 16px;
+}
+
+.keywordLabel {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-right: 4px;
+  letter-spacing: 0.08em;
+}
+
+.keywordItem {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  border-radius: 4px; /* 俐落微圓角 */
+  font-size: 0.82rem;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+}
+
+.keywordItem:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: rgba(224, 160, 58, 0.06);
+}
+
+@media (max-width: 600px) {
+  .searchContainer {
+    margin: 20px auto 10px auto;
+  }
+
+  .searchInput {
+    padding: 11px 38px 11px 38px;
+    font-size: 0.9rem;
+  }
+
+  .keywordList {
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .keywordItem {
+    padding: 3px 9px;
+    font-size: 0.78rem;
+  }
+}

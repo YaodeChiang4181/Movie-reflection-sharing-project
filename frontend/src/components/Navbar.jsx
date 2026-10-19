@@ -37,6 +37,17 @@ function Navbar() {
 
   const isActive = (path) => location.pathname === path;
 
+  const handleSearchClick = (e) => {
+    if (location.pathname === '/') {
+      e.preventDefault();
+      const el = document.getElementById('home-search-input');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+      }
+    }
+  };
+
   return (
     <>
       {/* Top Navbar */}
@@ -51,7 +62,7 @@ function Navbar() {
             <Link to="/" className={styles.navLink}>
               <span>首頁</span>
             </Link>
-            <Link to="/search" className={styles.navLink}>
+            <Link to="/?focus=search" onClick={handleSearchClick} className={styles.navLink}>
               <span>電影心得搜尋</span>
             </Link>
             <Link to="/events" className={styles.navLink}>
@@ -211,11 +222,12 @@ function Navbar() {
           <span>心得</span>
         </Link>
         <Link
-          to="/search"
-          className={`${styles.bottomTab} ${isActive('/search') ? styles.bottomTabActive : ''}`}
+          to="/?focus=search"
+          onClick={handleSearchClick}
+          className={`${styles.bottomTab} ${location.search.includes('focus=search') || location.search.includes('q=') ? styles.bottomTabActive : ''}`}
         >
           <Search size={22} />
-          <span>搜尋畫面</span>
+          <span>電影搜尋</span>
         </Link>
         <Link
           to="/events"

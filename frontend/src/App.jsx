@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -8,7 +8,6 @@ const Home = lazy(() => import('./pages/Home'));
 const MovieDetail = lazy(() => import('./pages/MovieDetail'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Auth = lazy(() => import('./pages/Auth'));
-const Search = lazy(() => import('./pages/Search'));
 const Events = lazy(() => import('./pages/Events'));
 const EventScan = lazy(() => import('./pages/EventScan'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -16,6 +15,12 @@ const ReviewForm = lazy(() => import('./pages/liff/ReviewForm'));
 const ProfileCard = lazy(() => import('./pages/liff/ProfileCard'));
 const CampaignScan = lazy(() => import('./pages/liff/CampaignScan'));
 const CuratedListDetail = lazy(() => import('./pages/CuratedListDetail'));
+
+function SearchRedirect() {
+  const location = useLocation();
+  const search = location.search ? location.search : '?focus=search';
+  return <Navigate to={`/${search}`} replace />;
+}
 
 function App() {
   return (
@@ -28,7 +33,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/:id/scan" element={<EventScan />} />
-            <Route path="/search" element={<Search />} />
+            <Route path="/search" element={<SearchRedirect />} />
             <Route path="/movies/:id" element={<MovieDetail />} />
             <Route path="/lists/:id" element={<CuratedListDetail />} />
             <Route path="/profile" element={<Profile />} />
