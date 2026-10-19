@@ -51,7 +51,7 @@ function Navbar() {
   return (
     <>
       {/* Top Navbar */}
-      <nav className={`${styles.navbar} ${isScrolled ? styles.navbarScrolled : 'glass'}`} style={{ transition: 'all 0.3s ease' }}>
+      <nav className={`${styles.navbar} ${isScrolled ? styles.navbarScrolled : ''}`} style={{ transition: 'all 0.3s ease' }}>
         <div className={`container flex-between ${styles.navContainer}`}>
           <Link to="/" className={styles.brand}>
             <Clapperboard className={styles.brandIcon} />
@@ -61,9 +61,6 @@ function Navbar() {
           <div className={styles.navLinks}>
             <Link to="/" className={styles.navLink}>
               <span>首頁</span>
-            </Link>
-            <Link to="/?focus=search" onClick={handleSearchClick} className={styles.navLink}>
-              <span>電影心得搜尋</span>
             </Link>
             <Link to="/events" className={styles.navLink}>
               <span>廣場</span>
@@ -77,6 +74,16 @@ function Navbar() {
 
           {/* Desktop user actions */}
           <div className={styles.userActions}>
+            <Link
+              to="/?focus=search"
+              onClick={handleSearchClick}
+              className={styles.searchIconBtn}
+              aria-label="快速搜尋"
+              title="搜尋電影、心得或片單"
+            >
+              <Search size={18} />
+            </Link>
+
             {isLoggedIn ? (
               <>
                 <div className={styles.publishDropdownContainer} onMouseEnter={() => setPublishMenuOpen(true)} onMouseLeave={() => setPublishMenuOpen(false)}>
