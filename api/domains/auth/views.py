@@ -1026,3 +1026,153 @@ class ExchangeAuthCodeView(APIView):
         response = Response({'user': UserMeSerializer(auth_code.user).data})
         set_jwt_cookies(response, refresh.access_token, refresh)
         return response
+
+
+class ForgotPasswordView(APIView):
+    """
+    找回帳號與發送重設密碼驗證信：
+    支援單一輸入（信箱、學號或公開暱稱），自動匹配對應用戶並發送包含帳號備忘的 6 碼 OTP 驗證碼。
+    具備防帳號枚舉、60 秒冷卻與單日發送上限防護。
+    """
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        import time
+        from .identity_resolver import resolve_user_by_identifier, send_system_email
+
+        identifier = request.data.get('identifier', '')
+        if not identifier or not isinstance(identifier, str) or not identifier.strip():
+            return Response({'error': '請輸入信箱、學號或公開暱稱'}, status=status.HTTP_400_BAD_REQUEST)
+
+        identifier = identifier.strip()
+        resolved = resolve_user_by_identifier(identifier)
+
+        # 防帳號枚舉保護：若查無帳號，微延遲後回傳通用成功訊息，防止探測註冊名單
+        if not resolved:
+            time.sleep(0.3)
+            return Response({
+                'message': '若此帳號/信箱存在於系統中，驗證信件已發送至登記信箱，請至信箱查閱。',
+                'masked_email': None
+            })
+
+        # 特殊情境：LINE 註冊且未綁定信箱
+        if resolved.get('identity_type') == 'line_no_email' or not resolved.get('email'):
+            return Response({
+                'error': '此帳號為 LINE 快速註冊帳戶，尚未綁定電子信箱。請直接使用「LINE 登入」按鈕登入，進入後可至個人設定綁定信箱。'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        target_email = resolved['email']
+
+        # 頻率限制 1：同一信箱 60 秒冷卻
+        one_min_ago = timezone.now() - timedelta(minutes=1)
+        recent = EmailVerification.objects.filter(email=target_email, created_at__gte=one_min_ago).first()
+        if recent:
+            return Response({'error': '發送過於頻繁，請稍候 60 秒後再試'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        # 頻率限制 2：同一信箱單日最多 5 次
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        daily_count = EmailVerification.objects.filter(email=target_email, created_at__gte=today_start).count()
+        if daily_count >= 5:
+            return Response({'error': '今日發送次數已達上限 (5次)，請明天再試'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        # 生成 6 位數 OTP
+        code = f"{random.randint(0, 999999):06d}"
+
+        # 組合包含帳號資訊備忘的親切信件內容
+        nickname = resolved.get('nickname', '')
+        campus_id = resolved.get('campus_id', '')
+        identity_label = resolved.get('identity_label', '映後時光影迷')
+
+        subject = '【映後時光】重設密碼與帳號資訊備忘'
+        message = (
+            f"親愛的影迷 您好：\n\n"
+            f"我們收到了您的帳號找回與密碼重設申請。以下為您的帳號資訊備忘：\n\n"
+            f"• 帳號身分：{identity_label}\n"
+            f"• 專屬帳號 ID：{campus_id}\n"
+            f"• 站內公開暱稱：{nickname}\n\n"
+            f"您的 6 位數重設驗證碼為：【 {code} 】\n\n"
+            f"此驗證碼有效期限為 10 分鐘，請勿將驗證碼外洩給他人。\n"
+            f"若您當初是使用 Google 或 LINE 快速登入，您亦可直接於網站點擊對應按鈕一鍵登入。\n"
+            f"若您並未提出此請求，請忽略本信件。\n\n"
+            f"— 映後時光 團隊敬上"
+        )
+
+        sent = send_system_email(target_email, subject, message)
+        if not sent:
+            return Response({'error': '寄信失敗，請確認郵件伺服器連線'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # 刪除先前的未驗證驗證碼，寫入新驗證碼
+        EmailVerification.objects.filter(email=target_email, is_verified=False).delete()
+        EmailVerification.objects.create(email=target_email, code=code)
+
+        return Response({
+            'message': '驗證信件已發送至登記信箱，請至信箱查閱。',
+            'masked_email': resolved.get('masked_email')
+        })
+
+
+class ResetPasswordView(APIView):
+    """
+    密碼重設端點：
+    驗證 6 位數 OTP，檢查新密碼強度，完成密碼更新並自動簽發 JWT Cookie 登入。
+    """
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from rest_framework_simplejwt.tokens import RefreshToken
+        from .identity_resolver import resolve_user_by_identifier
+
+        email = request.data.get('email', '')
+        code = request.data.get('code', '')
+        new_password = request.data.get('new_password', '')
+
+        if not email or not code or not new_password:
+            return Response({'error': '請提供完整資訊（信箱、驗證碼與新密碼）'}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = email.strip()
+        code = code.strip()
+
+        # 1. 檢核 OTP 驗證碼時效（10 分鐘內）與有效性
+        ten_mins_ago = timezone.now() - timedelta(minutes=10)
+        record = EmailVerification.objects.filter(
+            email=email,
+            code=code,
+            created_at__gte=ten_mins_ago,
+            is_verified=False
+        ).first()
+
+        if not record:
+            return Response({'error': '驗證碼錯誤或已過期，請重新索取'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. 定位使用者
+        resolved = resolve_user_by_identifier(email)
+        if not resolved or not resolved.get('user'):
+            return Response({'error': '查無對應之帳號'}, status=status.HTTP_404_NOT_FOUND)
+
+        user = resolved['user']
+
+        # 3. 密碼強度檢核
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as ve:
+            return Response({'error': ve.messages[0]}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 4. 更新密碼
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+
+        # 5. 標記驗證碼已作廢（單次有效，防重放攻擊）
+        record.is_verified = True
+        record.save(update_fields=['is_verified'])
+
+        # 6. 自動簽發 JWT 並寫入 Cookie，實現流暢無縫登入
+        refresh = RefreshToken.for_user(user)
+        response = Response({
+            'message': '密碼重設成功！歡迎回到映後時光。',
+            'user': UserMeSerializer(user).data
+        })
+        set_jwt_cookies(response, refresh.access_token, refresh)
+        return response
+

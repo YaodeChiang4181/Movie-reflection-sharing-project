@@ -3,11 +3,13 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
 import styles from './Auth.module.css';
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState('student'); // 'student' or 'outsider'
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [formData, setFormData] = useState({
     campus_id: '',
     password: '',
@@ -265,14 +267,14 @@ function Auth() {
             className={`${styles.roleTab} ${role === 'student' ? styles.activeRole : ''}`}
             onClick={() => { setRole('student'); setError(''); }}
           >
-            中大學號註冊
+            {isLogin ? '中大學生登入' : '中大學號註冊'}
           </button>
           <button
             type="button"
             className={`${styles.roleTab} ${role === 'outsider' ? styles.activeRole : ''}`}
             onClick={() => { setRole('outsider'); setError(''); }}
           >
-            信箱註冊
+            {isLogin ? '信箱登入' : '信箱註冊'}
           </button>
         </div>
 
@@ -392,8 +394,8 @@ function Auth() {
                     </button>
                   </div>
                 ) : (
-                  <div style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', fontWeight: 'bold' }}>
-                    ✅ 信箱已驗證成功
+                  <div style={{ color: 'var(--accent-primary, #C5A059)', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', fontWeight: 'bold' }}>
+                    信箱已驗證完成
                   </div>
                 )}
               </div>
@@ -412,7 +414,18 @@ function Auth() {
           )}
 
           <div className={styles.inputGroup}>
-            <label>密碼 (Password)</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label>密碼 (Password)</label>
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={() => setIsForgotPasswordOpen(true)}
+                  className={styles.forgotPasswordBtn}
+                >
+                  忘記帳號或密碼？
+                </button>
+              )}
+            </div>
             <input
               type="password"
               name="password"
@@ -542,6 +555,16 @@ function Auth() {
           </button>
         </p>
       </div>
+
+      {/* 忘記密碼與找回帳號彈窗 */}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+        onLoginSuccess={(userData) => {
+          login(userData);
+          navigate(redirectPath, { replace: true });
+        }}
+      />
     </div>
   );
 }

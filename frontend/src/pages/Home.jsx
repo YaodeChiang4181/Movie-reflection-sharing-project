@@ -84,7 +84,7 @@ function Home() {
   const [hasSearched, setHasSearched] = useState(Boolean(searchParams.get('q')?.trim()));
   const [searchActiveTab, setSearchActiveTab] = useState('all');
   const [selectedReview, setSelectedReview] = useState(null);
-  const [recommendedTags, setRecommendedTags] = useState(['動作', '喜劇', '科幻', '劇情']);
+  const [recommendedTags, setRecommendedTags] = useState(['院線熱映', '週末放鬆', '燒腦神作', '催淚神片', '冷門佳作']);
   const searchInputRef = useRef(null);
   const searchTimerRef = useRef(null);
 

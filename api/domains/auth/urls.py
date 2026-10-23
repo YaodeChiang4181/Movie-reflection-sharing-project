@@ -5,8 +5,8 @@ from .views import (
     RegisterView, CustomTokenObtainPairView, UserMeView, AdminUserViewSet, 
     SendVerificationView, VerifyEmailView, BindEmailView, LineLoginView, GoogleLoginView, NCULoginView, MergeGhostAccountView,
     RecalculateExpView, AdminStatsView, SyncUserExpView, UserAvatarUploadView,
-    RecalculateExpView, AdminStatsView, SyncUserExpView, UserAvatarUploadView,
-    AdminInviteTokenView, ClaimBadgeView, UpdateNicknameView, CookieTokenRefreshView, LogoutView, ExchangeAuthCodeView
+    AdminInviteTokenView, ClaimBadgeView, UpdateNicknameView, CookieTokenRefreshView, LogoutView, ExchangeAuthCodeView,
+    ForgotPasswordView, ResetPasswordView
 )
 
 router = DefaultRouter()
@@ -16,6 +16,8 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='auth_register'),
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('forgot-password/', ForgotPasswordView.as_view(), name='forgot_password'),
+    path('reset-password/', ResetPasswordView.as_view(), name='reset_password'),
     path('line-login/', LineLoginView.as_view(), name='line_login'),
     path('google-login/', GoogleLoginView.as_view(), name='google_login'),
     path('ncu-login/', NCULoginView.as_view(), name='ncu_login'),

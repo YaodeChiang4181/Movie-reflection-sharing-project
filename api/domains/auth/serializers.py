@@ -290,11 +290,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         username = attrs.get(self.username_field)
-        if username and '@' in username:
+        if username:
             try:
-                outsider = OutsiderIdentity.objects.get(email=username)
-                attrs[self.username_field] = outsider.user.campus_id
-            except OutsiderIdentity.DoesNotExist:
+                from .identity_resolver import resolve_user_by_identifier
+                resolved = resolve_user_by_identifier(username)
+                if resolved and resolved.get('user'):
+                    attrs[self.username_field] = resolved['user'].campus_id
+            except Exception:
                 pass
                 
         data = super().validate(attrs)
@@ -304,3 +306,4 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'is_staff': self.user.is_staff
         }
         return data
+

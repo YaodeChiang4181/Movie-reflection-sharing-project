@@ -120,8 +120,9 @@ function MovieDetail() {
   return (
     <div className={`container ${styles.pageWrapper}`}>
       <SEO
-        title={`${movie.title} 影評與心得｜映後時光`}
-        description={`這是關於 ${movie.title} 的影評與心得分享。快來映後時光看看大家怎麼說，或者透過漂流瓶找到下一部好電影！`}
+        title={`${movie.title} 影評、心得與串流導覽｜映後時光`}
+        description={`《${movie.title}》的社群影評心得、快速評分、主題片單收錄與台灣線上串流平台哪裡看導覽。快來映後時光交流觀影心得！`}
+        keywords={`${movie.title},${movie.title}影評,${movie.title}心得,${movie.title}評價,${movie.title}哪裡看,${movie.title}串流,電影推薦,映後時光`}
       />
       <div>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>

@@ -98,7 +98,7 @@ def handle_message(event):
                 
             if target_user and target_user.check_password(password):
                 if target_user.line_user_id and target_user.line_user_id != line_user_id:
-                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 此帳號已被其他 LINE 綁定！"))
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="此帳號已綁定其他 LINE 帳號。"))
                     return
                     
                 old_user = User.objects.filter(line_user_id=line_user_id).first()
@@ -147,11 +147,11 @@ def handle_message(event):
                 frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
                 btn_flex = get_website_button_flex(frontend_url)
                 line_bot_api.reply_message(event.reply_token, [
-                    TextSendMessage(text=f"✅ 帳號綁定成功！歡迎回來，{target_user.username or target_user.campus_id}。"),
-                    FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+                    TextSendMessage(text=f"帳號綁定完成。歡迎回來，{target_user.username or target_user.campus_id}。"),
+                    FlexSendMessage(alt_text="前往映後時光", contents=btn_flex)
                 ])
             else:
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 帳號或密碼錯誤，請重新確認！"))
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="帳號或密碼錯誤，請重新確認。"))
         else:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="綁定格式錯誤，請參考範例 (中間要有空格，不需括號)：\n#綁定 a12345678 mypassword"))
         return
@@ -176,11 +176,11 @@ def handle_message(event):
             new_nickname = unicodedata.normalize('NFKC', parts[1].strip())
             
             if len(new_nickname) > 50:
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 暱稱太長囉，請限制在 50 個字元以內！"))
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="暱稱長度請限制在 50 個字元以內。"))
                 return
                 
             if UserProfile.objects.filter(nickname=new_nickname).exclude(user=user).exists():
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"❌ 暱稱「{new_nickname}」已經被其他人使用囉，換一個試試看吧！"))
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"暱稱「{new_nickname}」已被使用，請嘗試其他名稱。"))
                 return
                 
             if user.profile.nickname_updated_at:
@@ -190,7 +190,7 @@ def handle_message(event):
                     remaining = int(300 - time_diff.total_seconds())
                     minutes = remaining // 60
                     seconds = remaining % 60
-                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"❌ 更改太頻繁囉，請等候 {minutes} 分 {seconds} 秒後再試！"))
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"更改過於頻繁，請於 {minutes} 分 {seconds} 秒後再試。"))
                     return
                     
             from django.utils import timezone
@@ -201,102 +201,54 @@ def handle_message(event):
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
             btn_flex = get_website_button_flex(frontend_url)
             line_bot_api.reply_message(event.reply_token, [
-                TextSendMessage(text=f"✅ 暱稱設定成功！以後大家都會看到你是「{new_nickname}」囉！"),
-                FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+                TextSendMessage(text=f"暱稱設定完成，已更新為「{new_nickname}」。"),
+                FlexSendMessage(alt_text="前往映後時光", contents=btn_flex)
             ])
         else:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="暱稱設定格式錯誤，請參考範例 (中間要有空格，不需括號)：\n#暱稱 影迷小明"))
         return
 
-    if text.startswith('#心得') or text.startswith('＃心得'):
-        movie_match = re.search(r'電影：([^\n]+)', text)
-        rating_match = re.search(r'評分：(\d+)', text)
-        tag_match = re.search(r'標籤：([^\n]+)', text)
-        content_match = re.search(r'心得：(.*)', text, re.DOTALL)
-        
-        if movie_match and rating_match and content_match:
-            movie_title = movie_match.group(1).strip()
-            rating = min(max(int(rating_match.group(1).strip()), 1), 5)
-            content = content_match.group(1).strip()
-            
-            from api.utils.tmdb import get_or_create_movie
-            movie, _, tmdb_genres = get_or_create_movie(movie_title)
-            
-            existing_review = Review.objects.filter(user=user, movie=movie).first()
-            if existing_review:
-                existing_review.rating = rating
-                existing_review.content = content
-                existing_review.save()
-                review = existing_review
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"✅ 已為您更新《{movie_title}》的心得內容！\n(註：重複評價不會再次獲得經驗值喔)"))
-                return
-            else:
-                review = Review.objects.create(
-                    user=user,
-                    movie=movie,
-                    rating=rating,
-                    content=content,
-                    source='line'
-                )
-            
-            from api.models import Tag
-            
-            movie_tag, _ = Tag.objects.get_or_create(name=movie_title)
-            review.tags.add(movie_tag)
-            
-            tags = []
-            if tag_match:
-                tag_text = tag_match.group(1).strip()
-                tag_text = tag_text.replace('(選填)', '').replace('（選填）', '')
-                if tag_text and tag_text not in ['無', '略過', '沒有']:
-                    # 用 # 分割，並移除每個標籤中包含的空白和分號
-                    raw_tags = tag_text.split('#')
-                    for t in raw_tags:
-                        import re
-                        cleaned = re.sub(r'[\s;]', '', t)
-                        if cleaned:
-                            tags.append(cleaned)
-                            
-            # Automatically fetch and append TMDB genres
-            for genre in tmdb_genres:
-                if genre not in tags:
-                    tags.append(genre)
-                            
-            has_spoiler = False
-            for tag_name in tags:
-                if tag_name in ['爆雷', '有雷', '劇透', '雷']:
-                    has_spoiler = True
-                if tag_name != movie_title:
-                    tag_obj, _ = Tag.objects.get_or_create(name=tag_name)
-                    review.tags.add(tag_obj)
-            
-            if has_spoiler:
-                review.is_spoiler = True
-                review.save()
-            
-            user_exp = add_user_experience(user, 25)
-            
-            frontend_url = os.getenv('FRONTEND_URL', 'https://your-domain.com')
-            movie_url = f"{frontend_url}/movies/{movie.id}"
-            
-            flex_bubble = get_exp_feedback_flex(user, 25, user_exp.level, user_exp.exp, movie_url=movie_url)
-            
-            line_bot_api.reply_message(
-                event.reply_token, 
-                FlexSendMessage(alt_text="發布成功！經驗值增加", contents=flex_bubble)
-            )
-            return
-        else:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="心得格式錯誤，請參考範例 (不需打括號)：\n#心得\n電影：奧德賽\n評分：5\n標籤：#動作片\n心得：真的很好看！"))
-            return
-            
-    # --- Stateful Search Logic ---
+    # --- 兩階段心得狀態機與自然評分管線 ---
+    from .review_pipeline import (
+        extract_quick_rating_intent,
+        handle_stage_one_rating,
+        handle_stage_two_content
+    )
+
     state_record, _ = LineBotState.objects.get_or_create(line_user_id=line_user_id)
     user_state = state_record.state
-    
+
+    # 處於階段二：等待心得內文追加
+    if user_state == "WAITING_FOR_REVIEW_CONTENT":
+        exit_commands = ['取消', '完成', '結束', '保留', '不用了', '略過']
+        reserved_nav = ['寫心得', '發布感想', '影迷名片', '急速評星', '近期活動', '查', '快速查詢', '影評推薦', '片單漂流瓶', '推薦電影', '來部推薦']
+        if text in exit_commands:
+            state_record.state = ""
+            state_record.data = {}
+            state_record.save()
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="已保留評分紀錄。"))
+            return
+        elif text in reserved_nav or text.startswith(('/', '／', '查 ', '搜尋 ', '#綁定', '＃綁定', '#暱稱', '＃暱稱')):
+            state_record.state = ""
+            state_record.data = {}
+            state_record.save()
+            user_state = ""
+        else:
+            response_msg = handle_stage_two_content(user, state_record, text)
+            line_bot_api.reply_message(event.reply_token, response_msg)
+            return
+
+    # 自然意圖解析：階段一評星 (支援「沙丘 5」、「奧本海默 4星」及相容傳統 #心得)
+    movie_title, score, extra_data = extract_quick_rating_intent(text)
+    if movie_title and score:
+        response_msg = handle_stage_one_rating(user, line_user_id, movie_title, score, extra_data=extra_data)
+        line_bot_api.reply_message(event.reply_token, response_msg)
+        return
+
+    # --- Stateful Search Logic ---
     # 攔截關鍵指令，強制退出目前的狀態 (避免在輸入電影名稱時，按到選單按鈕變成輸入電影名稱)
     reserved_commands = ['寫心得', '發布感想', '影迷名片', '急速評星', '近期活動', '查', '快速查詢', '影評推薦', '取消', '片單漂流瓶', '推薦電影', '來部推薦']
-    is_hash_cmd = any(text.startswith(c) for c in ['#心得', '＃心得', '#揪團', '＃揪團', '#綁定', '＃綁定', '#暱稱', '＃暱稱'])
+    is_hash_cmd = any(text.startswith(c) for c in ['#揪團', '＃揪團', '#綁定', '＃綁定', '#暱稱', '＃暱稱'])
     
     is_reserved = (
         text in reserved_commands or 
@@ -312,7 +264,7 @@ def handle_message(event):
             user_state = ""
             
         if text == '取消':
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="✅ 已為您取消目前的動作。"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="已取消目前的動作。"))
             return
             
     if text in ['查', '快速查詢']:
@@ -321,8 +273,8 @@ def handle_message(event):
         frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
         btn_flex = get_website_button_flex(frontend_url)
         line_bot_api.reply_message(event.reply_token, [
-            TextSendMessage(text="🔍 您欲查詢哪部電影呢？\n請直接輸入電影名稱："),
-            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+            TextSendMessage(text="請輸入您欲查詢的電影名稱："),
+            FlexSendMessage(alt_text="前往映後時光", contents=btn_flex)
         ])
         return
         
@@ -360,7 +312,7 @@ def handle_message(event):
 
             flex_carousel = get_review_carousel_flex(reviews, search_link)
             
-            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text=f"🔍 「{keyword}」的搜尋結果", contents=flex_carousel))
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text=f"「{keyword}」的搜尋結果", contents=flex_carousel))
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"系統查詢時發生錯誤：{str(e)}"))
@@ -399,7 +351,7 @@ def handle_message(event):
 
             flex_carousel = get_review_carousel_flex(reviews, search_link)
             
-            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text=f"🔍 「{keyword}」的搜尋結果", contents=flex_carousel))
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text=f"「{keyword}」的搜尋結果", contents=flex_carousel))
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"系統查詢時發生錯誤：{str(e)}"))
@@ -410,7 +362,7 @@ def handle_message(event):
     if user_state == "WAITING_FOR_SPEED_RATING":
         rating_text = text.strip()
         if not rating_text.isdigit() or not (1 <= int(rating_text) <= 5):
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 評分格式錯誤！請輸入 1 到 5 之間的數字 (或點擊上方的按鈕)：\n\n(隨時可以回覆「取消」取消進度喔～)"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="評分格式有誤，請輸入 1 至 5 的數字。\n(輸入「取消」可中斷操作)"))
             return
             
         rating = int(rating_text)
@@ -451,7 +403,7 @@ def handle_message(event):
         movie_url = f"{frontend_url}/movies/{movie.id}"
         
         flex_bubble = get_exp_feedback_flex(user, 10, user_exp.level, user_exp.exp, movie_url=movie_url)
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="評分成功！經驗值增加", contents=flex_bubble))
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="評分已記錄", contents=flex_bubble))
         return
 
     # --- Drift Bottle ---
@@ -468,7 +420,7 @@ def handle_message(event):
             
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"請輸入你想對《{bottle.movie_title}》的推薦人說的感謝或留言：\n\n(回覆「取消」可中斷)"))
         except Exception as e:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 找不到該漂流瓶。"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="查無該漂流瓶。"))
         return
 
     if user_state == "WAITING_FOR_BOTTLE_REPLY":
@@ -487,15 +439,15 @@ def handle_message(event):
                     sender_nickname = user.profile.nickname if hasattr(user, 'profile') else (user.line_display_name or "匿名使用者")
                     from api.integrations.line.flex_templates import get_bottle_reply_flex
                     flex_bubble = get_bottle_reply_flex(bottle, sender_nickname, reply_message)
-                    push_msg = FlexSendMessage(alt_text=f"💌 你的漂流瓶收到了回覆！", contents=flex_bubble)
+                    push_msg = FlexSendMessage(alt_text="漂流瓶收到回覆", contents=flex_bubble)
                     line_bot_api.push_message(target_line_user_id, push_msg)
-                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="✨ 感謝已成功發送給推薦人！"))
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="感謝留言已發送給推薦人。"))
                 except Exception as e:
-                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 發送感謝失敗，對方可能封鎖了機器人。"))
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="發送失敗，對方可能暫時無法接收訊息。"))
             else:
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 原推薦人尚未綁定 LINE，無法發送感謝。"))
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="原推薦人尚未綁定 LINE，無法送達留言。"))
         except Exception as e:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 處理感謝訊息時發生錯誤。"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="處理感謝訊息時發生錯誤。"))
         return
 
     if text == '片單漂流瓶':
@@ -506,15 +458,15 @@ def handle_message(event):
 
     if text == '推薦電影':
         if not user:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️ 請先完成 #綁定 才能使用漂流瓶功能喔！"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請先完成帳號綁定（#綁定 帳號 密碼）後再使用漂流瓶功能。"))
             return
         state_record.state = "WAITING_FOR_DRIFT_MOVIE_TITLE"
         state_record.save()
         frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
         btn_flex = get_website_button_flex(frontend_url)
         line_bot_api.reply_message(event.reply_token, [
-            TextSendMessage(text="🌊 準備將你的推薦裝進瓶中！\n\n請輸入你要推薦的【電影名稱】：\n\n(回覆「取消」可中斷)"),
-            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+            TextSendMessage(text="請輸入欲推薦的電影名稱：\n\n(回覆「取消」可中斷)"),
+            FlexSendMessage(alt_text="前往映後時光", contents=btn_flex)
         ])
         return
 
@@ -543,7 +495,7 @@ def handle_message(event):
             message=message
         )
         
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="🌊 你的漂流瓶已經成功丟入海中！感謝你的推薦 ✨"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="漂流瓶已投遞出海，感謝你的推薦。"))
         return
 
     if text == '來部推薦':
@@ -557,9 +509,9 @@ def handle_message(event):
         if not bottles:
             # 如果海裡有瓶子，只是剛好全都是自己的
             if total_bottles > 0:
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前海裡只有你丟的漂流瓶哦～等待其他人丟瓶子吧！🌊"))
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前尚無其他影友投遞的漂流瓶，請稍後再來撈取。"))
             else:
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前海裡還沒有漂流瓶哦～趕快點擊「推薦電影」成為第一個丟瓶子的人吧！🌊"))
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="目前海域尚無漂流瓶，歡迎點擊「推薦電影」投遞第一個漂流瓶。"))
             return
             
         bottle = random.choice(bottles)
@@ -585,7 +537,7 @@ def handle_message(event):
     if text in ['寫心得', '發布感想']:
         state_record.state = "WAITING_FOR_REVIEW_TITLE"
         state_record.save()
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="📝 準備發布心得！\n\n請輸入您要分享的【電影名稱】：\n\n(隨時可以回覆「取消」取消進度喔～)"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請輸入欲分享的電影名稱：\n\n(回覆「取消」可中斷)"))
         return
         
     if user_state == "WAITING_FOR_REVIEW_TITLE":
@@ -599,7 +551,7 @@ def handle_message(event):
     if user_state == "WAITING_FOR_REVIEW_RATING":
         rating_text = text.strip()
         if not rating_text.isdigit() or not (1 <= int(rating_text) <= 5):
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 評分格式錯誤！請輸入 1 到 5 之間的數字：\n\n(隨時可以回覆「取消」取消進度喔～)"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="評分格式有誤，請輸入 1 至 5 的數字：\n\n(回覆「取消」可中斷)"))
             return
             
         rating = int(rating_text)
@@ -608,7 +560,7 @@ def handle_message(event):
         state_record.save()
         
         movie_title = state_record.data.get('review_title')
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"您給了 {rating} 顆星！🌟\n\n最後一步，請輸入您的【心得內容】：\n\n(隨時可以回覆「取消」取消進度喔～)"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"已記錄評分 {rating}.0 / 5.0。\n請輸入您的心得內文：\n\n(回覆「取消」可中斷)"))
         return
         
     if user_state == "WAITING_FOR_REVIEW_CONTENT":
@@ -617,7 +569,7 @@ def handle_message(event):
         state_record.state = "WAITING_FOR_REVIEW_TAGS"
         state_record.save()
         
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="太棒了！📝\n\n最後，請為這篇心得加上【Hashtag】 (請用 # 開頭，例如：#動作片 #好雷)。\n若不需要標籤，請直接輸入「無」或「略過」：\n\n(隨時可以回覆「取消」取消進度喔～)"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請為這篇心得加上標籤（以 # 開頭，如 #動作片 #好雷），若不需標籤請輸入「略過」：\n\n(回覆「取消」可中斷)"))
         return
 
     if user_state == "WAITING_FOR_REVIEW_TAGS":
@@ -714,16 +666,16 @@ def handle_message(event):
         
         # 身分標章
         if level >= 5:
-            badge_title = "🥉 青銅冒險家"
-            badge_color = "#CD7F32"
+            badge_title = "資深影迷"
+            badge_color = "#C5A059"
         elif level >= 2:
-            badge_title = "✨ 唉呦不錯呦"
-            badge_color = "#FFD700"
+            badge_title = "進階影迷"
+            badge_color = "#D4AF37"
         elif level >= 1:
-            badge_title = "🌱 初出茅廬"
-            badge_color = "#6BCB77"
+            badge_title = "初級影迷"
+            badge_color = "#AAAAAA"
         else:
-            badge_title = "🎬 新手影迷"
+            badge_title = "新晉影迷"
             badge_color = "#888888"
         
         # 已發布心得
@@ -752,15 +704,20 @@ def handle_message(event):
         flex_card = {
             "type": "bubble",
             "size": "mega",
+            "styles": {
+                "header": { "backgroundColor": "#1A1A1A" },
+                "body": { "backgroundColor": "#141414" },
+                "footer": { "backgroundColor": "#181818" }
+            },
             "header": {
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
                     {
                         "type": "text",
-                        "text": "🎬 專屬影迷名片",
+                        "text": "影迷專屬名片",
                         "weight": "bold",
-                        "color": "#FFFFFF",
+                        "color": "#F0F0F0",
                         "size": "xl"
                     },
                     {
@@ -772,7 +729,6 @@ def handle_message(event):
                         "margin": "sm"
                     }
                 ],
-                "backgroundColor": "#2D1B69",
                 "paddingAll": "20px"
             },
             "body": {
@@ -785,9 +741,9 @@ def handle_message(event):
                         "text": nickname,
                         "weight": "bold",
                         "size": "xxl",
-                        "color": "#111111"
+                        "color": "#F0F0F0"
                     },
-                    {"type": "separator", "margin": "lg"},
+                    {"type": "separator", "margin": "lg", "color": "#262626"},
                     # 等級與經驗值
                     {
                         "type": "box",
@@ -797,7 +753,7 @@ def handle_message(event):
                                 "type": "box",
                                 "layout": "horizontal",
                                 "contents": [
-                                    {"type": "text", "text": f"Lv. {level}", "size": "md", "color": "#8B5CF6", "weight": "bold", "flex": 3},
+                                    {"type": "text", "text": f"Lv. {level}", "size": "md", "color": "#C5A059", "weight": "bold", "flex": 3},
                                     {"type": "text", "text": f"EXP {current_exp}/{exp_needed}", "size": "sm", "color": "#888888", "align": "end", "flex": 5}
                                 ]
                             },
@@ -810,7 +766,7 @@ def handle_message(event):
                                     {
                                         "type": "box",
                                         "layout": "vertical",
-                                        "backgroundColor": "#8B5CF6",
+                                        "backgroundColor": "#C5A059",
                                         "height": "8px",
                                         "flex": progress_flex,
                                         "contents": []
@@ -818,7 +774,7 @@ def handle_message(event):
                                     {
                                         "type": "box",
                                         "layout": "vertical",
-                                        "backgroundColor": "#E5E7EB",
+                                        "backgroundColor": "#2A2A2A",
                                         "height": "8px",
                                         "flex": remaining_flex,
                                         "contents": []
@@ -828,7 +784,7 @@ def handle_message(event):
                         ],
                         "margin": "lg"
                     },
-                    {"type": "separator", "margin": "lg"},
+                    {"type": "separator", "margin": "lg", "color": "#262626"},
                     # 數據統計
                     {
                         "type": "box",
@@ -838,18 +794,18 @@ def handle_message(event):
                                 "type": "box",
                                 "layout": "vertical",
                                 "contents": [
-                                    {"type": "text", "text": str(review_count), "size": "xl", "weight": "bold", "color": "#111111", "align": "center"},
-                                    {"type": "text", "text": "📝 發布心得", "size": "xs", "color": "#888888", "align": "center", "margin": "sm"}
+                                    {"type": "text", "text": str(review_count), "size": "xl", "weight": "bold", "color": "#F0F0F0", "align": "center"},
+                                    {"type": "text", "text": "發布心得", "size": "xs", "color": "#888888", "align": "center", "margin": "sm"}
                                 ],
                                 "flex": 1
                             },
-                            {"type": "separator"},
+                            {"type": "separator", "color": "#262626"},
                             {
                                 "type": "box",
                                 "layout": "vertical",
                                 "contents": [
-                                    {"type": "text", "text": str(likes_received), "size": "xl", "weight": "bold", "color": "#111111", "align": "center"},
-                                    {"type": "text", "text": "👍 獲得推薦", "size": "xs", "color": "#888888", "align": "center", "margin": "sm"}
+                                    {"type": "text", "text": str(likes_received), "size": "xl", "weight": "bold", "color": "#F0F0F0", "align": "center"},
+                                    {"type": "text", "text": "獲得肯定", "size": "xs", "color": "#888888", "align": "center", "margin": "sm"}
                                 ],
                                 "flex": 1
                             }
@@ -857,14 +813,14 @@ def handle_message(event):
                         "margin": "lg",
                         "paddingAll": "sm"
                     },
-                    {"type": "separator", "margin": "lg"},
+                    {"type": "separator", "margin": "lg", "color": "#262626"},
                     # 常用標籤
                     {
                         "type": "box",
                         "layout": "vertical",
                         "contents": [
-                            {"type": "text", "text": "🏷️ 常用標籤", "size": "sm", "color": "#888888"},
-                            {"type": "text", "text": tag_str, "size": "sm", "color": "#8B5CF6", "weight": "bold", "wrap": True, "margin": "sm"}
+                            {"type": "text", "text": "常用標籤", "size": "sm", "color": "#888888"},
+                            {"type": "text", "text": tag_str, "size": "sm", "color": "#C5A059", "weight": "bold", "wrap": True, "margin": "sm"}
                         ],
                         "margin": "lg"
                     }
@@ -873,14 +829,13 @@ def handle_message(event):
             "footer": {
                 "type": "box",
                 "layout": "vertical",
-                "backgroundColor": "#F9FAFB",
                 "paddingAll": "md",
                 "contents": [
                     {
                         "type": "text",
-                        "text": "💡 發布心得 +25 EXP｜留言 +10 EXP｜被按讚 +1 EXP",
+                        "text": "發布心得 +25 EXP ｜ 留言互動 +10 EXP ｜ 獲肯定 +1 EXP",
                         "size": "xxs",
-                        "color": "#9CA3AF",
+                        "color": "#777777",
                         "wrap": True,
                         "align": "center"
                     }
@@ -891,7 +846,7 @@ def handle_message(event):
         btn_flex = get_website_button_flex(frontend_url)
         line_bot_api.reply_message(event.reply_token, [
             FlexSendMessage(alt_text="專屬影迷名片", contents=flex_card),
-            FlexSendMessage(alt_text="上網站看看成果", contents=btn_flex)
+            FlexSendMessage(alt_text="前往映後時光", contents=btn_flex)
         ])
         return
 
@@ -903,7 +858,7 @@ def handle_message(event):
             
         frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
         flex_carousel = get_events_list_flex(events, f"{frontend_url}/events")
-        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="📅 近期電影揪團", contents=flex_carousel))
+        line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="近期電影揪團", contents=flex_carousel))
         return
 
     if text == '影評推薦':
@@ -928,7 +883,7 @@ def handle_message(event):
             frontend_url = os.getenv('FRONTEND_URL', 'https://movie-reflection-sharing-project.vercel.app')
             flex_carousel = get_review_carousel_flex(trending_reviews, frontend_url)
             
-            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="✨ 影評推薦", contents=flex_carousel))
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="熱門影評推薦", contents=flex_carousel))
         except Exception as e:
             try:
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"載入熱門影評時發生錯誤：{str(e)}"))
@@ -974,7 +929,7 @@ def handle_message(event):
                 new_event.attendees.add(user)
             
             flex_card = get_event_success_flex(new_event)
-            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="✅ 揪團建立成功", contents=flex_card))
+            line_bot_api.reply_message(event.reply_token, FlexSendMessage(alt_text="揪團建立完成", contents=flex_card))
             return
         else:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="揪團格式錯誤，請參考範例：\n#揪團\n活動：看電影\n時間：2024-12-31 19:00\n地點：信義威秀\n描述：大家一起來"))
@@ -1005,7 +960,7 @@ def handle_message(event):
             event_obj.attendees.add(user)
             current_count = event_obj.attendees.count()
             
-            reply_text = f"✅ 成功加入【{event_obj.title}】！\n目前共有 {current_count} 人參加。"
+            reply_text = f"已成功加入【{event_obj.title}】。\n目前共有 {current_count} 人參加。"
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
         except Exception as e:
             try:
@@ -1017,7 +972,7 @@ def handle_message(event):
     try:
         line_bot_api.reply_message(
             event.reply_token, 
-            TextSendMessage(text="無法辨識指令，可試試：「#心得」、「查 奧德賽」、「近期活動」、「急速評星」。\n\n💡 忘記指令？輸入「/規則」即可查看規則喔！")
+            TextSendMessage(text="無法辨識此指令。您可以輸入片名與評分（例如：沙丘 5）、或輸入「/規則」查看詳細說明。")
         )
     except LineBotApiError:
         pass
@@ -1038,7 +993,7 @@ def handle_postback(event):
         # 診斷：檢查 TMDB_API_KEY 是否存在
         tmdb_key = getattr(django_settings, 'TMDB_API_KEY', '')
         if not tmdb_key:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️ 系統設定異常：TMDB API Key 尚未設定，請聯繫管理員在 Render 環境變數中加入 TMDB_API_KEY。"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="系統設定異常：TMDB API Key 尚未設定，請聯繫管理員。"))
             return
         
         movies_data = fetch_random_movies_by_genre(genre_id, count=3)
@@ -1059,7 +1014,7 @@ def handle_postback(event):
         movie = Movie.objects.filter(title=movie_title).first()
         user = User.objects.filter(line_user_id=line_user_id).first()
         if movie and user and Review.objects.filter(user=user, movie=movie).exists():
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"⚠️ 您已經評價過《{movie_title}》囉！"))
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"您已評價過《{movie_title}》。"))
             return
         
         # 顯示評分卡片 (不再使用 Quick Reply)
@@ -1084,11 +1039,11 @@ def handle_postback(event):
         existing_review = Review.objects.filter(user=user, movie=movie).first()
         if existing_review:
             if existing_review.rating == rating and existing_review.content == "":
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"⚠️ 您已經為《{movie_title}》打過 {rating} 星囉！"))
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"您已為《{movie_title}》評過 {rating} 星。"))
             else:
                 existing_review.rating = rating
                 existing_review.save()
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"✅ 已為您將《{movie_title}》的評分更新為 {rating} 星！\n(註：重複評分不會再次獲得經驗值喔)"))
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"已將《{movie_title}》評分更新為 {rating} 星。\n(重複評分不另計經驗值)"))
             return
             
         # Create review with empty content
@@ -1121,7 +1076,7 @@ def handle_postback(event):
         # 評分完畢後自動推送下三部電影
         from api.utils.tmdb import fetch_random_movies_by_genre
         next_movies_data = fetch_random_movies_by_genre(genre_id, count=3)
-        messages_to_send = [FlexSendMessage(alt_text="評分成功！經驗值增加", contents=flex_bubble)]
+        messages_to_send = [FlexSendMessage(alt_text="評分已記錄", contents=flex_bubble)]
         
         if next_movies_data:
             next_movies_flex = get_speed_rate_movies_carousel_flex(next_movies_data, genre_id)

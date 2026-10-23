@@ -8,6 +8,7 @@ import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';
 import CollageCover from '../components/CollageCover';
 import WatchProviderOverlay from '../components/WatchProviderOverlay';
+import SEO from '../components/SEO';
 import { decodeHtml } from '../utils/text';
 import styles from './CuratedListDetail.module.css';
 
@@ -296,6 +297,11 @@ function CuratedListDetail() {
 
   return (
     <div className={styles.container}>
+      <SEO
+        title={`${listData.title}｜主題策展片單 - 映後時光`}
+        description={listData.description || `在映後時光探索「${listData.title}」主題策展片單與電影短評推薦。`}
+        keywords={`${listData.title},主題片單,主題策展片單,電影策展,片單推薦,私房片單,電影推薦,映後時光${listData.hashtags?.length ? ',' + listData.hashtags.map(h => h.name).join(',') : ''}`}
+      />
       {/* 編輯模式橫幅提示 */}
       {isEditing && (
         <div className={styles.editBanner}>

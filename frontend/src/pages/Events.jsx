@@ -8,6 +8,7 @@ import EventCard from '../components/EventCard';
 import EventDetailModal from '../components/EventDetailModal';
 import ListCard from '../components/ListCard';
 import CuratorStudioModal from '../components/CuratorStudioModal';
+import SEO from '../components/SEO';
 import styles from './Events.module.css';
 import { Link } from 'react-router-dom';
 
@@ -94,6 +95,11 @@ function Events() {
 
   return (
     <div className={`container ${styles.pageWrapper}`}>
+      <SEO
+        title="活動廣場｜電影揪團與精選主題片單 - 映後時光"
+        description="在映後時光活動廣場發掘最新觀影揪團活動，輸入 6 碼活動代碼一鍵報名；瀏覽社群精選主題策展片單，與志同道合的觀影同好一同探索好電影！"
+        keywords="電影揪團,觀影揪團,看電影找伴,主題策展片單,主題片單,電影活動,活動代碼,join_code,映後時光"
+      />
       <header className={`flex-between ${styles.header}`}>
         <div>
           <h1 className={styles.title}>廣場</h1>
