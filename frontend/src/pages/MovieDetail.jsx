@@ -278,7 +278,20 @@ function MovieDetail() {
 
                   const hotReviews = reviews.filter(r => !isSpeedRating(r) && r.upvotes > 0).sort((a, b) => b.upvotes - a.upvotes);
                   const normalReviews = reviews.filter(r => !isSpeedRating(r) && r.upvotes === 0);
-                  const speedRatings = reviews.filter(r => isSpeedRating(r));
+                  
+                  // 每位使用者在簡易心得（急速評星）版塊只顯示最新的一筆評分，防止重複卡片
+                  const rawSpeedRatings = reviews
+                    .filter(r => isSpeedRating(r))
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                  const seenSpeedRatingUsers = new Set();
+                  const speedRatings = rawSpeedRatings.filter(r => {
+                    const uid = r.user?.campus_id || r.user?.id;
+                    if (uid) {
+                      if (seenSpeedRatingUsers.has(uid)) return false;
+                      seenSpeedRatingUsers.add(uid);
+                    }
+                    return true;
+                  });
 
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

@@ -178,23 +178,70 @@ class ReviewSerializer(serializers.ModelSerializer):
                     movie.save(update_fields=['media_type'])
             validated_data['movie'] = movie
             
-            user = validated_data.get('user')
-            if user:
-                is_rapid_rating = "急速評星" in tag_names
+            user = validated_data.get('user') or (self.context.get('request') and self.context['request'].user)
+            if user and user.is_authenticated:
+                content_val = validated_data.get('content', '') or ''
+                content_str = content_val.strip()
+                is_rapid_rating = (
+                    "急速評星" in tag_names or 
+                    not content_str or 
+                    content_str == "來自急速評星的無內文評價"
+                )
                 
-                existing_reviews = Review.objects.filter(user=user, movie=movie)
+                existing_reviews = Review.objects.filter(user=user, movie=movie, is_deleted=False)
                 
                 from django.db.models import Q
-                rapid_condition = Q(tags__name="急速評星")
+                rapid_condition = (
+                    Q(tags__name="急速評星") |
+                    Q(content="來自急速評星的無內文評價") |
+                    Q(content="") |
+                    Q(content__isnull=True)
+                )
                 
-                has_rapid = existing_reviews.filter(rapid_condition).exists()
-                has_normal = existing_reviews.exclude(rapid_condition).exists()
+                existing_rapid = existing_reviews.filter(rapid_condition).first()
+                existing_normal = existing_reviews.exclude(rapid_condition).first()
                 
-                if is_rapid_rating and has_rapid:
-                    raise serializers.ValidationError("您已經針對此電影送出過急速評星。")
-                elif not is_rapid_rating and has_normal:
-                    raise serializers.ValidationError("您已經針對此電影撰寫過一般心得。")
-                    
+                if is_rapid_rating:
+                    # 避免重複急速評星：若已存在急速評星紀錄，直接平滑更新評分，不新增第二筆
+                    if existing_rapid:
+                        new_rating = validated_data.get('rating')
+                        if new_rating is not None:
+                            existing_rapid.rating = new_rating
+                        existing_rapid.updated_at = timezone.now()
+                        existing_rapid.save(update_fields=['rating', 'updated_at'])
+                        for name in tag_names:
+                            is_sys = name == movie_title or name in (tmdb_genres if 'tmdb_genres' in locals() else [])
+                            tag, created = Tag.objects.get_or_create(
+                                name=name,
+                                defaults={'is_system': is_sys}
+                            )
+                            existing_rapid.tags.add(tag)
+                        return existing_rapid
+                    elif existing_normal:
+                        raise serializers.ValidationError("您已經針對此電影撰寫過一般心得。")
+                else:
+                    if existing_normal:
+                        raise serializers.ValidationError("您已經針對此電影撰寫過一般心得。")
+                    elif existing_rapid:
+                        # 將既有的急速評星升級為正式完整心得，避免同一作品有兩筆紀錄
+                        existing_rapid.content = content_val
+                        if validated_data.get('rating') is not None:
+                            existing_rapid.rating = validated_data.get('rating')
+                        existing_rapid.is_spoiler = validated_data.get('is_spoiler', False)
+                        if validated_data.get('display_date'):
+                            existing_rapid.display_date = validated_data.get('display_date')
+                        existing_rapid.updated_at = timezone.now()
+                        existing_rapid.save()
+                        # 移除急速評星標籤
+                        existing_rapid.tags.remove(*existing_rapid.tags.filter(name="急速評星"))
+                        for name in tag_names:
+                            is_sys = name == movie_title or name in (tmdb_genres if 'tmdb_genres' in locals() else [])
+                            tag, created = Tag.objects.get_or_create(
+                                name=name,
+                                defaults={'is_system': is_sys}
+                            )
+                            existing_rapid.tags.add(tag)
+                        return existing_rapid
             
             review = Review.objects.create(**validated_data)
             

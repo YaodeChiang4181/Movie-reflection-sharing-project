@@ -161,10 +161,11 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         # Gather user reviewed IDs to exclude
         user_reviewed_movie_ids = set()
         user_reviewed_tmdb_ids = set()
-        
         if request.user.is_authenticated:
-            # Gather IDs of movies already RAPID reviewed by this user
-            user_reviewed_movie_ids = set(Review.objects.filter(user=request.user, tags__name="急速評星").values_list('movie_id', flat=True))
+            # Gather IDs of movies already reviewed or rated by this user (both Web and LINE)
+            user_reviewed_movie_ids = set(
+                Review.objects.filter(user=request.user, is_deleted=False).values_list('movie_id', flat=True)
+            )
             
             # Gather their tmdb_ids to also filter from the TMDB pool
             user_reviewed_tmdb_ids = set(
