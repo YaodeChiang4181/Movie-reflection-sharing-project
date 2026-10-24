@@ -406,8 +406,31 @@ function Profile() {
             {/* 數據格子 */}
             <div className={styles.statsGrid}>
               {(() => {
+                const breakdown = userData?.reviewed_media_breakdown || (() => {
+                  const seenByMedia = { movie: new Set(), tv: new Set(), anime: new Set() };
+                  reviews.forEach(r => {
+                    const mid = r.movie?.id;
+                    const mtype = r.movie?.media_type || 'movie';
+                    if (mid && seenByMedia[mtype]) {
+                      seenByMedia[mtype].add(mid);
+                    }
+                  });
+                  return {
+                    movie: seenByMedia.movie.size,
+                    tv: seenByMedia.tv.size,
+                    anime: seenByMedia.anime.size,
+                  };
+                })();
+
+                const breakdownText = `${breakdown.movie || 0} 電影 · ${breakdown.tv || 0} 影集 · ${breakdown.anime || 0} 動漫`;
+
                 const stats = [
-                  { icon: Film, value: userData?.total_movies_reviewed || totalReviews, label: '已評電影' },
+                  { 
+                    icon: Film, 
+                    value: userData?.total_movies_reviewed || totalReviews, 
+                    label: '已評作品',
+                    subLabel: breakdownText
+                  },
                   { icon: ThumbsUp, value: totalVotes, label: '獲得推薦' },
                   { icon: MessageSquare, value: commentedReviews.length, label: '留言互動' }
                 ];
@@ -417,6 +440,9 @@ function Profile() {
                       <stat.icon size={20} className={styles.statCardIcon} />
                       <span className={styles.statCardValue}>{stat.value}</span>
                       <span className={styles.statCardLabel}>{stat.label}</span>
+                      {stat.subLabel && (
+                        <span className={styles.statCardSubLabel}>{stat.subLabel}</span>
+                      )}
                     </div>
                   ));
               })()}

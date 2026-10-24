@@ -314,6 +314,24 @@
   white-space: nowrap;
 }
 
+.statCardSubLabel {
+  font-size: 0.68rem;
+  color: #C5A059;
+  letter-spacing: 0.2px;
+  margin-top: 2px;
+  white-space: nowrap;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+@media (max-width: 480px) {
+  .statCardSubLabel {
+    font-size: 0.6rem;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
 /* 常用標籤列 */
 .tagsBar {
   display: flex;

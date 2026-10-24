@@ -49,6 +49,7 @@ class UserMeSerializer(serializers.ModelSerializer):
     all_user_tags = serializers.SerializerMethodField()
     rating_distribution = serializers.SerializerMethodField()
     total_movies_reviewed = serializers.SerializerMethodField()
+    reviewed_media_breakdown = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
 
     hosted_events_count = serializers.SerializerMethodField()
@@ -56,7 +57,7 @@ class UserMeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'all_user_tags', 'rating_distribution', 'total_movies_reviewed', 'is_staff', 'avatar', 'email', 'email_verified', 'hosted_events_count', 'attended_events_count')
+        fields = ('id', 'campus_id', 'nickname', 'real_name', 'department', 'date_joined', 'level', 'exp', 'common_tags', 'all_user_tags', 'rating_distribution', 'total_movies_reviewed', 'reviewed_media_breakdown', 'is_staff', 'avatar', 'email', 'email_verified', 'hosted_events_count', 'attended_events_count')
 
     def get_nickname(self, obj):
         if hasattr(obj, 'profile') and obj.profile:
@@ -131,6 +132,21 @@ class UserMeSerializer(serializers.ModelSerializer):
         return Review.objects.filter(
             user=obj, is_deleted=False
         ).values('movie').distinct().count()
+
+    def get_reviewed_media_breakdown(self, obj):
+        from api.models import Review
+        from django.db.models import Count
+        qs = (
+            Review.objects.filter(user=obj, is_deleted=False)
+            .values('movie__media_type')
+            .annotate(count=Count('movie_id', distinct=True))
+        )
+        counts = {item['movie__media_type'] or 'movie': item['count'] for item in qs}
+        return {
+            'movie': counts.get('movie', 0),
+            'tv': counts.get('tv', 0),
+            'anime': counts.get('anime', 0),
+        }
 
     def get_hosted_events_count(self, obj):
         from api.models import Event
