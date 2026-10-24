@@ -37,7 +37,7 @@ function HomeSearchResults({
             onClick={() => setActiveTab('reviews')}
           >
             <MessageCircle size={15} />
-            電影心得 ({reviewsCount})
+            影視作品 ({reviewsCount})
           </button>
           <button
             type="button"
@@ -53,10 +53,10 @@ function HomeSearchResults({
           type="button"
           className={styles.backBtn}
           onClick={onClearSearch}
-          aria-label="返回首頁全部動態"
+          aria-label="返回首頁動態專區"
         >
           <ArrowLeft size={16} />
-          返回全部動態
+          返回動態專區
         </button>
       </div>
 
@@ -121,7 +121,7 @@ function HomeSearchResults({
             <div className={styles.sectionBlock}>
               <h2 className={styles.sectionTitle}>
                 <MessageCircle size={20} color="var(--accent-primary)" />
-                相關影視心得
+                相關影視作品
                 <span className={styles.sectionBadge}>({reviews.length})</span>
               </h2>
               <div className="posterGrid">
@@ -185,7 +185,7 @@ function HomeSearchResults({
 
                     <div className="posterInfo">
                       <div className="posterTitle" title={decodeHtml(review.movie?.title)}>
-                        {decodeHtml(review.movie?.title || '未命名電影')}
+                        {decodeHtml(review.movie?.title || '未命名作品')}
                       </div>
                       <div className="posterMeta">
                         {review.rating !== null && review.rating > 0 && (
@@ -194,7 +194,11 @@ function HomeSearchResults({
                           </span>
                         )}
                         <span className="posterDate">
-                          {new Date(review.effective_date || review.created_at).toLocaleDateString('zh-TW')}
+                          {review.movie?.review_count > 1 ? (
+                            `共 ${review.movie.review_count} 篇心得`
+                          ) : (
+                            new Date(review.effective_date || review.created_at).toLocaleDateString('zh-TW')
+                          )}
                         </span>
                       </div>
                     </div>

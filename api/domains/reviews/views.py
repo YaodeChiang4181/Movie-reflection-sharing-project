@@ -14,6 +14,7 @@ from api.utils.tmdb import (
 )
 from api.domains.gamification.services import add_user_experience
 import random
+import re
 
 class MovieViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Movie.objects.annotate(
@@ -431,7 +432,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def search(self, request):
-        query = request.query_params.get('q', '')
+        query = request.query_params.get('q', '').strip()
         if not query:
             return Response([])
             
@@ -455,38 +456,110 @@ class ReviewViewSet(viewsets.ModelViewSet):
             else:
                 results = self.get_queryset().exclude(movie_id__in=top_20_ids).distinct()
                 
-            # 加上同樣的 annotate 確保 order_by 不出錯
             results = results.annotate(
                 match_priority=Value(1, output_field=IntegerField()),
                 occurrences=Value(1, output_field=IntegerField())
-            ).order_by('-created_at')
+            ).order_by(
+                Case(When(rating__isnull=False, then=Value(1)), default=Value(2), output_field=IntegerField()),
+                '-rating',
+                '-created_at'
+            )
             
         else:
-            query_len = len(query)
-            results = self.get_queryset().filter(
-                Q(movie__title__icontains=query) | 
-                Q(movie__original_title__icontains=query) | 
-                Q(content__icontains=query) | 
-                Q(tags__name__icontains=query) | 
-                Q(user__profile__nickname__icontains=query)
-            ).distinct().annotate(
-            match_priority=Case(
-                When(movie__title__icontains=query, then=Value(1)),
-                When(movie__original_title__icontains=query, then=Value(1)),
-                When(user__profile__nickname__icontains=query, then=Value(2)),
-                When(content__icontains=query, then=Value(3)),
-                When(tags__name__icontains=query, then=Value(4)),
-                default=Value(5),
-                output_field=IntegerField(),
-            ),
-            occurrences=Case(
-                When(content__icontains=query, then=(Length('content') - Length(Replace('content', Value(query), Value('')))) / query_len),
-                default=Value(0),
-                output_field=IntegerField(),
-            )
-        ).order_by('match_priority', '-occurrences', '-created_at')
+            # 支援類別關鍵字語意對映 (例如搜尋「電影」能直接抓出全站電影心得)
+            CATEGORY_MAP = {
+                'movie': {'電影', 'movie', 'movies', '院線片', '片子', '電影心得'},
+                'tv': {'影集', '電視劇', '劇集', '美劇', '日劇', '韓劇', '台劇', '陸劇', 'tv', 'series', '連續劇', '影集心得', '電視劇心得'},
+                'anime': {'動漫', '動畫', '新番', '番劇', '二次元', 'anime', 'animation', '動漫心得', '動畫心得'},
+            }
 
-        serializer = self.get_serializer(results, many=True)
+            clean_q = re.sub(r'^[#【\[]\s*|\s*[】\]]$', '', query.lower())
+            matched_media_type = None
+            for m_type, keywords in CATEGORY_MAP.items():
+                if clean_q in keywords:
+                    matched_media_type = m_type
+                    break
+
+            query_len = max(len(query), 1)
+
+            if matched_media_type:
+                search_filter = (
+                    Q(movie__media_type=matched_media_type) |
+                    Q(movie__title__icontains=query) |
+                    Q(movie__original_title__icontains=query) |
+                    Q(content__icontains=query) |
+                    Q(tags__name__icontains=query)
+                )
+                results = self.get_queryset().filter(search_filter).distinct().annotate(
+                    match_priority=Case(
+                        When(movie__title__iexact=query, then=Value(1)),
+                        When(movie__title__icontains=query, then=Value(2)),
+                        When(movie__media_type=matched_media_type, then=Value(3)),
+                        default=Value(4),
+                        output_field=IntegerField(),
+                    ),
+                    occurrences=Case(
+                        When(content__icontains=query, then=(Length('content') - Length(Replace('content', Value(query), Value('')))) / query_len),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    )
+                )
+            else:
+                search_filter = (
+                    Q(movie__title__icontains=query) | 
+                    Q(movie__original_title__icontains=query) | 
+                    Q(content__icontains=query) | 
+                    Q(tags__name__icontains=query) | 
+                    Q(user__profile__nickname__icontains=query)
+                )
+                results = self.get_queryset().filter(search_filter).distinct().annotate(
+                    match_priority=Case(
+                        When(movie__title__iexact=query, then=Value(1)),
+                        When(movie__title__icontains=query, then=Value(2)),
+                        When(movie__original_title__icontains=query, then=Value(2)),
+                        When(user__profile__nickname__icontains=query, then=Value(3)),
+                        When(content__icontains=query, then=Value(4)),
+                        When(tags__name__icontains=query, then=Value(5)),
+                        default=Value(6),
+                        output_field=IntegerField(),
+                    ),
+                    occurrences=Case(
+                        When(content__icontains=query, then=(Length('content') - Length(Replace('content', Value(query), Value('')))) / query_len),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    )
+                )
+
+            # 依相關度、出現頻率、是否有給評分、評分高低、發布時間排序
+            results = results.order_by(
+                'match_priority',
+                '-occurrences',
+                Case(When(rating__isnull=False, then=Value(1)), default=Value(2), output_field=IntegerField()),
+                '-rating',
+                '-created_at'
+            )
+
+        # 作品去重：同部電影/影集/動漫只保留一筆品質最高且最契合的代表心得，避免卡片重複出現
+        seen_movie_ids = set()
+        deduped_results = []
+        for review in results:
+            if review.movie_id not in seen_movie_ids:
+                seen_movie_ids.add(review.movie_id)
+                deduped_results.append(review)
+
+        # 附加上每部作品在全站擁有的心得總數，供前端卡片呈現「共 N 篇心得」
+        if deduped_results:
+            movie_ids = [r.movie_id for r in deduped_results]
+            counts = dict(
+                Review.objects.filter(movie_id__in=movie_ids, is_deleted=False)
+                .values('movie_id')
+                .annotate(c=Count('id'))
+                .values_list('movie_id', 'c')
+            )
+            for r in deduped_results:
+                r.movie.review_count = counts.get(r.movie_id, 1)
+
+        serializer = self.get_serializer(deduped_results, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])

@@ -66,8 +66,18 @@ function Search() {
         api.get(`reviews/search/?q=${encodeURIComponent(searchQuery)}`),
         api.get(`lists/search/?q=${encodeURIComponent(searchQuery)}`)
       ]);
-      setResults(reviewsRes.data);
-      setListResults(listsRes.data);
+      const rawReviews = Array.isArray(reviewsRes.data) ? reviewsRes.data : (reviewsRes.data?.results || []);
+      const seenMovieIds = new Set();
+      const dedupedReviews = rawReviews.filter(r => {
+        const mid = r.movie?.id;
+        if (mid) {
+          if (seenMovieIds.has(mid)) return false;
+          seenMovieIds.add(mid);
+        }
+        return true;
+      });
+      setResults(dedupedReviews);
+      setListResults(Array.isArray(listsRes.data) ? listsRes.data : (listsRes.data?.results || []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -166,7 +176,7 @@ function Search() {
             onClick={() => setActiveTab('reviews')}
             style={{ padding: '8px 24px', borderRadius: '20px', background: activeTab === 'reviews' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)', color: activeTab === 'reviews' ? 'var(--bg-primary)' : 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <MessageCircle size={16} /> 心得
+            <MessageCircle size={16} /> 影視作品
           </button>
           <button
             onClick={() => setActiveTab('lists')}
@@ -220,14 +230,34 @@ function Search() {
           {(activeTab === 'all' || activeTab === 'reviews') && results.length > 0 && (
             <div>
               <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MessageCircle size={24} color="var(--accent-primary)" /> 相關影評心得
+                <MessageCircle size={24} color="var(--accent-primary)" /> 相關影視作品
               </h2>
               <div className="posterGrid">
                 {results.map(review => (
                   <div key={review.id} className="posterCard" onClick={() => {
                     if (review.movie?.id) navigate(`/movies/${review.movie.id}`);
                   }}>
-                    <div className="posterWrapper">
+                    <div className="posterWrapper" style={{ position: 'relative' }}>
+                      {review.movie?.media_type && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '8px',
+                          left: '8px',
+                          background: 'rgba(20, 20, 20, 0.75)',
+                          backdropFilter: 'blur(6px)',
+                          WebkitBackdropFilter: 'blur(6px)',
+                          border: '1px solid rgba(197, 160, 89, 0.35)',
+                          color: '#C5A059',
+                          fontSize: '0.7rem',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontWeight: '600',
+                          zIndex: 2,
+                          pointerEvents: 'none'
+                        }}>
+                          {review.movie.media_type === 'tv' ? '影集' : review.movie.media_type === 'anime' ? '動漫' : '電影'}
+                        </span>
+                      )}
                       {review.movie?.poster_url ? (
                         <img src={review.movie.poster_url} alt="poster" className="posterImg" />
                       ) : (
@@ -246,12 +276,18 @@ function Search() {
                       </div>
                     </div>
                     <div className="posterInfo">
-                      <div className="posterTitle">{review.movie?.title || '未命名電影'}</div>
+                      <div className="posterTitle">{review.movie?.title || '未命名作品'}</div>
                       <div className="posterMeta">
                         {review.rating !== null && review.rating > 0 && (
                           <span className="posterRating"><Star size={12} fill="currentColor" /> {review.rating}/5</span>
                         )}
-                        <span className="posterDate">{new Date(review.effective_date || review.created_at).toLocaleDateString('zh-TW')}</span>
+                        <span className="posterDate">
+                          {review.movie?.review_count > 1 ? (
+                            `共 ${review.movie.review_count} 篇心得`
+                          ) : (
+                            new Date(review.effective_date || review.created_at).toLocaleDateString('zh-TW')
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>

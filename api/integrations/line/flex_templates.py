@@ -1274,7 +1274,7 @@ def get_stage_one_rating_flex(movie, rating, liff_url):
         },
         {
             "type": "text",
-            "text": "散場步出影廳，這部電影留在你心底的是哪一句話？直接在此回覆即可。",
+            "text": "映後，這部作品留在你心底的是哪一句話？直接在此回覆即可。",
             "size": "sm",
             "color": "#AAAAAA",
             "margin": "lg",

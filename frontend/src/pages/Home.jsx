@@ -203,7 +203,17 @@ function Home() {
         api.get(`reviews/search/?q=${encodeURIComponent(cleanTerm)}`),
         api.get(`lists/search/?q=${encodeURIComponent(cleanTerm)}`)
       ]);
-      setSearchResults(Array.isArray(reviewsRes.data) ? reviewsRes.data : (reviewsRes.data?.results || []));
+      const rawReviews = Array.isArray(reviewsRes.data) ? reviewsRes.data : (reviewsRes.data?.results || []);
+      const seenMovieIds = new Set();
+      const dedupedReviews = rawReviews.filter(r => {
+        const mid = r.movie?.id;
+        if (mid) {
+          if (seenMovieIds.has(mid)) return false;
+          seenMovieIds.add(mid);
+        }
+        return true;
+      });
+      setSearchResults(dedupedReviews);
       setListResults(Array.isArray(listsRes.data) ? listsRes.data : (listsRes.data?.results || []));
     } catch (err) {
       console.error("Home search failed:", err);
@@ -569,7 +579,7 @@ function Home() {
                     <div className="hero-quote-content">
                       <div className="hero-quote-mark">“</div>
                       <div className="hero-quote-text" style={{ color: 'var(--text-muted)', fontStyle: 'normal' }}>
-                        這部電影在等你的意見呢
+                        這部作品在等你的意見呢
                       </div>
                     </div>
                   )}
@@ -650,90 +660,90 @@ function Home() {
             </button>
           </div>
 
-      <div className="home-layout">
-        {/* 左側 70%：資訊流 */}
-        <div>
-          {isLoading ? (
-            <div style={{ display: 'grid', gap: '16px' }}>
-              {[1, 2, 3, 4].map((n) => (
-                <div key={n} className="glass" style={{ padding: '16px 24px', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
-                    <div className="skeleton skeleton-list-poster" />
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <div className="skeleton skeleton-title" style={{ width: '50%', height: '1.5rem', marginBottom: '8px' }} />
-                      <div className="skeleton skeleton-text" style={{ width: '30%', height: '1rem', marginBottom: '0' }} />
+          <div className="home-layout">
+            {/* 左側 70%：資訊流 */}
+            <div>
+              {isLoading ? (
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} className="glass" style={{ padding: '16px 24px', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+                        <div className="skeleton skeleton-list-poster" />
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                          <div className="skeleton skeleton-title" style={{ width: '50%', height: '1.5rem', marginBottom: '8px' }} />
+                          <div className="skeleton skeleton-text" style={{ width: '30%', height: '1rem', marginBottom: '0' }} />
+                        </div>
+                      </div>
+                      <div className="skeleton skeleton-text" style={{ width: '80px', height: '2rem', borderRadius: '20px', marginBottom: '0' }} />
                     </div>
-                  </div>
-                  <div className="skeleton skeleton-text" style={{ width: '80px', height: '2rem', borderRadius: '20px', marginBottom: '0' }} />
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : feedItems.length === 0 ? (
-            <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-              <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前沒有任何動態</h2>
-            </div>
-          ) : (
-            <div className="posterGrid">
-              {feedItems.map(item => (
-                <FeedCard key={`${item.feed_type}-${item.id}`} item={item} onClick={() => handleCardClick(item)} />
-              ))}
-            </div>
-          )}
+              ) : feedItems.length === 0 ? (
+                <div className="glass" style={{ padding: '40px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                  <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>目前沒有任何動態</h2>
+                </div>
+              ) : (
+                <div className="posterGrid">
+                  {feedItems.map(item => (
+                    <FeedCard key={`${item.feed_type}-${item.id}`} item={item} onClick={() => handleCardClick(item)} />
+                  ))}
+                </div>
+              )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
-              >
-                上一頁
-              </button>
-              <span style={{ color: 'var(--text-secondary)' }}>第 {currentPage} 頁 / 共 {totalPages} 頁</span>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
-              >
-                下一頁
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* 右側 30%：功能操作面板 */}
-        <div className="home-action-panel">
-          <div className="editorial-action-block">
-            <div className="editorial-header">人群散場後</div>
-            <div className="editorial-content">
-              <p>這部電影，</p>
-              <p>你看完想說什麼？</p>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                  >
+                    上一頁
+                  </button>
+                  <span style={{ color: 'var(--text-secondary)' }}>第 {currentPage} 頁 / 共 {totalPages} 頁</span>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                  >
+                    下一頁
+                  </button>
+                </div>
+              )}
             </div>
 
-            <button className="editorial-btn" onClick={handleComposeClick}>
-              [ 寫下觀後感 ]
-            </button>
+            {/* 右側 30%：功能操作面板 */}
+            <div className="home-action-panel">
+              <div className="editorial-action-block">
+                <div className="editorial-header">人群散場後</div>
+                <div className="editorial-content">
+                  <p>這部作品，</p>
+                  <p>你看完想說什麼？</p>
+                </div>
 
-            <div className="editorial-or">或</div>
+                <button className="editorial-btn" onClick={handleComposeClick}>
+                  [ 寫下觀後感 ]
+                </button>
 
-            <button className="editorial-btn" onClick={() => {
-              if (!isLoggedIn) {
-                alert('請先登入才能使用急速評星。');
-                navigate('/auth');
-                return;
-              }
-              setIsSpeedRatingOpen(true);
-            }}>
-              [ 急速評星 ]
-            </button>
+                <div className="editorial-or">或</div>
 
-            <button className="editorial-btn-secondary" onClick={handleDriftClick} style={{ marginTop: '32px' }}>
-              尋找影迷漂流瓶
-            </button>
+                <button className="editorial-btn" onClick={() => {
+                  if (!isLoggedIn) {
+                    alert('請先登入才能使用急速評星。');
+                    navigate('/auth');
+                    return;
+                  }
+                  setIsSpeedRatingOpen(true);
+                }}>
+                  [ 急速評星 ]
+                </button>
+
+                <button className="editorial-btn-secondary" onClick={handleDriftClick} style={{ marginTop: '32px' }}>
+                  尋找影迷漂流瓶
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
         </>
       )}
 
@@ -762,7 +772,7 @@ function Home() {
 
       {/* Curator Studio Modal */}
       {isCuratorStudioOpen && (
-        <CuratorStudioModal 
+        <CuratorStudioModal
           onClose={() => setIsCuratorStudioOpen(false)}
           onSuccess={(newList) => {
             setIsCuratorStudioOpen(false);

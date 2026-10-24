@@ -253,7 +253,23 @@ class MovieListViewSet(viewsets.GenericViewSet):
         if not q:
             return Response([])
 
+        CATEGORY_MAP = {
+            'movie': {'電影', 'movie', 'movies', '院線片', '片子', '電影心得'},
+            'tv': {'影集', '電視劇', '劇集', '美劇', '日劇', '韓劇', '台劇', '陸劇', 'tv', 'series', '連續劇', '影集心得', '電視劇心得'},
+            'anime': {'動漫', '動畫', '新番', '番劇', '二次元', 'anime', 'animation', '動漫心得', '動畫心得'},
+        }
+        import re
+        clean_q = re.sub(r'^[#【\[]\s*|\s*[】\]]$', '', q.lower())
+        matched_media_type = None
+        for m_type, keywords in CATEGORY_MAP.items():
+            if clean_q in keywords:
+                matched_media_type = m_type
+                break
+
+        category_filter = Q(items__movie__media_type=matched_media_type) if matched_media_type else Q()
+
         qs = self.get_queryset().filter(
+            category_filter |
             Q(title__icontains=q) |
             Q(description__icontains=q) |
             Q(hashtags__contains=[q]) |
