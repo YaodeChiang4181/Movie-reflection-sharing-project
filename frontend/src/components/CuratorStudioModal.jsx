@@ -111,7 +111,7 @@ const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '', editD
     setIsSyncing(true);
 
     try {
-      const syncRes = await api.post('movies/sync/', { tmdb_id: movieId });
+      const syncRes = await api.post('movies/sync/', { tmdb_id: movieId, media_type: movie.media_type });
       const localMovieId = syncRes.data.id;
 
       setFormData(prev => ({
@@ -281,7 +281,7 @@ const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '', editD
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div style={{ background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '12px' }}>
-                <h3 style={{ margin: '0 0 16px 0', color: 'white', fontSize: '1.1rem' }}>新增電影</h3>
+                <h3 style={{ margin: '0 0 16px 0', color: 'white', fontSize: '1.1rem' }}>新增收錄作品（電影/影集/動漫）</h3>
                 <div style={{ position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0 16px', marginBottom: '16px' }}>
                     <Search size={18} style={{ color: 'var(--text-muted)' }} />
@@ -289,7 +289,7 @@ const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '', editD
                       type="text"
                       value={searchQuery}
                       onChange={handleSearchChange}
-                      placeholder="輸入電影名稱搜尋..."
+                      placeholder="輸入作品名稱搜尋..."
                       style={{ flex: 1, padding: '12px', background: 'transparent', border: 'none', color: 'white', outline: 'none' }}
                     />
                     {isSearching && <Loader2 size={18} className="animate-spin" style={{ color: 'var(--text-muted)' }} />}
@@ -307,7 +307,21 @@ const CuratorStudioModal = ({ onClose, onSuccess, initialSearchQuery = '', editD
                             </div>
                           )}
                           <div style={{ flex: 1 }}>
-                            <div style={{ color: 'white', fontWeight: 'bold' }}>{m.title}</div>
+                            <div style={{ color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span>{m.title}</span>
+                              {m.media_type_label && (
+                                <span style={{
+                                  fontSize: '0.7rem',
+                                  padding: '1px 5px',
+                                  borderRadius: '3px',
+                                  background: m.media_type === 'tv' ? 'rgba(197, 160, 89, 0.2)' : m.media_type === 'anime' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                                  color: m.media_type === 'tv' ? '#C5A059' : m.media_type === 'anime' ? '#93C5FD' : '#D1D5DB',
+                                  fontWeight: '600'
+                                }}>
+                                  {m.media_type_label}
+                                </span>
+                              )}
+                            </div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{m.release_date || m.release_year || m.original_title}</div>
                           </div>
                           <Plus size={20} style={{ color: 'var(--accent-primary)' }} />

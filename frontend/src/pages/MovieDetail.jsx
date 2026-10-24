@@ -146,7 +146,23 @@ function MovieDetail() {
                 <ArrowLeft size={24} />
                 <span style={{ fontSize: '0.9rem' }}>返回</span>
               </button>
-              <h1 className={styles.title} style={{ textAlign: 'center', margin: 0 }}>{movie.title}</h1>
+              <h1 className={styles.title} style={{ textAlign: 'center', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <span>{movie.title}</span>
+                {movie.media_type && (
+                  <span style={{
+                    fontSize: '0.78rem',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    background: movie.media_type === 'tv' ? 'rgba(197, 160, 89, 0.2)' : movie.media_type === 'anime' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                    color: movie.media_type === 'tv' ? '#C5A059' : movie.media_type === 'anime' ? '#93C5FD' : '#D1D5DB',
+                    border: '1px solid currentColor',
+                    fontWeight: '600',
+                    verticalAlign: 'middle'
+                  }}>
+                    {movie.media_type === 'tv' ? '影集' : movie.media_type === 'anime' ? '動漫' : '電影'}
+                  </span>
+                )}
+              </h1>
             </div>
             {movie.original_title && (
               <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.2rem', fontStyle: 'italic', letterSpacing: '0.5px' }}>

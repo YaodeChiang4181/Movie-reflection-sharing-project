@@ -5,17 +5,39 @@ import TmdbPoster from './TmdbPoster';
 import styles from './EventCard.module.css';
 
 function FeedCard({ item, onClick }) {
-  if (item.feed_type === 'MOVIE') {
+  if (item.feed_type === 'MOVIE' || item.feed_type === 'TV' || item.feed_type === 'ANIME' || !item.feed_type) {
+    const isTv = item.feed_type === 'TV';
+    const isAnime = item.feed_type === 'ANIME';
+    const label = isTv ? '影集' : isAnime ? '動漫' : '電影';
+
     return (
       <div 
         className="posterCard" 
         onClick={onClick}
       >
-        <div className="posterWrapper">
+        <div className="posterWrapper" style={{ position: 'relative' }}>
+          <span style={{
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            background: 'rgba(20, 20, 20, 0.75)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            border: '1px solid rgba(197, 160, 89, 0.35)',
+            color: '#C5A059',
+            fontSize: '0.7rem',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            fontWeight: '600',
+            zIndex: 2,
+            pointerEvents: 'none'
+          }}>
+            {label}
+          </span>
           <TmdbPoster title={item.title} posterUrl={item.poster_url} className="posterImg" />
           <div className="posterOverlay">
             <button className="overlayBtn">
-              <MessageCircle size={16} /> 查看電影
+              <MessageCircle size={16} /> 查看{label}
             </button>
           </div>
         </div>

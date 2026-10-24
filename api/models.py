@@ -78,9 +78,16 @@ class Movie(models.Model):
     title = models.CharField(max_length=200)
     original_title = models.CharField(max_length=200, blank=True, null=True)
     tmdb_id = models.IntegerField(blank=True, null=True)
+    media_type = models.CharField(
+        max_length=20, 
+        choices=(('movie', '電影'), ('tv', '影集'), ('anime', '動漫')), 
+        default='movie', 
+        db_index=True,
+        verbose_name="作品類型"
+    )
     poster_url = models.URLField(max_length=500, blank=True, null=True)
-    director = models.CharField(max_length=100)
-    release_year = models.IntegerField()
+    director = models.CharField(max_length=100, blank=True, default='')
+    release_year = models.IntegerField(default=0)
     
     def __str__(self):
         return self.title

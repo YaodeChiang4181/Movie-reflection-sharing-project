@@ -27,8 +27,38 @@ GENRE_MAP = {
     10770: "電視電影",
     53: "驚悚",
     10752: "戰爭",
-    37: "西部"
+    37: "西部",
+    10759: "動作冒險",
+    10762: "兒童",
+    10763: "新聞",
+    10764: "真人秀",
+    10765: "科幻奇幻",
+    10766: "肥皂劇",
+    10767: "脫口秀",
+    10768: "戰爭政治"
 }
+
+def determine_media_type(item):
+    """
+    Determine whether a TMDB item should be categorized as 'anime', 'tv', or 'movie'.
+    - If genre 16 ('動畫' / 'Animation') is present in genre_ids or genres -> 'anime'
+    - Else if media_type == 'tv' -> 'tv'
+    - Else -> 'movie'
+    """
+    if not item:
+        return 'movie'
+    
+    genre_ids = item.get('genre_ids') or []
+    if not genre_ids and item.get('genres'):
+        genre_ids = [g.get('id') for g in item.get('genres') if isinstance(g, dict) and g.get('id')]
+        
+    if 16 in genre_ids:
+        return 'anime'
+        
+    tmdb_type = item.get('media_type')
+    if tmdb_type == 'tv':
+        return 'tv'
+    return 'movie'
 
 DEFAULT_TMDB_API_KEY = '9f47183d5f6d186439851ec7c0555109'
 
@@ -141,17 +171,28 @@ def fetch_movie_metadata(movie_title):
                 print(f"TMDB Images Fetch Error: {e}")
 
         poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
-        
+        release_date = best_match.get('release_date') or best_match.get('first_air_date') or ''
+        release_year = None
+        if release_date:
+            try:
+                release_year = int(release_date.split('-')[0])
+            except:
+                pass
+
+        classified_type = determine_media_type(best_match)
+
         return {
             'tmdb_id': tmdb_id,
             'original_title': best_match.get('original_title') or best_match.get('original_name'),
             'localized_title': best_match.get('title') or best_match.get('name'),
             'genres': genres,
             'poster_url': poster_url,
+            'release_year': release_year,
+            'media_type': classified_type,
         }
     return None
 
-def get_or_create_movie(movie_title):
+def get_or_create_movie(movie_title, media_type_hint=None):
     """
     Helper to get or create a Movie instance using TMDB metadata if available.
     Returns (Movie instance, created (bool), tmdb_genres (list))
@@ -159,7 +200,11 @@ def get_or_create_movie(movie_title):
     tmdb_meta = fetch_movie_metadata(movie_title)
     tmdb_genres = tmdb_meta['genres'] if tmdb_meta else []
     
-    movie_defaults = {'director': 'Unknown', 'release_year': timezone.now().year}
+    movie_defaults = {
+        'director': '', 
+        'release_year': timezone.now().year,
+        'media_type': media_type_hint or 'movie'
+    }
     
     final_title = movie_title
     
@@ -172,6 +217,10 @@ def get_or_create_movie(movie_title):
             movie_defaults['tmdb_id'] = tmdb_meta['tmdb_id']
         if tmdb_meta.get('poster_url'):
             movie_defaults['poster_url'] = tmdb_meta['poster_url']
+        if tmdb_meta.get('release_year'):
+            movie_defaults['release_year'] = tmdb_meta['release_year']
+        if tmdb_meta.get('media_type'):
+            movie_defaults['media_type'] = tmdb_meta['media_type']
             
     # Try to find existing movie by tmdb_id to avoid duplicates from different query inputs
     if tmdb_meta and tmdb_meta.get('tmdb_id'):
@@ -184,8 +233,11 @@ def get_or_create_movie(movie_title):
             if 'original_title' in movie_defaults and movie.original_title != movie_defaults['original_title']:
                 movie.original_title = movie_defaults['original_title']
                 updated = True
+            if 'media_type' in movie_defaults and movie.media_type != movie_defaults['media_type']:
+                movie.media_type = movie_defaults['media_type']
+                updated = True
             if updated:
-                movie.save(update_fields=['title', 'original_title'])
+                movie.save(update_fields=['title', 'original_title', 'media_type'])
             return movie, False, tmdb_genres
             
     movie, created = Movie.objects.get_or_create(
@@ -278,8 +330,8 @@ def fetch_random_movies_by_genre(genre_id, count=3):
 
 def search_tmdb_movies(query):
     """
-    Search TMDB for movies matching the query.
-    Returns a list of dicts with 'id', 'title', 'original_title', 'release_date', 'poster_url'.
+    Search TMDB for movies, TV series, and anime matching the query.
+    Returns a list of dicts with 'id', 'title', 'original_title', 'release_date', 'poster_url', 'media_type', 'media_type_label'.
     """
     api_key = get_tmdb_api_key()
     if not api_key or not query.strip():
@@ -287,27 +339,36 @@ def search_tmdb_movies(query):
 
     try:
         encoded_query = urllib.parse.quote(query.strip())
-        url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&language=zh-TW&query={encoded_query}&page=1"
+        url = f"https://api.themoviedb.org/3/search/multi?api_key={api_key}&language=zh-TW&query={encoded_query}&page=1"
         
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=5) as response:
             data = json.loads(response.read().decode('utf-8'))
             results = []
             
-            for item in data.get('results', [])[:10]:
+            raw_results = [r for r in data.get('results', []) if r.get('media_type') in ['movie', 'tv']]
+            
+            type_labels = {'movie': '電影', 'tv': '影集', 'anime': '動漫'}
+            for item in raw_results[:12]:
                 poster_path = item.get('poster_path')
                 poster_url = f"https://image.tmdb.org/t/p/w200{poster_path}" if poster_path else None
-                release_date = item.get('release_date', '')
+                release_date = item.get('release_date') or item.get('first_air_date') or ''
                 year = release_date.split('-')[0] if release_date else '未知年份'
+                
+                title = item.get('title') or item.get('name') or ''
+                original_title = item.get('original_title') or item.get('original_name') or ''
+                classified_type = determine_media_type(item)
                 
                 results.append({
                     'tmdb_id': item.get('id'),
                     'id': item.get('id'),
-                    'title': item.get('title'),
-                    'original_title': item.get('original_title') or '',
+                    'title': title,
+                    'original_title': original_title,
                     'year': year,
                     'release_year': year,
                     'poster_url': poster_url,
+                    'media_type': classified_type,
+                    'media_type_label': type_labels.get(classified_type, '電影')
                 })
             return results
     except Exception as e:
@@ -315,46 +376,89 @@ def search_tmdb_movies(query):
         
     return []
 
-def fetch_movie_metadata_by_id(tmdb_id):
+def fetch_movie_metadata_by_id(tmdb_id, media_type=None):
     """
     Fetch TMDB metadata exact match by tmdb_id.
+    Supports both movies and TV series/anime.
     """
     api_key = get_tmdb_api_key()
     if not api_key:
         return None
 
-    try:
-        url = f"https://api.themoviedb.org/3/movie/{tmdb_id}?api_key={api_key}&language=zh-TW"
-        
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode('utf-8'))
-            
-            genres = [g['name'] for g in data.get('genres', [])][:5]
-            
-            poster_path = data.get('poster_path')
-            poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
-            
-            release_date = data.get('release_date', '')
-            release_year = None
-            if release_date:
-                try:
-                    release_year = int(release_date.split('-')[0])
-                except:
-                    pass
-            
-            return {
-                'tmdb_id': data.get('id'),
-                'title': data.get('title'),
-                'original_title': data.get('original_title'),
-                'genres': genres,
-                'poster_url': poster_url,
-                'release_year': release_year,
-            }
-    except Exception as e:
-        print(f"TMDB Fetch Metadata By ID Error: {e}")
+    if not media_type:
+        local = Movie.objects.filter(tmdb_id=tmdb_id).first()
+        if local:
+            media_type = local.media_type
+
+    endpoints = []
+    if media_type in ['tv', 'anime']:
+        endpoints = ['tv', 'movie']
+    elif media_type == 'movie':
+        endpoints = ['movie', 'tv']
+    else:
+        endpoints = ['movie', 'tv']
+
+    for ep in endpoints:
+        try:
+            url = f"https://api.themoviedb.org/3/{ep}/{tmdb_id}?api_key={api_key}&language=zh-TW"
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode('utf-8'))
+                data['media_type'] = ep
+                
+                genres = [g['name'] for g in data.get('genres', [])][:5]
+                poster_path = data.get('poster_path')
+                poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else None
+                
+                release_date = data.get('release_date') or data.get('first_air_date') or ''
+                release_year = None
+                if release_date:
+                    try:
+                        release_year = int(release_date.split('-')[0])
+                    except:
+                        pass
+                
+                classified_type = determine_media_type(data)
+                
+                return {
+                    'tmdb_id': data.get('id'),
+                    'title': data.get('title') or data.get('name'),
+                    'localized_title': data.get('title') or data.get('name'),
+                    'original_title': data.get('original_title') or data.get('original_name'),
+                    'genres': genres,
+                    'poster_url': poster_url,
+                    'release_year': release_year,
+                    'media_type': classified_type,
+                }
+        except Exception:
+            continue
         
     return None
+
+def find_disambiguation_candidates(query):
+    """
+    Check if a query has diverse media_types (e.g. anime vs tv vs movie)
+    and return up to 3 diverse candidates for LINE Bot clarification.
+    """
+    results = search_tmdb_movies(query)
+    if not results:
+        return []
+        
+    seen_types = set()
+    diverse_candidates = []
+    
+    for r in results:
+        mtype = r.get('media_type', 'movie')
+        if mtype not in seen_types:
+            seen_types.add(mtype)
+            diverse_candidates.append(r)
+        if len(diverse_candidates) >= 3:
+            break
+            
+    if len(seen_types) > 1:
+        return diverse_candidates
+        
+    return []
 
 
 def fetch_tmdb_popular_pool(pool_size=50):
@@ -448,7 +552,8 @@ def fetch_watch_providers(tmdb_id, media_type='movie', region='TW'):
         return {}
 
     try:
-        url = f"https://api.themoviedb.org/3/{media_type}/{tmdb_id}/watch/providers?api_key={api_key}"
+        tmdb_ep = 'tv' if media_type in ['tv', 'anime'] else 'movie'
+        url = f"https://api.themoviedb.org/3/{tmdb_ep}/{tmdb_id}/watch/providers?api_key={api_key}"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=5) as response:
             data = json.loads(response.read().decode('utf-8'))

@@ -7,7 +7,7 @@ from linebot.models import (
 )
 from api.models import Review, Tag, LineBotState
 from api.domains.gamification.services import add_user_experience
-from api.utils.tmdb import get_or_create_movie
+from api.utils.tmdb import get_or_create_movie, find_disambiguation_candidates
 from .flex_templates import (
     get_stage_one_rating_flex, get_stage_two_completed_flex
 )
@@ -73,6 +73,22 @@ def handle_stage_one_rating(user, line_user_id, movie_title, rating, extra_data=
     """
     第一階段：極速評星收錄與狀態鎖定
     """
+    # 檢查是否有同名歧義版本（例如動漫 vs 真人影集）
+    year_match = re.search(r'\b(19\d{2}|20\d{2})\b', movie_title)
+    if not year_match:
+        candidates = find_disambiguation_candidates(movie_title)
+        if len(candidates) > 1:
+            qr_buttons = []
+            for cand in candidates[:3]:
+                type_label = cand.get('media_type_label', '作品')
+                year_str = cand.get('year', '')
+                btn_label = f"{year_str} {type_label}".strip()[:20]
+                action_text = f"{cand['title']} {year_str} {rating}星"
+                qr_buttons.append(QuickReplyButton(action=MessageAction(label=btn_label, text=action_text)))
+                
+            msg_text = f"檢索到多部《{movie_title}》，請點選欲評分的作品版本："
+            return TextSendMessage(text=msg_text, quick_reply=QuickReply(items=qr_buttons))
+
     movie, _, tmdb_genres = get_or_create_movie(movie_title)
 
     # 建立或更新評價 (防止重複評價洗經驗)

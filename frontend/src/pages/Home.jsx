@@ -60,7 +60,7 @@ function Home() {
   const [isCuratorStudioOpen, setIsCuratorStudioOpen] = useState(false);
 
   const [feedItems, setFeedItems] = useState([]);
-  const [feedType, setFeedType] = useState('all'); // 'all', 'movies', 'events'
+  const [feedType, setFeedType] = useState('movies'); // 'movies' (左), 'tv' (中), 'anime' (右)
   const [isLoading, setIsLoading] = useState(true);
 
   const [heroItems, setHeroItems] = useState([]);
@@ -411,10 +411,10 @@ function Home() {
   };
 
   const handleCardClick = (item) => {
-    if (item.feed_type === 'MOVIE') {
-      navigate(`/movies/${item.id}`);
-    } else {
+    if (item.feed_type === 'EVENT') {
       setSelectedEvent(item);
+    } else {
+      navigate(`/movies/${item.id}`);
     }
   };
   const handleDriftClick = () => {
@@ -628,27 +628,27 @@ function Home() {
       ) : (
         /* 狀態 1：預設首頁動態流 */
         <>
-          {/* 膠囊快篩 */}
-          <div className={styles.tabsContainer} style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
-        <button
-          className={`${styles.tab} ${feedType === 'all' ? styles.active : ''}`}
-          onClick={() => { setFeedType('all'); setCurrentPage(1); }}
-        >
-          全部動態
-        </button>
-        <button
-          className={`${styles.tab} ${feedType === 'movies' ? styles.active : ''}`}
-          onClick={() => { setFeedType('movies'); setCurrentPage(1); }}
-        >
-          電影專區
-        </button>
-        <button
-          className={`${styles.tab} ${feedType === 'events' ? styles.active : ''}`}
-          onClick={() => { setFeedType('events'); setCurrentPage(1); }}
-        >
-          活動回顧
-        </button>
-      </div>
+          {/* 三大影視專區分段切換（電影最左、影集中間、動漫最右） */}
+          <div className={styles.tabsContainer} style={{ marginBottom: '24px' }}>
+            <button
+              className={`${styles.tab} ${feedType === 'movies' ? styles.active : ''}`}
+              onClick={() => { setFeedType('movies'); setCurrentPage(1); }}
+            >
+              電影專區
+            </button>
+            <button
+              className={`${styles.tab} ${feedType === 'tv' ? styles.active : ''}`}
+              onClick={() => { setFeedType('tv'); setCurrentPage(1); }}
+            >
+              影集專區
+            </button>
+            <button
+              className={`${styles.tab} ${feedType === 'anime' ? styles.active : ''}`}
+              onClick={() => { setFeedType('anime'); setCurrentPage(1); }}
+            >
+              動漫專區
+            </button>
+          </div>
 
       <div className="home-layout">
         {/* 左側 70%：資訊流 */}

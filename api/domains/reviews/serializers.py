@@ -48,6 +48,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         child=serializers.CharField(max_length=50), write_only=True, required=False
     )
     tmdb_id = serializers.IntegerField(write_only=True, required=False)
+    media_type = serializers.CharField(write_only=True, required=False)
     upvotes = serializers.IntegerField(read_only=True, required=False)
     downvotes = serializers.IntegerField(read_only=True, required=False)
     user_voted = serializers.SerializerMethodField()
@@ -57,7 +58,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Review
-        fields = ('id', 'user', 'movie', 'movie_title', 'tmdb_id', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'display_date', 'effective_date', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
+        fields = ('id', 'user', 'movie', 'movie_title', 'tmdb_id', 'media_type', 'rating', 'content', 'source', 'is_spoiler', 'tags', 'tag_names', 'created_at', 'display_date', 'effective_date', 'upvotes', 'downvotes', 'user_voted', 'comments_count')
 
     def get_comments_count(self, obj):
         val = getattr(obj, 'comments_count', None)
@@ -132,10 +133,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         raw_tag_names = validated_data.pop('tag_names', [])
         tag_names = list(raw_tag_names) if raw_tag_names is not None else []
         tmdb_id = validated_data.pop('tmdb_id', None)
+        media_type = validated_data.pop('media_type', None)
         
         # Fetch metadata using tmdb_id if provided, else fallback to title search
         if tmdb_id:
-            tmdb_meta = fetch_movie_metadata_by_id(tmdb_id)
+            tmdb_meta = fetch_movie_metadata_by_id(tmdb_id, media_type=media_type)
         else:
             tmdb_meta = fetch_movie_metadata(movie_title)
             
@@ -149,7 +151,11 @@ class ReviewSerializer(serializers.ModelSerializer):
             tag_names.append(movie_title)
                 
         with transaction.atomic():
-            movie_defaults = {'director': 'Unknown', 'release_year': timezone.now().year}
+            movie_defaults = {
+                'director': '', 
+                'release_year': timezone.now().year,
+                'media_type': media_type or 'movie'
+            }
             if tmdb_meta:
                 if tmdb_meta.get('original_title'):
                     movie_defaults['original_title'] = tmdb_meta['original_title']
@@ -157,11 +163,19 @@ class ReviewSerializer(serializers.ModelSerializer):
                     movie_defaults['tmdb_id'] = tmdb_meta['tmdb_id']
                 if tmdb_meta.get('poster_url'):
                     movie_defaults['poster_url'] = tmdb_meta['poster_url']
+                if tmdb_meta.get('release_year'):
+                    movie_defaults['release_year'] = tmdb_meta['release_year']
+                if tmdb_meta.get('media_type'):
+                    movie_defaults['media_type'] = tmdb_meta['media_type']
 
-            movie, _ = Movie.objects.get_or_create(
+            movie, created = Movie.objects.get_or_create(
                 title=movie_title,
                 defaults=movie_defaults
             )
+            if not created and tmdb_meta and tmdb_meta.get('media_type'):
+                if movie.media_type != tmdb_meta['media_type']:
+                    movie.media_type = tmdb_meta['media_type']
+                    movie.save(update_fields=['media_type'])
             validated_data['movie'] = movie
             
             user = validated_data.get('user')

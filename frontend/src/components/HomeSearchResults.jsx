@@ -121,7 +121,7 @@ function HomeSearchResults({
             <div className={styles.sectionBlock}>
               <h2 className={styles.sectionTitle}>
                 <MessageCircle size={20} color="var(--accent-primary)" />
-                相關電影影評
+                相關影視心得
                 <span className={styles.sectionBadge}>({reviews.length})</span>
               </h2>
               <div className="posterGrid">
@@ -135,11 +135,31 @@ function HomeSearchResults({
                       }
                     }}
                   >
-                    <div className="posterWrapper">
+                    <div className="posterWrapper" style={{ position: 'relative' }}>
+                      {review.movie?.media_type && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '8px',
+                          left: '8px',
+                          background: 'rgba(20, 20, 20, 0.75)',
+                          backdropFilter: 'blur(6px)',
+                          WebkitBackdropFilter: 'blur(6px)',
+                          border: '1px solid rgba(197, 160, 89, 0.35)',
+                          color: '#C5A059',
+                          fontSize: '0.7rem',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontWeight: '600',
+                          zIndex: 2,
+                          pointerEvents: 'none'
+                        }}>
+                          {review.movie.media_type === 'tv' ? '影集' : review.movie.media_type === 'anime' ? '動漫' : '電影'}
+                        </span>
+                      )}
                       {review.movie?.poster_url ? (
                         <img
                           src={review.movie.poster_url}
-                          alt={review.movie.title || '電影海報'}
+                          alt={review.movie.title || '海報'}
                           className="posterImg"
                           loading="lazy"
                         />

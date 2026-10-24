@@ -113,6 +113,8 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
     try {
       const payload = {
         movie_title: movieTag,
+        tmdb_id: selectedTmdbId,
+        media_type: selectedMovie?.media_type,
         content: content,
         rating: rating > 0 ? rating : null,
         tag_names: finalTags,
@@ -190,7 +192,21 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                           <div className={styles.dropdownPosterPlaceholder}><ImageIcon size={16}/></div>
                         )}
                         <div className={styles.dropdownInfo}>
-                          <div className={styles.dropdownTitle}>{movie.title}</div>
+                          <div className={styles.dropdownTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>{movie.title}</span>
+                            {movie.media_type_label && (
+                              <span style={{
+                                fontSize: '0.7rem',
+                                padding: '1px 5px',
+                                borderRadius: '3px',
+                                background: movie.media_type === 'tv' ? 'rgba(197, 160, 89, 0.2)' : movie.media_type === 'anime' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                                color: movie.media_type === 'tv' ? '#C5A059' : movie.media_type === 'anime' ? '#93C5FD' : '#D1D5DB',
+                                fontWeight: '600'
+                              }}>
+                                {movie.media_type_label}
+                              </span>
+                            )}
+                          </div>
                           <div className={styles.dropdownMeta}>{movie.original_title} ({movie.year})</div>
                         </div>
                       </div>
@@ -207,8 +223,20 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                     <div className={styles.previewPosterPlaceholder}><ImageIcon size={24}/></div>
                   )}
                   <div className={styles.previewInfo}>
-                    <div className={styles.previewTitle}>
-                      {selectedMovie.title} {selectedMovie.year ? `(${selectedMovie.year})` : ''}
+                    <div className={styles.previewTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>{selectedMovie.title} {selectedMovie.year ? `(${selectedMovie.year})` : ''}</span>
+                      {selectedMovie.media_type_label && (
+                        <span style={{
+                          fontSize: '0.7rem',
+                          padding: '1px 5px',
+                          borderRadius: '3px',
+                          background: selectedMovie.media_type === 'tv' ? 'rgba(197, 160, 89, 0.2)' : selectedMovie.media_type === 'anime' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                          color: selectedMovie.media_type === 'tv' ? '#C5A059' : selectedMovie.media_type === 'anime' ? '#93C5FD' : '#D1D5DB',
+                          fontWeight: '600'
+                        }}>
+                          {selectedMovie.media_type_label}
+                        </span>
+                      )}
                     </div>
                     
                     <div className={styles.starRating}>
@@ -229,7 +257,7 @@ function ReviewForm({ onClose, onReviewAdded, initialData = null, prefilledMovie
                   </div>
                 </div>
                 <button type="button" className={styles.changeMovieBtn} onClick={handleChangeMovie}>
-                  更換電影
+                  更換作品
                 </button>
               </div>
             )}

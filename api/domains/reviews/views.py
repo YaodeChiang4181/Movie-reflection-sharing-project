@@ -53,11 +53,11 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def watch_providers(self, request, pk=None):
-        """取得該電影在串流平台的上架資訊（由 TMDB Watch Providers API 提供）"""
+        """取得該作品在串流平台的上架資訊（由 TMDB Watch Providers API 提供）"""
         movie = self.get_object()
         if not movie.tmdb_id:
-            return Response({'detail': '此電影尚無 TMDB 資料，無法查詢串流平台。'}, status=status.HTTP_404_NOT_FOUND)
-        data = fetch_watch_providers(movie.tmdb_id)
+            return Response({'detail': '此作品尚無 TMDB 資料，無法查詢串流平台。'}, status=status.HTTP_404_NOT_FOUND)
+        data = fetch_watch_providers(movie.tmdb_id, media_type=getattr(movie, 'media_type', 'movie'))
         return Response(data)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
@@ -67,14 +67,16 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
             return Response([])
         results = search_tmdb_movies(query) or []
         
-        # 整合本地資料庫已有之電影（增強命中率與容錯能力）
+        # 整合本地資料庫已有之電影與影視（增強命中率與容錯能力）
         existing_tmdb_ids = {r.get('tmdb_id') or r.get('id') for r in results if (r.get('tmdb_id') or r.get('id'))}
         local_movies = Movie.objects.filter(
             Q(title__icontains=query) | Q(original_title__icontains=query)
         )[:10]
+        type_labels = {'movie': '電影', 'tv': '影集', 'anime': '動漫'}
         for lm in local_movies:
             ref_id = lm.tmdb_id or lm.id
             if ref_id not in existing_tmdb_ids:
+                mtype = getattr(lm, 'media_type', 'movie')
                 results.append({
                     'tmdb_id': lm.tmdb_id or lm.id,
                     'id': lm.tmdb_id or lm.id,
@@ -83,13 +85,16 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                     'year': str(lm.release_year) if lm.release_year else '',
                     'release_year': lm.release_year or '',
                     'poster_url': lm.poster_url or '',
+                    'media_type': mtype,
+                    'media_type_label': type_labels.get(mtype, '電影')
                 })
         return Response(results)
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def sync(self, request):
-        """同步 TMDB 電影至本地資料庫並回傳本地 ID"""
+        """同步 TMDB 影視作品至本地資料庫並回傳本地 ID"""
         tmdb_id = request.data.get('tmdb_id')
+        media_type = request.data.get('media_type')
         if not tmdb_id:
             return Response({'error': '需要 tmdb_id'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -98,17 +103,21 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         if not movie and isinstance(tmdb_id, int):
             movie = Movie.objects.filter(id=tmdb_id).first()
         if movie:
+            if media_type and movie.media_type != media_type:
+                movie.media_type = media_type
+                movie.save(update_fields=['media_type'])
             return Response({
                 'id': movie.id, 
                 'title': movie.title,
                 'poster_url': movie.poster_url,
-                'release_year': movie.release_year
+                'release_year': movie.release_year,
+                'media_type': movie.media_type
             })
             
         # 若無，則呼叫 tmdb api 同步
-        tmdb_meta = fetch_movie_metadata_by_id(tmdb_id)
+        tmdb_meta = fetch_movie_metadata_by_id(tmdb_id, media_type=media_type)
         if not tmdb_meta:
-            return Response({'error': '找不到該 TMDB 電影'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': '找不到該 TMDB 作品'}, status=status.HTTP_404_NOT_FOUND)
             
         movie, _ = Movie.objects.get_or_create(
             tmdb_id=tmdb_id,
@@ -117,13 +126,15 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                 'original_title': tmdb_meta.get('original_title') or '',
                 'poster_url': tmdb_meta.get('poster_url') or '',
                 'release_year': tmdb_meta.get('release_year') or 2024,
+                'media_type': tmdb_meta.get('media_type') or media_type or 'movie',
             }
         )
         return Response({
             'id': movie.id, 
             'title': movie.title,
             'poster_url': movie.poster_url,
-            'release_year': movie.release_year
+            'release_year': movie.release_year,
+            'media_type': movie.media_type
         })
 
 

@@ -79,7 +79,7 @@ function Navbar() {
               onClick={handleSearchClick}
               className={styles.searchIconBtn}
               aria-label="快速搜尋"
-              title="搜尋電影、心得或片單"
+              title="搜尋電影、影劇、動漫或片單"
             >
               <Search size={18} />
             </Link>
@@ -95,7 +95,7 @@ function Navbar() {
                   {publishMenuOpen && (
                     <div className={`${styles.publishDropdown} glass`}>
                       <button onClick={() => window.dispatchEvent(new CustomEvent('open-review-form'))}>
-                        <Edit3 size={16} /> 寫電影心得
+                        <Edit3 size={16} /> 寫影視心得
                       </button>
                       <button onClick={() => window.dispatchEvent(new CustomEvent('open-event-form'))}>
                         <Film size={16} /> 發起放映活動
