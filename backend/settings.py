@@ -20,6 +20,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 載入本地端的 .env 檔案
 load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / 'frontend' / '.env')
+
+# NCU Portal OAuth Client 設定（支援多種常見命名）
+NCU_CLIENT_ID = os.environ.get('NCU_CLIENT_ID') or os.environ.get('VITE_NCU_CLIENT_ID')
+NCU_CLIENT_SECRET = os.environ.get('NCU_CLIENT_SECRET') or os.environ.get('Client_Secret') or os.environ.get('CLIENT_SECRET')
 
 
 # Quick-start development settings - unsuitable for production

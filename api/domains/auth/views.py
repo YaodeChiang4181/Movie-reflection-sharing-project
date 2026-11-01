@@ -11,6 +11,7 @@ import os
 import requests
 from django.core.mail import send_mail
 from api.models import EmailVerification
+from django.conf import settings
 from .serializers import RegisterSerializer, CustomTokenObtainPairSerializer, UserMeSerializer, AdminUserSerializer
 from .cookie_utils import set_jwt_cookies, clear_jwt_cookies
 
@@ -322,11 +323,39 @@ class NCULoginView(APIView):
         if not code or not redirect_uri:
             return Response({'error': '缺少 code 或 redirect_uri'}, status=status.HTTP_400_BAD_REQUEST)
             
-        client_id = os.environ.get('NCU_CLIENT_ID')
-        client_secret = os.environ.get('NCU_CLIENT_SECRET')
+        client_id = (
+            os.environ.get('NCU_CLIENT_ID') or
+            os.environ.get('VITE_NCU_CLIENT_ID') or
+            getattr(settings, 'NCU_CLIENT_ID', None)
+        )
+        client_secret = (
+            os.environ.get('NCU_CLIENT_SECRET') or
+            os.environ.get('Client_Secret') or
+            os.environ.get('CLIENT_SECRET') or
+            getattr(settings, 'NCU_CLIENT_SECRET', None)
+        )
         
+        if client_id:
+            client_id = str(client_id).strip().strip("'\"")
+        if client_secret:
+            client_secret = str(client_secret).strip().strip("'\"")
+
         if not client_id or not client_secret:
-            return Response({'error': 'NCU Client configuration missing'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            missing_items = []
+            if not client_id:
+                missing_items.append("NCU_CLIENT_ID (或 VITE_NCU_CLIENT_ID)")
+            if not client_secret:
+                missing_items.append("NCU_CLIENT_SECRET (或 Client_Secret)")
+            error_message = (
+                f"NCU Client 設定缺失：後端伺服器環境變數缺少 {', '.join(missing_items)}。"
+                f"請至部署平台 (如 Vercel Project Settings > Environment Variables) 確認變數名稱，"
+                f"並務必重新部署 (Redeploy) 以使新變數生效。"
+            )
+            print(f"================ NCU CONFIG ERROR ================")
+            print(error_message)
+            print(f"Resolved client_id exists: {bool(client_id)}, client_secret exists: {bool(client_secret)}")
+            print(f"==================================================")
+            return Response({'error': error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
         # 1. Exchange code for access_token
         token_url = 'https://portal.ncu.edu.tw/oauth2/token'
