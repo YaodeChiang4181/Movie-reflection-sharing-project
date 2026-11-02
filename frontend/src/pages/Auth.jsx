@@ -6,6 +6,11 @@ import { useGoogleLogin } from '@react-oauth/google';
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
 import styles from './Auth.module.css';
 
+// 控制是否顯示「NCU Portal 登入」按鈕
+// 目前 NCU Portal 處於「測試開發中」，先預設隱藏此按鈕。
+// 待向老師申請公開網站核准後，只需將此處改為 true（或在環境變數設定 VITE_ENABLE_NCU_LOGIN=true）即可立即恢復！
+const SHOW_NCU_PORTAL_LOGIN = import.meta.env.VITE_ENABLE_NCU_LOGIN === 'true' || false;
+
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState('student'); // 'student' or 'outsider'
@@ -517,34 +522,37 @@ function Auth() {
               <span>{isLogin ? 'Gmail 登入' : 'Gmail 註冊 / 登入'}</span>
             </button>
 
-            <button
-              type="button"
-              onClick={handleNCULogin}
-              style={{
-                flex: '1 1 120px',
-                backgroundColor: '#0F265C',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                transition: 'transform 0.2s',
-              }}
-              onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 3L2 12H5V20H19V12H22L12 3Z" fill="currentColor" />
-              </svg>
-              <span>{isLogin ? 'NCU 登入' : 'NCU 註冊 / 登入'}</span>
-            </button>
+            {/* NCU Portal 登入按鈕（待申請公開網站完成後，將 SHOW_NCU_PORTAL_LOGIN 改為 true 即可恢復顯示） */}
+            {SHOW_NCU_PORTAL_LOGIN && (
+              <button
+                type="button"
+                onClick={handleNCULogin}
+                style={{
+                  flex: '1 1 120px',
+                  backgroundColor: '#0F265C',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 3L2 12H5V20H19V12H22L12 3Z" fill="currentColor" />
+                </svg>
+                <span>{isLogin ? 'NCU 登入' : 'NCU 註冊 / 登入'}</span>
+              </button>
+            )}
           </div>
         </div>
 
