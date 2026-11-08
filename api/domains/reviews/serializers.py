@@ -151,10 +151,11 @@ class ReviewSerializer(serializers.ModelSerializer):
             tag_names.append(movie_title)
                 
         with transaction.atomic():
+            target_media_type = (tmdb_meta.get('media_type') if tmdb_meta else None) or media_type or 'movie'
             movie_defaults = {
                 'director': '', 
                 'release_year': timezone.now().year,
-                'media_type': media_type or 'movie'
+                'media_type': target_media_type
             }
             if tmdb_meta:
                 if tmdb_meta.get('original_title'):
@@ -168,14 +169,30 @@ class ReviewSerializer(serializers.ModelSerializer):
                 if tmdb_meta.get('media_type'):
                     movie_defaults['media_type'] = tmdb_meta['media_type']
 
-            movie, created = Movie.objects.get_or_create(
-                title=movie_title,
-                defaults=movie_defaults
-            )
-            if not created and tmdb_meta and tmdb_meta.get('media_type'):
-                if movie.media_type != tmdb_meta['media_type']:
-                    movie.media_type = tmdb_meta['media_type']
-                    movie.save(update_fields=['media_type'])
+            movie = None
+            if tmdb_meta and tmdb_meta.get('tmdb_id'):
+                movie = Movie.objects.filter(tmdb_id=tmdb_meta['tmdb_id']).first()
+
+            if not movie:
+                movie, created = Movie.objects.get_or_create(
+                    title=movie_title,
+                    defaults=movie_defaults
+                )
+            else:
+                created = False
+
+            updated_fields = []
+            if tmdb_meta and tmdb_meta.get('tmdb_id') and not movie.tmdb_id:
+                movie.tmdb_id = tmdb_meta['tmdb_id']
+                updated_fields.append('tmdb_id')
+            if target_media_type and movie.media_type != target_media_type:
+                movie.media_type = target_media_type
+                updated_fields.append('media_type')
+            if tmdb_meta and tmdb_meta.get('poster_url') and not movie.poster_url:
+                movie.poster_url = tmdb_meta['poster_url']
+                updated_fields.append('poster_url')
+            if updated_fields:
+                movie.save(update_fields=updated_fields)
             validated_data['movie'] = movie
             
             user = validated_data.get('user') or (self.context.get('request') and self.context['request'].user)

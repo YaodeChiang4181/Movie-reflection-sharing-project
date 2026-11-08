@@ -103,10 +103,21 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
         movie = Movie.objects.filter(tmdb_id=tmdb_id).first()
         if not movie and isinstance(tmdb_id, int):
             movie = Movie.objects.filter(id=tmdb_id).first()
+
+        # 呼叫 tmdb api 取得最新或校正的中繼資料
+        tmdb_meta = fetch_movie_metadata_by_id(tmdb_id, media_type=media_type)
+        target_mtype = tmdb_meta.get('media_type') if tmdb_meta else (media_type or 'movie')
+
         if movie:
-            if media_type and movie.media_type != media_type:
-                movie.media_type = media_type
-                movie.save(update_fields=['media_type'])
+            updated_fields = []
+            if target_mtype and movie.media_type != target_mtype:
+                movie.media_type = target_mtype
+                updated_fields.append('media_type')
+            if tmdb_meta and tmdb_meta.get('poster_url') and not movie.poster_url:
+                movie.poster_url = tmdb_meta['poster_url']
+                updated_fields.append('poster_url')
+            if updated_fields:
+                movie.save(update_fields=updated_fields)
             return Response({
                 'id': movie.id, 
                 'title': movie.title,
@@ -115,8 +126,6 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                 'media_type': movie.media_type
             })
             
-        # 若無，則呼叫 tmdb api 同步
-        tmdb_meta = fetch_movie_metadata_by_id(tmdb_id, media_type=media_type)
         if not tmdb_meta:
             return Response({'error': '找不到該 TMDB 作品'}, status=status.HTTP_404_NOT_FOUND)
             
@@ -127,7 +136,7 @@ class MovieViewSet(viewsets.ReadOnlyModelViewSet):
                 'original_title': tmdb_meta.get('original_title') or '',
                 'poster_url': tmdb_meta.get('poster_url') or '',
                 'release_year': tmdb_meta.get('release_year') or 2024,
-                'media_type': tmdb_meta.get('media_type') or media_type or 'movie',
+                'media_type': target_mtype,
             }
         )
         return Response({

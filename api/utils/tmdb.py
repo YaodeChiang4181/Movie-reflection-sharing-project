@@ -41,9 +41,16 @@ GENRE_MAP = {
 def determine_media_type(item):
     """
     Determine whether a TMDB item should be categorized as 'anime', 'tv', or 'movie'.
-    - If genre 16 ('動畫' / 'Animation') is present in genre_ids or genres -> 'anime'
-    - Else if media_type == 'tv' -> 'tv'
-    - Else -> 'movie'
+    - If TMDB media_type is 'movie':
+      - Stays 'movie' (including animated feature films like Up, Toy Story, Coco, Spirited Away).
+    - If TMDB media_type is 'tv':
+      - If genre 16 ('動畫' / 'Animation') is present in genre_ids or genres -> 'anime' (TV animation / anime series)
+      - Else -> 'tv' (Live-action TV series)
+    - Fallback when media_type is not explicitly specified:
+      - If item has TV-specific attributes (first_air_date, number_of_seasons):
+        - If genre 16 is present -> 'anime'
+        - Else -> 'tv'
+      - Else -> 'movie'
     """
     if not item:
         return 'movie'
@@ -52,12 +59,23 @@ def determine_media_type(item):
     if not genre_ids and item.get('genres'):
         genre_ids = [g.get('id') for g in item.get('genres') if isinstance(g, dict) and g.get('id')]
         
-    if 16 in genre_ids:
-        return 'anime'
-        
+    is_animation = 16 in genre_ids
     tmdb_type = item.get('media_type')
+    
+    if tmdb_type == 'movie':
+        return 'movie'
+        
     if tmdb_type == 'tv':
+        if is_animation:
+            return 'anime'
         return 'tv'
+        
+    # Fallback when tmdb_type is missing or ambiguous
+    if item.get('first_air_date') or item.get('number_of_seasons'):
+        if is_animation:
+            return 'anime'
+        return 'tv'
+
     return 'movie'
 
 DEFAULT_TMDB_API_KEY = '9f47183d5f6d186439851ec7c0555109'
@@ -552,13 +570,28 @@ def fetch_watch_providers(tmdb_id, media_type='movie', region='TW'):
         return {}
 
     try:
-        tmdb_ep = 'tv' if media_type in ['tv', 'anime'] else 'movie'
-        url = f"https://api.themoviedb.org/3/{tmdb_ep}/{tmdb_id}/watch/providers?api_key={api_key}"
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode('utf-8'))
+        endpoints_to_try = []
+        if media_type == 'tv':
+            endpoints_to_try = ['tv', 'movie']
+        elif media_type == 'anime':
+            endpoints_to_try = ['tv', 'movie']
+        else: # 'movie' or fallback
+            endpoints_to_try = ['movie', 'tv']
 
-        region_data = data.get('results', {}).get(region, {})
+        region_data = {}
+        for tmdb_ep in endpoints_to_try:
+            try:
+                url = f"https://api.themoviedb.org/3/{tmdb_ep}/{tmdb_id}/watch/providers?api_key={api_key}"
+                req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    data = json.loads(response.read().decode('utf-8'))
+                    r_data = data.get('results', {}).get(region, {})
+                    if r_data:
+                        region_data = r_data
+                        break
+            except Exception:
+                continue
+
         if not region_data:
             result = {}
             cache.set(cache_key, result, timeout=86400)
